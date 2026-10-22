@@ -1,0 +1,65 @@
+/* =====================================================================
+   admin.css: sección ADMINISTRACIÓN (HU-006; después HU-035 a HU-040).
+   Página: views/admin/panel.ejs. El enlace "Panel" del menú está en base.css.
+   ===================================================================== */
+.admin { max-width: 1100px; margin: 0 auto; padding: 40px 4vw 64px; }
+.admin h1 { color: var(--navy); margin-bottom: 8px; }
+.admin-sub { margin-bottom: 24px; }
+/* Una tarjeta por cada sección del panel. Las que el usuario no tiene permiso de ver quedan más claras. */
+.admin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.admin-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+.admin-card h2 { font-size: 18px; color: var(--navy); margin-bottom: 6px; }
+.admin-card p { font-size: 14px; color: var(--text-muted); }
+.admin-card-bloqueada { opacity: .55; }
+.admin-estado { display: inline-block; font-size: 12px; font-weight: 600; color: var(--blue); background: var(--primary-light); padding: 3px 10px; border-radius: 999px; margin-bottom: 10px; }
+
+/* Tarjeta de una sección ya disponible: es un enlace (HU-036 en adelante). */
+.admin-card-lista { display: block; color: inherit; text-decoration: none; transition: border-color .15s, box-shadow .15s; }
+.admin-card-lista:hover { border-color: var(--primary); box-shadow: 0 4px 14px rgba(14, 165, 233, .15); }
+.admin-estado-lista { color: var(--green); background: #e7f6ea; }
+
+/* ===== Productos (HU-036): views/admin/productos.ejs y views/admin/producto-nuevo.ejs ===== */
+.admin-volver { display: inline-block; font-size: 14px; color: var(--blue); margin-bottom: 16px; }
+.admin-cabecera { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; }
+.admin-cabecera .btn { padding: 10px 18px; border-radius: 8px; }
+.admin-exito { background: #e7f6ea; border: 1px solid #bfe5c6; color: #1f5e2a; border-radius: 8px; padding: 12px 14px; margin-bottom: 18px; font-size: 14px; }
+.admin-exito a { color: var(--blue); font-weight: 600; margin-left: 6px; }
+.admin-errores { background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; border-radius: 8px; padding: 12px 14px; margin-bottom: 18px; font-size: 14px; }
+.admin-nota { font-size: 13px; color: var(--text-muted); margin-top: 12px; }
+
+/* Tabla de productos. */
+.admin-tabla { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 14px; }
+.admin-tabla th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); background: #f8fafc; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.admin-tabla td { padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.admin-tabla tr:last-child td { border-bottom: 0; }
+.admin-tabla .num { text-align: right; font-variant-numeric: tabular-nums; }
+.admin-tabla .sku { font-family: Consolas, monospace; font-size: 13px; }
+.admin-tabla a { color: var(--navy); font-weight: 600; }
+.admin-fila-nueva td { background: #f0f9ff; }
+.admin-chip { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; }
+.admin-chip.activo { color: var(--green); background: #e7f6ea; }
+.admin-chip.inactivo { color: var(--text-muted); background: #eef2f6; }
+
+/* Formulario de producto nuevo. */
+.admin-angosto { max-width: 820px; }
+.admin-form fieldset { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px 6px; margin: 0 0 16px; }
+.admin-form legend { font-weight: 700; color: var(--navy); padding: 0 6px; }
+.admin-fila { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.admin-fila-3 { grid-template-columns: repeat(3, 1fr); }
+.admin-campo { margin-bottom: 14px; }
+.admin-campo label { display: block; font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+.admin-campo input, .admin-campo select, .admin-campo textarea { display: block; width: 100%; padding: 0 12px; font: inherit; font-size: 15px; color: var(--text); background: #fff; border: 1px solid #cfd8e3; border-radius: 8px; }
+.admin-campo input, .admin-campo select { height: 44px; }
+.admin-campo textarea { padding: 10px 12px; resize: vertical; }
+.admin-campo :is(input, select, textarea):focus { outline: 3px solid var(--primary-light); border-color: var(--primary); }
+.admin-campo .campo-error { border-color: var(--danger); background: #fff5f5; }
+.admin-aviso { font-size: 13px; color: var(--danger); margin-top: 6px; }
+.admin-ayuda { font-size: 12px; color: var(--text-muted); margin: 6px 0 12px; }
+.admin-campo .admin-ayuda { margin-bottom: 0; }
+.admin-opcional { font-weight: 400; color: var(--text-muted); font-size: 13px; }
+.admin-check { display: flex; align-items: center; gap: 10px; font-size: 14px; margin-bottom: 12px; cursor: pointer; }
+.admin-check input { width: 18px; height: 18px; accent-color: var(--primary); }
+.admin-acciones { display: flex; justify-content: flex-end; align-items: center; gap: 18px; }
+.admin-acciones .btn { padding: 12px 22px; border-radius: 8px; border: 0; font: inherit; font-weight: 600; cursor: pointer; }
+.admin-cancelar { color: var(--text-muted); font-size: 14px; }
+.admin-cabecera .eyebrow, .admin-angosto .eyebrow { margin-bottom: 8px; }

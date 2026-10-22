@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Catálogo | AQUAROMA', estilos: ['catalogo'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <div class="wrap">
+    <h1>Nuestro Catálogo</h1>
+    <div class="layout">
+      <aside>
+        <p class="intro">Descubre nuestras aguas funcionales con ingredientes naturales.</p>
+        <form class="filters" id="filtros">
+          <fieldset>
+            <legend>Aroma</legend>
+            <label><input type="checkbox" name="aroma" value="todos" checked> Todos</label>
+            <%# Un filtro por cada aroma que tenga productos activos: un sabor nuevo en la base aparece solo. %>
+            <% const aromas = new Map(productos.map(p => [p.aromaSlug, p.aroma])); %>
+            <% aromas.forEach((nombre, slug) => { %>
+              <label><input type="checkbox" name="aroma" value="<%= slug %>"> <%= nombre %></label>
+            <% }) %>
+          </fieldset>
+          <fieldset>
+            <legend>Tipo</legend>
+            <label><input type="radio" name="tipo" value="todos" checked> Todos</label>
+            <label><input type="radio" name="tipo" value="con-gas"> Con gas</label>
+            <label><input type="radio" name="tipo" value="sin-gas"> Sin gas</label>
+            <label><input type="radio" name="tipo" value="electrolitos"> Electrolitos</label>
+          </fieldset>
+          <button type="reset" class="clear">Limpiar filtros ↻</button>
+        </form>
+      </aside>
+
+      <section>
+        <p class="count" id="count">Mostrando <%= productos.length %> productos</p>
+        <div class="grid" id="grid">
+          <% const colores = { limon: 't-yellow', menta: 't-green', frutilla: 't-red', pepino: 't-green', durazno: 't-orange', arandano: 't-purple',
+                               mango: 't-orange', 'frutos-rojos': 't-red', 'hibisco-y-rosa': 't-purple', 'limon-y-menta': 't-yellow', 'pepino-y-limon': 't-green' }; %>
+          <!-- Cada tarjeta muestra los datos del modelo, incluida la imagen y la disponibilidad del producto. -->
+          <% productos.forEach(p => { %>
+            <article class="item" data-aroma="<%= p.aromaSlug %>" data-tipo="<%= p.tipoSlug %>"
+                     data-id="<%= p.id %>" data-nombre="<%= p.nombre %>" data-precio="<%= p.precio %>"
+                     data-imagen="<%= p.imagen %>" data-aroma-nombre="<%= p.aroma %>">
+              <%# HU-016: la imagen y el nombre llevan a la ficha de detalle del producto. %>
+              <a href="/catalogo/<%= p.id %>" class="item-enlace">
+                <div class="img">
+                  <img src="/img/productos/<%= p.imagen %>" alt="<%= p.nombre %>">
+                  <% if (p.stock === 0) { %><span class="badge out">Agotado</span><% } %>
+                </div>
+                <h3><%= p.nombre %></h3>
+              </a>
+              <p class="price"><%= clp(p.precio) %></p>
+              <span class="tag <%= colores[p.aromaSlug] %>"><%= p.etiqueta %></span>
+              <% if (p.stock > 0) { %>
+                <button class="buy">Agregar al carrito</button>
+              <% } else { %>
+                <button class="buy" disabled>Agotado</button>
+              <% } %>
+            </article>
+          <% }) %>
+        </div>
+        <p class="empty" id="empty" hidden>No se encontraron productos con estos filtros. Prueba quitar alguno.</p>
+      </section>
+    </div>
+  </div>
+
+  <!-- Filtros por aroma y tipo de agua: public/js/catalogo-filtros.js. Los botones "Agregar al carrito" los conecta public/js/carrito.js (se carga desde el menú). -->
+  <script src="/js/catalogo-filtros.js"></script>
+</body>
+</html> 

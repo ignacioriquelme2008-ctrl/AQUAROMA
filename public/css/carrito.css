@@ -1,0 +1,125 @@
+/* =====================================================================
+   carrito.css: sección CARRITO (HU-022 a HU-026).
+   Página: views/carrito/carrito.ejs.
+   ===================================================================== */
+.wrap { max-width: 1100px; margin: auto; padding: 28px 4vw 60px; }
+.sub { margin: 6px 0 20px; font-size: 15px; }
+/* Dos columnas: productos a la izquierda y resumen del pedido a la derecha. */
+.layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+.panel { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+
+/* ===== Lista de productos ===== */
+/* Cada fila tiene 5 columnas: producto, aroma, cantidad, precio y acciones. */
+.row { display: grid; grid-template-columns: 2.4fr 1.4fr 1fr 1fr 150px; gap: 12px; align-items: center; }
+.head { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 10px 0; border-bottom: 1px solid var(--line); font-weight: 600; }
+.head span:nth-child(n+3) { text-align: center; }
+.item { background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; padding: 14px 0; }
+.prod { display: flex; gap: 14px; align-items: center; }
+.prod img { width: 170px; height: 300px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+.prod strong { display: block; color: var(--navy); font-size: 14px; }
+.prod small { display: block; font-size: 12px; line-height: 1.45; }
+.aroma { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--navy); }
+/* Círculo de color con el ícono del aroma (los colores están en public/js/carrito-pagina.js). */
+.ic { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+
+/* Botones − / + y casilla para escribir la cantidad (HU-023). */
+.qty { display: flex; align-items: center; justify-content: center; border: 1px solid #d3dbe6; border-radius: 8px; width: fit-content; margin: auto; }
+.qty button { border: 0; background: none; width: 32px; height: 34px; font-size: 18px; cursor: pointer; color: var(--navy); }
+.qty button:hover { background: #f1f5fa; }
+.qty .qty-input { width: 46px; height: 34px; border: 0; border-left: 1px solid #d3dbe6; border-right: 1px solid #d3dbe6; text-align: center; font: inherit; font-weight: 700; color: var(--navy); background: #fff; -moz-appearance: textfield; }
+.qty .qty-input::-webkit-outer-spin-button, .qty .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.qty .qty-input:focus { outline: 2px solid var(--blue); outline-offset: -2px; }
+
+.price { font-size: 18px; font-weight: 700; color: var(--blue); margin: 2px 0 8px; text-align: center; }
+.price b { display: block; font-size: 14px; color: var(--navy); }
+
+/* ===== Botón "Eliminar" con animación (HU-024) ===== */
+.del {
+  display: inline-flex;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100px;
+  min-width: 100px;
+  justify-self: center;
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #4c1d95;
+  color: #fff;
+  font: 600 13px system-ui, sans-serif;
+  cursor: pointer;
+  transition: width 0.4s, min-width 0.4s, padding 0.4s, background 0.4s, transform 0.4s;
+  box-shadow: 0 6px 14px rgba(76, 29, 149, 0.3);
+}
+.del:hover { background: #5b21b6; transform: translateY(-2px); }
+.del:active { background: #2e1065; transform: scale(0.96); }
+
+/* Al eliminar: el botón se achica, la papelera tiembla, se abre la tapa y aparece un ✓ verde. */
+.del.is-success { width: 42px; min-width: 42px; padding: 0; animation: eliminar-exito 0.8s ease both; }
+.del.is-success .del-label { display: none; }
+.del.is-success::before { content: "✓"; font-size: 24px; animation: check-in 0.3s 0.5s ease both; }
+
+.trash-icon {
+  display: inline-block;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.trash-lid { transform-box: view-box; transform-origin: 19px 6px; }
+.del.is-success .trash-icon { position: absolute; left: 50%; top: 50%; translate: -50% -50%; animation: ocultar-papelera 0.2s 0.45s forwards; }
+.del.is-success .trash-body { transform-box: view-box; transform-origin: 12px 12px; animation: temblor-papelera 0.45s ease-in-out; }
+.del.is-success .trash-lid { animation: abrir-tapa 0.28s 0.1s ease-out forwards; }
+
+@keyframes eliminar-exito {
+  0%, 55% { background: #4c1d95; transform: scale(1); }
+  25% { width: 48px; min-width: 48px; transform: scale(0.85); }
+  75%, 100% { background: #10b981; transform: scale(1); }
+}
+@keyframes check-in {
+  from { opacity: 0; transform: scale(0.3); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes temblor-papelera {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-4deg); }
+  75% { transform: rotate(4deg); }
+}
+@keyframes abrir-tapa { to { transform: translate(2px, -4px) rotate(35deg); } }
+@keyframes ocultar-papelera { to { opacity: 0; } }
+
+.foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding-top: 16px; font-size: 13px; }
+.foot a { color: var(--blue); font-weight: 600; }
+/* Aviso "Tu carrito está vacío". */
+.empty { padding: 30px 0; text-align: center; }
+
+/* ===== Resumen del pedido (HU-025) ===== */
+dl div { display: flex; justify-content: space-between; padding: 10px 0; font-size: 14px; }
+.free { color: #2f8f3a; font-weight: 600; }
+.total { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 16px; }
+.total span { font-weight: 700; color: var(--navy); }
+.total strong { font-size: 26px; color: var(--blue); }
+.iva { text-align: right; font-size: 12px; margin: 2px 0 16px; }
+.confirm { width: 100%; padding: 14px; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
+.confirm:hover:not(:disabled) { background: #1750b0; }
+.confirm:disabled { background: #c9d3e0; cursor: not-allowed; }
+.secure { font-size: 12px; margin: 12px 0 16px; }
+.perks { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); padding: 14px 0 0; text-align: center; font-size: 12px; }
+.perks li + li { border-left: 1px solid var(--line); }
+.perks span { display: block; font-size: 20px; margin-bottom: 4px; }
+
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+@media (max-width: 640px) {
+  .head { display: none; }
+  .row { grid-template-columns: 1fr 1fr; }
+  .prod { grid-column: 1 / -1; }
+  .price { text-align: left; }
+}

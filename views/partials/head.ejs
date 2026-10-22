@@ -1,0 +1,11 @@
+<%# Encabezado común de todas las páginas: título de la pestaña y hojas de estilo.
+    Uso (en el <head> de cada vista):
+      include('../partials/head', { titulo: 'Catálogo | AQUAROMA', estilos: ['catalogo'] })
+    base.css se carga siempre. "estilos" agrega las hojas de la sección (public/css/<nombre>.css). %>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><%= titulo %></title>
+<link rel="stylesheet" href="/css/base.css">
+<% (locals.estilos || []).forEach((hoja) => { %>
+<link rel="stylesheet" href="/css/<%= hoja %>.css">
+<% }) %>

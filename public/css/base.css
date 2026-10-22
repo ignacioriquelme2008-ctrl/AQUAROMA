@@ -1,0 +1,152 @@
+/* =====================================================================
+   base.css: estilos que comparten TODAS las páginas.
+   Se carga siempre desde views/partials/head.ejs. Después, cada página carga
+   la hoja de su sección (inicio.css, usuarios.css, catalogo.css, ...).
+   ===================================================================== */
+
+/* ===== Colores (variables) ===== */
+:root {
+  --primary: #0ea5e9;
+  --primary-light: #e0f2fe;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --white: #ffffff;
+  --success: #10b981;
+  --danger: #ef4444;
+  --navy: #0b2d6b;
+  --blue: #1d5fd1;
+  --green: #2f8f3a;
+  --ink: #3a4660;
+  --line: #e6ebf2;
+}
+
+/* ===== Base ===== */
+/* Reinicia el margen y padding para que los elementos empiecen con el mismo formato en todas las secciones. */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+/* Todo lo que tenga el atributo "hidden" queda oculto (lo usan los avisos que se muestran con JavaScript). */
+[hidden] { display: none !important; }
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: var(--ink);
+  background: #f5f8fc;
+  line-height: 1.5;
+}
+
+/* Quita el subrayado por defecto de los enlaces y ayuda a mantener una navegación más limpia. */
+a { text-decoration: none; color: inherit; }
+/* Contorno visible al moverse con el teclado (Tab). */
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+/* ===== Títulos ===== */
+/* Título principal de cada página, con una línea azul corta debajo. */
+h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 800;
+  font-size: clamp(28px, 4vw, 36px);
+  color: var(--navy);
+  padding-bottom: 12px;
+  position: relative;
+  margin-bottom: 12px;
+}
+h1::after { content: ""; position: absolute; left: 0; bottom: 0; width: 48px; height: 3px; background: var(--blue); }
+h2 { font-size: 17px; color: var(--navy); margin-bottom: 14px; }
+h3 { font-size: 15px; color: var(--navy); }
+
+/* Texto pequeño en mayúsculas que va sobre un título (inicio, nosotros, ficha, panel). */
+.eyebrow { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--navy); font-weight: 600; margin-bottom: 18px; }
+
+/* ===== Botones ===== */
+/* Los botones comparten una base para mantener coherencia visual y facilitar la acción principal. */
+.btn {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #fff;
+}
+.btn-green { background: var(--green); }
+.btn-primary { background: var(--primary); }
+.btn-primary:hover { background: #0284c7; }
+
+/* Botón "Agregar al carrito" (catálogo y ficha del producto). */
+.buy { display: block; width: 100%; padding: 10px; border: 0; border-radius: 6px; background: var(--blue); color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; }
+.buy:hover:not(:disabled) { background: #1750b0; }
+.buy:disabled { background: #ececec; color: #444; cursor: not-allowed; }
+
+/* Etiqueta roja "Agotado" sobre la imagen de un producto (catálogo y ficha). */
+.badge { position: absolute; top: 10px; right: 10px; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 6px; }
+.out { background: #e0343f; color: #fff; }
+
+/* ===== Menú (views/partials/navbar.ejs) ===== */
+/* La barra queda fija al scroll para que el usuario siempre tenga acceso a la navegación. */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--white);
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 24px;
+}
+
+.nav-inner {
+  max-width: none;
+  margin: 0;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo { display: flex; align-items: center; gap: 10px; color: var(--text); padding: 4px; }
+.logo-img {
+  height: 40px;        /* alto fijo: sube o baja este número */
+  width: auto;         /* el ancho se ajusta solo, sin deformar */
+  max-width: 160px;    /* límite de ancho por si la imagen es muy ancha */
+  object-fit: contain; /* la imagen entra completa, sin recortarse */
+  display: block;
+}
+.logo-text { display: flex; flex-direction: column; line-height: 1.2; }
+.logo-text strong { font-size: 18px; }
+.logo-text span {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nav-links { display: flex; gap: 8px; list-style: none; }
+.nav-links a {
+  color: var(--text-muted);
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 999px;
+  transition: all 0.2s;
+}
+.nav-links a:hover { color: var(--primary); background: var(--primary-light); }
+
+/* Botón del carrito: solo en el menú, forma de pastilla. */
+.navbar .btn { padding: 10px 20px; border-radius: 999px; gap: 8px; }
+/* HU-022: número de artículos dentro del botón del carrito. */
+.nav-contador { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: #fff; color: var(--blue); font-size: 13px; font-weight: 700; line-height: 22px; text-align: center; }
+
+/* Parte derecha del menú: nombre del usuario, "Panel", "Cerrar sesión" o "Iniciar sesión / Registrarse". */
+.nav-acciones { display: flex; align-items: center; gap: 6px; }
+.nav-acciones form { margin: 0; }
+.nav-usuario { font-size: 14px; font-weight: 600; color: var(--navy); margin-right: 6px; }
+.nav-enlace { font: inherit; font-size: 14px; font-weight: 500; color: var(--text-muted); background: none; border: 0; padding: 8px 12px; border-radius: 999px; cursor: pointer; }
+.nav-enlace:hover { color: var(--primary); background: var(--primary-light); }
+/* Enlace "Panel": solo lo ve el administrador (HU-006). */
+.nav-panel { color: var(--navy); font-weight: 600; }
+
+/* ===== Tarjeta centrada ===== */
+/* Caja blanca al centro de la página. La usan el login y el registro (usuarios.css agrega sus campos)
+   y las páginas de error ("No encontrado" y "Acceso denegado"). */
+.auth { display: flex; justify-content: center; padding: 48px 16px 64px; }
+.auth-card { width: 100%; max-width: 440px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 32px 28px; }
+.auth-card h1 { font-size: 30px; margin-bottom: 14px; }
+.auth-sub { font-size: 14px; margin-bottom: 22px; }
+.auth-boton { width: 100%; justify-content: center; border: 0; cursor: pointer; font-family: inherit; margin-top: 6px; }

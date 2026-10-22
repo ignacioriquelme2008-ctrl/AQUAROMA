@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Panel de administración | AQUAROMA', estilos: ['admin'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <!-- Portada del panel (HU-006). Solo llega aquí un Administrador: lo controla el middleware soloAdmin. -->
+  <main class="admin">
+    <p class="eyebrow">Administración</p>
+    <h1>Panel de administración</h1>
+    <p class="admin-sub">Hola, <%= usuario.nombre %>. Desde aquí se gestionará la tienda.</p>
+
+    <div class="admin-grid">
+      <% secciones.forEach(s => { %>
+        <%# Una sección con "url" (y con permiso) ya está hecha: la tarjeta completa es un enlace. %>
+        <% if (s.url && s.permitido) { %>
+          <a class="admin-card admin-card-lista" href="<%= s.url %>">
+            <span class="admin-estado admin-estado-lista">Disponible</span>
+            <h2><%= s.titulo %></h2>
+            <p><%= s.descripcion %></p>
+          </a>
+        <% } else { %>
+          <article class="admin-card<%= s.permitido ? '' : ' admin-card-bloqueada' %>">
+            <span class="admin-estado"><%= s.permitido ? 'Próximamente' : 'Sin permiso' %></span>
+            <h2><%= s.titulo %></h2>
+            <p><%= s.descripcion %></p>
+          </article>
+        <% } %>
+      <% }) %>
+    </div>
+  </main>
+</body>
+</html>

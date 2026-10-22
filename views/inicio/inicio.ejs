@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Aquaroma | Agua funcional', estilos: ['inicio'] }) %>
+</head>
+<body>
+  <!-- Incluye la barra de navegación reutilizable en todas las páginas para mantener la experiencia consistente. -->
+  <%- include('../partials/navbar') %>
+
+  <main>
+    <!-- Esta sección presenta el mensaje principal de la marca y empuja al usuario a explorar el catálogo. -->
+    <section class="hero" id="inicio">
+      <div class="hero-text">
+        <!-- HU-008: bienvenida con la marca y la propuesta de valor (funcionalidad, hidratación y bienestar). -->
+        <p class="eyebrow">Bienvenido a AQUAROMA · Agua funcional</p>
+        <h1>Agua con sabor y aroma</h1>
+        <!-- Explica brevemente qué ofrece el producto y por qué es atractivo para el cliente. -->
+        <p class="lead">Agua con sabor y aroma natural, infusionada con ingredientes funcionales que te hidratan y te hacen bien todos los días.</p>        <!-- Botón de acción principal para llevar al usuario al catálogo. -->
+        <a href="/catalogo" class="btn btn-green">Ver catálogo <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+
+    <!-- Sección de productos con los aromas destacados para mostrar variedad y captar interés. -->
+    <section class="aromas" id="productos">
+      <h2 class="eyebrow center">Aromas que te hacen bien</h2>
+      <div class="cards">
+        <!-- Cada tarjeta representa un sabor distinto y ayuda a comparar opciones rapidamente. -->
+        <% destacados.forEach(p => { %>
+          <article class="card">
+            <% if (p.masVendido) { %><span class="card-vendido">Más vendido</span><% } %>
+            <img src="/img/productos/<%= p.imagen %>" alt="Agua Aquaroma sabor <%= p.aroma %>">
+            <h3><%= p.aroma %></h3>
+            <p><%= p.etiqueta %> · <%= clp(p.precio) %></p>
+            <a href="/catalogo/<%= p.id %>">Ver producto →</a>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

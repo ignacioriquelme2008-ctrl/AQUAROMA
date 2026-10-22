@@ -1,0 +1,31 @@
+/* =====================================================================
+   producto.css: sección CATÁLOGO, ficha de un producto (HU-016, HU-017).
+   Página: views/catalogo/producto.ejs. El botón .buy y la etiqueta "Agotado" están en base.css.
+   ===================================================================== */
+.ficha-wrap { max-width: 1000px; margin: auto; padding: 28px 4vw 60px; }
+.ficha-volver { display: inline-block; color: var(--blue); font-weight: 600; font-size: 14px; margin-bottom: 18px; }
+.ficha-volver:hover { text-decoration: underline; }
+
+/* Dos columnas: imagen a la izquierda y datos a la derecha. En pantallas chicas quedan una sobre otra. */
+.ficha { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 36px; align-items: start;
+  background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 24px; }
+.ficha-img { position: relative; border-radius: 10px; overflow: hidden; background: #f1f5f9; }
+.ficha-img img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+
+.ficha-info .eyebrow { margin-bottom: 8px; }
+.ficha-precio { font-size: 26px; font-weight: 700; color: var(--blue); margin: 4px 0 14px; }
+.ficha-descripcion { line-height: 1.7; margin-bottom: 18px; }
+
+/* Lista de datos (aroma, tipo, tamaño, disponibilidad): cada fila en dos columnas y separada por una línea. */
+.ficha-datos { border-top: 1px solid var(--line); margin-bottom: 22px; }
+.ficha-datos div { display: flex; justify-content: space-between; padding: 10px 0; font-size: 14px; border-bottom: 1px solid var(--line); }
+.ficha-datos dt { font-weight: 600; color: var(--navy); }
+
+/* Disponibilidad (HU-017): pastilla verde "N unidades disponibles" o roja "Agotado". */
+.estado { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+.disponible { background: #d1fae5; color: #047857; }
+.agotado { background: #fee2e2; color: var(--danger); }
+
+.ficha .buy { padding: 14px; font-size: 16px; border-radius: 8px; }
+
+@media (max-width: 760px) { .ficha { grid-template-columns: 1fr; gap: 20px; } }

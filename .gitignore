@@ -1,0 +1,4 @@
+# Ignora dependencias instaladas localmente para no subirlas al repositorio.
+node_modules
+# Oculta las variables de entorno para no guardar datos sensibles.
+.env

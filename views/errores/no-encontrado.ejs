@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Página no encontrada | AQUAROMA', estilos: [] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <!-- Se muestra cuando la página o el producto no existe (error 404). -->
+  <main class="auth">
+    <div class="auth-card">
+      <h1>No encontrado</h1>
+      <p class="auth-sub"><%= locals.mensaje || 'La página que buscas no existe.' %></p>
+      <a href="/catalogo" class="btn btn-primary auth-boton">Ir al catálogo</a>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Nosotros | AQUAROMA', estilos: ['inicio'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <!-- HU-010: sección "Nosotros". Criterio 1: historia de la marca y concepto de equilibrio entre sabor,
+       aroma e hidratación. Criterio 2: valores y atributos del producto. Criterio 3: se abre desde el menú. -->
+  <main class="about-page">
+    <section class="about-hero">
+      <p class="eyebrow">Conoce Aquaroma</p>
+      <h1>Hidratación con sabor, aroma y propósito</h1>
+      <p>En AQUAROMA buscamos el equilibrio entre sabor, aroma e hidratación: que tomar agua sea un momento agradable, sin dejar de ser un hábito saludable.</p>
+    </section>
+
+    <!-- Historia de la marca, contada por el equipo. -->
+    <section class="about-historia" aria-labelledby="titulo-historia">
+      <h2 id="titulo-historia">Nuestra historia</h2>
+      <p>AQUAROMA nació entre nosotros, a partir de algo que nos pasaba a diario: muchas veces teníamos agua cerca, pero simplemente no nos daban ganas de tomarla.</p>
+      <p>Nos pusimos a pensar en cómo podíamos hacer que algo tan cotidiano como hidratarse se sintiera diferente, sin dejar de ser saludable. De ahí surgió nuestra idea de darle al agua un aroma que hiciera cada sorbo más agradable y despertara los sentidos.</p>
+      <p>Al principio fue solo una idea que conversábamos entre nosotros, pero poco a poco comenzamos a investigarla, probarla y convertirla en un proyecto real. Hoy AQUAROMA representa ese esfuerzo y esas ganas de crear algo nuestro, diferente y que podamos compartir con otras personas.</p>
+    </section>
+
+    <!-- Valores de la marca: salen de la historia de arriba. -->
+    <section aria-labelledby="titulo-valores">
+      <h2 class="about-titulo" id="titulo-valores">Nuestros valores</h2>
+      <div class="about-valores">
+        <article class="about-card">
+          <span class="about-icono" aria-hidden="true">💧</span>
+          <h3>Hidratación saludable</h3>
+          <p>El agua es la base de todo lo que hacemos. El aroma la hace más agradable, pero hidratarse sigue siendo un hábito sano.</p>
+        </article>
+        <article class="about-card">
+          <span class="about-icono" aria-hidden="true">🌿</span>
+          <h3>Despertar los sentidos</h3>
+          <p>Queremos que cada sorbo se disfrute, para que tomar agua deje de ser una obligación y se convierta en un gusto.</p>
+        </article>
+        <article class="about-card">
+          <span class="about-icono" aria-hidden="true">✨</span>
+          <h3>Hacer diferente lo cotidiano</h3>
+          <p>Partimos de algo tan simple como hidratarse y lo investigamos y probamos hasta convertirlo en un proyecto real.</p>
+        </article>
+        <article class="about-card">
+          <span class="about-icono" aria-hidden="true">🤝</span>
+          <h3>Algo nuestro para compartir</h3>
+          <p>AQUAROMA es el esfuerzo de nuestro equipo y nuestras ganas de crear algo propio para compartir con otras personas.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Lo que ofrece el producto: corresponde a lo que hay en el catálogo (tipos de agua y aromas de la base). -->
+    <section class="about-content" aria-label="Nuestra propuesta">
+      <article class="about-card">
+        <h2>Nuestra propuesta</h2>
+        <p>Combinamos sabores frutales, herbales y florales en una variedad de aguas para que encuentres una opción que se adapte a tu gusto y a cada momento del día.</p>
+      </article>
+      <article class="about-card">
+        <h2>Para cada momento</h2>
+        <p>Tenemos agua sin gas para el día a día, con gas para algo más refrescante y con electrolitos para acompañarte cuando te mueves más.</p>
+      </article>
+    </section>
+
+    <div class="about-cta">
+      <a href="/catalogo" class="btn btn-green">Explorar catálogo <span aria-hidden="true">→</span></a>
+    </div>
+  </main>
+</body>
+</html>

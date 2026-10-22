@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Ocurrió un error | AQUAROMA', estilos: [] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <!-- La muestra el manejador de errores de app.js cuando algo falla en el servidor (error 500)
+       o la petición no se puede leer (error 400). Nunca muestra el detalle técnico del error. -->
+  <main class="auth">
+    <div class="auth-card">
+      <h1>Ocurrió un error</h1>
+      <p class="auth-sub">
+        <% if (locals.estado === 500) { %>Tuvimos un problema al cargar esta página. Inténtalo de nuevo en unos minutos.
+        <% } else { %>No pudimos procesar tu solicitud. Revisa los datos e inténtalo de nuevo.<% } %>
+      </p>
+      <a href="/" class="btn btn-primary auth-boton">Volver al inicio</a>
+    </div>
+  </main>
+</body>
+</html>

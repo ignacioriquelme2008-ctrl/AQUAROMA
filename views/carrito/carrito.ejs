@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Carrito | AQUAROMA', estilos: ['carrito'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+<!-- La página del carrito ordena la compra para que el cliente revise productos, cantidades y total antes de confirmar. -->
+<div class="wrap">
+  <!-- El encabezado explica el propósito de la vista y ayuda a que el usuario sepa que está en la etapa de revisión del pedido. -->
+  <h1>Carrito de Compras</h1>
+  <p class="sub">Revisa tus productos y confirma tu pedido</p>
+
+  <div class="layout">
+    <!-- La sección principal muestra los productos seleccionados, mientras el resumen del lado sirve para ver el costo final. -->
+    <section class="panel">
+      <h2>💧 Productos</h2>
+      <div class="row head"><span>Producto</span><span>Aroma</span><span>Cantidad</span><span>Precio</span><span>Acciones</span></div>
+      <div id="items"></div>
+      <!-- Si no hay elementos, se informa al usuario que debe agregar productos antes de continuar. -->
+      <p class="empty" id="empty" hidden>Tu carrito está vacío. Agrega productos desde el catálogo.</p>
+      <div class="foot">
+        <a href="/catalogo">← Seguir comprando</a>
+      </div>
+    </section>
+
+    <!-- El resumen del pedido deja claro el total y facilita la decisión final de compra. -->
+    <aside class="panel summary">
+      <h2>📄 Resumen del Pedido</h2>
+      <dl>
+        <div><dt id="subLabel">Subtotal</dt><dd id="subtotal">$0</dd></div>
+        <!-- El costo de envío todavía no está definido; se decide al hacer "Confirmar pedido" (HU-028). -->
+        <div><dt>Envío</dt><dd>Por definir</dd></div>
+      </dl>
+      <div class="total"><span>Total</span><strong id="total">$0</strong></div>
+      <p class="iva">IVA incluido</p>
+      <%# HU-004: confirmar un pedido es una acción privada. Sin sesión, el botón lleva al login (public/js/carrito-pagina.js). %>
+      <button class="confirm" id="confirm" data-requiere-login="<%= locals.usuario ? '' : '1' %>">🔒 Confirmar Pedido</button>
+      <ul class="perks">
+        <li><span>🍃</span>Agua sostenible</li>
+        <li><span>💧</span>Origen natural</li>
+        <li><span>♡</span>Hecha con propósito</li>
+      </ul>
+    </aside>
+  </div>
+</div>
+  <!-- Lo que hace la página (dibujar productos, cambiar cantidades, eliminar, resumen) está en public/js/carrito-pagina.js. -->
+  <script src="/js/carrito-pagina.js"></script>
+</body>
+</html>

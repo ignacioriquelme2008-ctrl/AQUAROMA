@@ -1,0 +1,76 @@
+/* =====================================================================
+   inicio.css: sección INICIO.
+   Páginas: views/inicio/inicio.ejs (HU-008) y views/inicio/nosotros.ejs (HU-010).
+   ===================================================================== */
+
+/* ===== Portada (hero) ===== */
+/* La sección principal tiene una imagen de fondo y un texto grande para presentar la marca al entrar. */
+.hero {
+  margin-top: 24px;
+  min-height: 480px;
+  background: #cfe6f5 url(/img/marca/AQUAROMA_1920px.png) right center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  padding: 40px 4vw;
+}
+.hero-text { max-width: 520px; }
+.hero h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.05; color: var(--navy); font-weight: 800; margin-bottom: 22px; }
+.lead { font-size: 18px; line-height: 1.6; margin-bottom: 28px; }
+
+/* ===== Productos destacados ===== */
+.aromas { padding: 36px 4vw 60px; max-width: 1100px; margin: auto; }
+.center { text-align: center; color: var(--blue); }
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.card { position: relative; border: 1px solid var(--line); border-radius: 10px; padding: 8px 8px 18px; }
+.card img {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: contain;
+  background: #f1f5f9;
+  border-radius: 6px;
+  display: block;
+}
+.card h3 { color: var(--navy); font-size: 20px; margin: 14px 8px 0; padding-bottom: 8px; position: relative; }
+.card h3::after { content: ""; position: absolute; left: 0; bottom: 0; width: 26px; height: 3px; background: var(--green); }
+.card p { font-size: 14px; line-height: 1.5; margin: 10px 8px; }
+.card a { color: var(--blue); font-weight: 600; font-size: 14px; margin: 0 8px; }
+/* Etiqueta "Más vendido": se calcula con las ventas reales (models/Producto.js, obtenerDestacados). */
+.card-vendido { position: absolute; top: 14px; left: 14px; background: var(--green); color: #fff;
+  font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+
+@media (max-width: 800px) {
+  .cards { grid-template-columns: 1fr; }
+  .hero { background-position: 70% center; }
+}
+
+/* ===== Nosotros ===== */
+.about-page { max-width: 1100px; margin: 0 auto; padding: 40px 4vw 64px; }
+.about-hero { padding: 48px; border-radius: 18px; background: linear-gradient(135deg, #e8f5ff, #f0f8e9); }
+.about-hero .eyebrow { margin-bottom: 10px; }
+.about-hero h1 { max-width: 720px; color: var(--navy); font-size: clamp(34px, 5vw, 52px); line-height: 1.12; margin-bottom: 16px; }
+.about-hero p:last-child { max-width: 700px; font-size: 18px; line-height: 1.7; }
+.about-content { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+.about-card { padding: 28px; border: 1px solid var(--line); border-radius: 14px; }
+.about-card h2 { color: var(--navy); font-size: 22px; margin-bottom: 10px; }
+.about-card p { line-height: 1.7; }
+.about-cta { margin-top: 28px; text-align: center; }
+/* HU-010: historia de la marca y valores. */
+.about-historia { margin-top: 32px; padding: 32px 36px; background: #fff; border: 1px solid var(--line); border-radius: 14px; }
+.about-historia h2, .about-titulo { color: var(--navy); font-size: 26px; margin-bottom: 14px; }
+.about-historia p { max-width: 820px; font-size: 17px; line-height: 1.75; margin-bottom: 12px; }
+.about-historia p:last-child { margin-bottom: 0; }
+.about-titulo { margin-top: 36px; }
+.about-valores { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.about-valores .about-card { padding: 22px; background: #fff; }
+.about-valores h3 { color: var(--navy); font-size: 17px; margin: 8px 0 8px; }
+.about-valores p { font-size: 14px; line-height: 1.6; }
+.about-icono { font-size: 26px; }
+@media (max-width: 1000px) { .about-valores { grid-template-columns: 1fr 1fr; } }
+
+@media (max-width: 640px) {
+  .about-page { padding-top: 24px; }
+  .about-hero { padding: 30px 24px; }
+  .about-content { grid-template-columns: 1fr; }
+  .about-valores { grid-template-columns: 1fr; }
+  .about-historia { padding: 24px; }
+}

@@ -1,0 +1,36 @@
+/* =====================================================================
+   usuarios.css: sección USUARIOS.
+   Páginas: views/usuarios/login.ejs (HU-003) y views/usuarios/registro.ejs (HU-001, HU-002).
+   La caja blanca centrada (.auth, .auth-card) está en base.css porque también la usan las páginas de error.
+   ===================================================================== */
+
+/* Nombre y apellido lado a lado. */
+.auth-fila { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Cada campo: etiqueta arriba y casilla de texto abajo. */
+.auth-campo { margin-bottom: 16px; }
+.auth-campo label { display: block; font-size: 14px; font-weight: 600; color: var(--navy); padding: 0 0 6px; cursor: default; }
+.auth-campo input { display: block; width: 100%; height: 44px; padding: 0 12px; font: inherit; font-size: 15px; color: var(--text); background: #fff; border: 1px solid #cfd8e3; border-radius: 8px; }
+.auth-campo input:focus { outline: 3px solid var(--primary-light); border-color: var(--primary); }
+/* HU-002: campos con error marcados en rojo (los que devuelve el servidor y los que el navegador detecta al enviar). */
+.auth-campo input.campo-error, .auth-campo input:user-invalid { border-color: var(--danger); background: #fff5f5; }
+
+/* Requisitos de la contraseña: cada uno se marca en verde cuando se cumple (public/js/registro.js). */
+.auth-reglas { list-style: none; padding: 0; margin-top: 10px; display: grid; gap: 4px; font-size: 13px; color: var(--text-muted); }
+.auth-reglas li::before { content: "○"; display: inline-block; width: 18px; }
+.auth-reglas li.ok { color: var(--green); }
+.auth-reglas li.ok::before { content: "✓"; font-weight: 700; }
+
+/* Mensajes de error: uno bajo cada campo y una lista arriba del formulario. */
+.auth-aviso { font-size: 13px; color: var(--danger); margin-top: 6px; }
+.auth-errores { list-style: none; padding: 12px 14px; margin-bottom: 18px; background: #fee2e2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b; font-size: 14px; display: grid; gap: 4px; }
+
+/* "¿No tienes cuenta? Regístrate" / "¿Ya tienes cuenta? Inicia sesión". */
+.auth-pie { text-align: center; font-size: 14px; margin-top: 18px; }
+.auth-pie a { color: var(--blue); font-weight: 600; }
+
+@media (max-width: 480px) { .auth-fila { grid-template-columns: 1fr; } }
+
+/* Login: mensaje verde después de crear la cuenta y aviso azul cuando se llega desde una página privada (HU-004). */
+.auth-exito { padding: 12px 14px; margin-bottom: 18px; background: #e7f6ea; border: 1px solid #bfe5c6; border-radius: 8px; color: #1f5e2a; font-size: 14px; }
+.auth-info { padding: 12px 14px; margin-bottom: 18px; background: var(--primary-light); border: 1px solid #bae6fd; border-radius: 8px; color: var(--navy); font-size: 14px; }

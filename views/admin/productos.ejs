@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Productos | Administración | AQUAROMA', estilos: ['admin'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <!-- HU-036: lista de productos del panel. Los datos llegan de adminProductosController.listar. -->
+  <main class="admin">
+    <a href="/admin" class="admin-volver">← Volver al panel</a>
+    <div class="admin-cabecera">
+      <div>
+        <p class="eyebrow">Administración</p>
+        <h1>Productos</h1>
+      </div>
+      <a href="/admin/productos/nuevo" class="btn btn-primary">+ Nuevo producto</a>
+    </div>
+
+    <%# Aviso después de crear un producto (llega con ?creado=id). %>
+    <% if (creado) { %>
+      <p class="admin-exito" role="status">
+        Se creó <strong><%= creado.nombre %></strong> (SKU <%= creado.sku %>).
+        <% if (creado.activo) { %><a href="/catalogo/<%= creado.id %>">Ver en la tienda →</a>
+        <% } else { %>Quedó inactivo, así que no se muestra en la tienda.<% } %>
+      </p>
+    <% } %>
+
+    <table class="admin-tabla">
+      <thead>
+        <tr><th>SKU</th><th>Nombre</th><th>Aroma</th><th>Tipo de agua</th><th class="num">Precio</th><th class="num">Stock</th><th>Estado</th></tr>
+      </thead>
+      <tbody>
+        <% productos.forEach(p => { %>
+          <tr<%- creado && creado.id === p.id ? ' class="admin-fila-nueva"' : '' %>>
+            <td class="sku"><%= p.sku %></td>
+            <td><% if (p.activo) { %><a href="/catalogo/<%= p.id %>"><%= p.nombre %></a><% } else { %><%= p.nombre %><% } %></td>
+            <td><%= p.aroma || '—' %></td>
+            <td><%= p.tipo %></td>
+            <td class="num"><%= clp(p.precio) %></td>
+            <td class="num"><%= p.stock %></td>
+            <td><span class="admin-chip <%= p.activo ? 'activo' : 'inactivo' %>"><%= p.activo ? 'Activo' : 'Inactivo' %></span></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <p class="admin-nota">Editar y desactivar productos se agrega en la HU-037.</p>
+  </main>
+</body>
+</html>

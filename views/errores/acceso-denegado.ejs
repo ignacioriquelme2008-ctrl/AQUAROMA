@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Acceso denegado | AQUAROMA', estilos: [] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <!-- Se muestra cuando alguien sin el rol o el permiso necesario intenta entrar a una página (HU-006). -->
+  <main class="auth">
+    <div class="auth-card">
+      <h1>Acceso denegado</h1>
+      <p class="auth-sub">No tienes permiso para ver esta página. Si crees que es un error, comunícate con la tienda.</p>
+      <a href="/" class="btn btn-primary auth-boton">Volver al inicio</a>
+    </div>
+  </main>
+</body>
+</html>

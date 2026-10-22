@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: producto.nombre + ' | AQUAROMA', estilos: ['producto'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <!-- Ficha de detalle de un producto (HU-016). Se llega desde la tarjeta del catálogo o desde el inicio. -->
+  <main class="ficha-wrap">
+    <a href="/catalogo" class="ficha-volver">← Volver al catálogo</a>
+
+    <% const agotado = producto.stock <= 0; %>
+    <!-- Los data-* son los datos que usa public/js/carrito.js para agregar el producto al carrito. -->
+    <article class="ficha" data-id="<%= producto.id %>" data-nombre="<%= producto.nombre %>" data-precio="<%= producto.precio %>"
+             data-imagen="<%= producto.imagen %>" data-aroma-nombre="<%= producto.aroma %>">
+      <div class="ficha-img">
+        <img src="/img/productos/<%= producto.imagen %>" alt="<%= producto.nombre %>">
+        <% if (agotado) { %><span class="badge out">Agotado</span><% } %>
+      </div>
+
+      <div class="ficha-info">
+        <p class="eyebrow"><%= producto.etiqueta %></p>
+        <h1><%= producto.nombre %></h1>
+        <p class="ficha-precio"><%= clp(producto.precio) %></p>
+        <%# Si todavía no tiene descripción completa, se muestra la etiqueta corta. %>
+        <p class="ficha-descripcion"><%= producto.descripcion_larga || producto.etiqueta %></p>
+
+        <dl class="ficha-datos">
+          <div><dt>Aroma</dt><dd><%= producto.aroma %></dd></div>
+          <div><dt>Tipo de agua</dt><dd><%= producto.tipo %></dd></div>
+          <div><dt>Tamaño</dt><dd><%= producto.volumen_ml %> ml<%= producto.tipo_envase ? ' · ' + producto.tipo_envase : '' %></dd></div>
+          <div>
+            <dt>Disponibilidad</dt>
+            <dd>
+              <% if (agotado) { %>
+                <span class="estado agotado">Agotado</span>
+              <% } else { %>
+                <span class="estado disponible"><%= producto.stock %> <%= producto.stock === 1 ? 'unidad disponible' : 'unidades disponibles' %></span>
+              <% } %>
+            </dd>
+          </div>
+        </dl>
+
+        <% if (agotado) { %>
+          <button type="button" class="buy" disabled>Agotado</button>
+        <% } else { %>
+          <button type="button" class="buy">Agregar al carrito</button>
+        <% } %>
+      </div>
+    </article>
+  </main>
+
+  <!-- El botón "Agregar al carrito" lo conecta public/js/carrito.js, que se carga desde el menú (partials/navbar.ejs). -->
+</body>
+</html>

@@ -1,0 +1,67 @@
+/* =====================================================================
+   catalogo.css: sección CATÁLOGO, página de la lista de productos.
+   Página: views/catalogo/catalogo.ejs (HU-013, HU-014, HU-015, HU-017).
+   La ficha de cada producto tiene su propia hoja: producto.css.
+   ===================================================================== */
+
+/* El catálogo usa un fondo y un borde un poco más claros que el resto del sitio, y un título más liviano. */
+:root { --line: #e3e9f0; }
+body { background: #f7f9fc; }
+h1 { font-weight: 400; font-size: clamp(30px, 4vw, 40px); }
+
+/* El contenedor principal centra la vista y deja margen para que el catálogo no quede pegado a los bordes. */
+.wrap { max-width: 1150px; margin: auto; padding: 28px 4vw 60px; }
+/* La estructura en dos columnas separa los filtros del listado para que sea más fácil navegar. */
+.layout { display: grid; grid-template-columns: 230px 1fr; gap: 26px; align-items: start; }
+.intro { font-size: 14px; line-height: 1.5; margin-bottom: 16px; }
+
+/* ===== Filtros (aroma y tipo de agua) ===== */
+/* Los filtros se guardan en un panel con borde para diferenciar claramente la búsqueda de los productos. */
+.filters { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+fieldset { border: 0; padding: 0; margin-bottom: 16px; }
+fieldset + fieldset { border-top: 1px solid var(--line); padding-top: 16px; }
+legend { font-weight: 700; color: var(--navy); font-size: 15px; margin-bottom: 10px; padding: 0; }
+label { display: flex; gap: 10px; align-items: center; font-size: 14px; padding: 5px 0; cursor: pointer; }
+input { accent-color: var(--blue); width: 16px; height: 16px; }
+.clear { width: 100%; padding: 10px; border: 1px solid #cfd8e3; background: #fff; border-radius: 8px; font-size: 14px; color: var(--navy); cursor: pointer; }
+.clear:hover { background: #f1f5fa; }
+
+/* ===== Lista de productos ===== */
+.count { font-size: 13px; margin-bottom: 8px; }
+/* La grilla de productos organiza las tarjetas en varias columnas para aprovechar el espacio. */
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+/* Cada tarjeta de producto recibe un borde y fondo blanco para que sean fáciles de distinguir. */
+.item { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px 12px; overflow: hidden; }
+.img { position: relative; margin: 0 -12px 10px; }
+.item .img img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; display: block; }
+.price { font-size: 18px; font-weight: 700; color: var(--blue); margin: 2px 0 8px; text-align: center; }
+/* Etiqueta de color con la descripción corta. El color depende del aroma (ver "colores" en catalogo.ejs). */
+.tag { display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 6px; margin-bottom: 10px; }
+.t-yellow { background: #e8f1fd; color: #1a4f9c; }
+.t-green { background: #e4f4e3; color: #2a6b2a; }
+.t-red { background: #fde8ea; color: #b02a37; }
+.t-orange { background: #fdeedb; color: #a15a10; }
+.t-purple { background: #ece8f9; color: #4a3d9a; }
+/* Aviso cuando ningún producto cumple los filtros. */
+.empty { padding: 40px 0; text-align: center; }
+
+/* HU-016: imagen y nombre de la tarjeta llevan a la ficha del producto */
+.item-enlace { display: block; color: inherit; text-decoration: none; }
+.item-enlace:hover h3 { color: var(--blue); text-decoration: underline; }
+
+/* Animación al pasar el mouse: la tarjeta completa se agranda y se levanta con sombra (la imagen se ve entera, sin recortes).
+   :focus-within hace lo mismo cuando se llega a la tarjeta con el teclado (Tab). */
+.item { transition: transform .3s ease, box-shadow .3s ease; }
+.item:hover, .item:focus-within { transform: translateY(-6px) scale(1.04); box-shadow: 0 14px 28px rgba(11, 45, 107, .14); }
+/* Si la persona pidió "reducir movimiento" en su sistema, no se anima nada. */
+@media (prefers-reduced-motion: reduce) {
+  .item { transition: none; }
+  .item:hover, .item:focus-within { transform: none; }
+}
+
+@media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) {
+  .layout { grid-template-columns: 1fr; }
+  .grid { grid-template-columns: 1fr; }
+  .price { text-align: left; }
+}

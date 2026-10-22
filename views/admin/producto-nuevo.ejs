@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Nuevo producto | Administración | AQUAROMA', estilos: ['admin'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <%
+    // datos = lo que escribió el administrador (si hubo errores, el formulario vuelve con todo lleno).
+    // errores = { campo: 'mensaje' }: cada campo con problema se marca en rojo con su mensaje debajo.
+    const d = datos || {};
+    const marca = (campo) => errores[campo] ? 'class="campo-error" aria-invalid="true"' : '';
+    const aviso = (campo) => errores[campo] ? '<p class="admin-aviso">' + errores[campo].replace(/</g, '&lt;') + '</p>' : '';
+    const sel = (valor, id) => Number(valor) === id ? 'selected' : '';
+    const hayErrores = Object.keys(errores).length > 0;
+  %>
+  <!-- HU-036: formulario para crear un producto. Lo procesa adminProductosController.crear (POST /admin/productos). -->
+  <main class="admin admin-angosto">
+    <a href="/admin/productos" class="admin-volver">← Volver a productos</a>
+    <p class="eyebrow">Administración</p>
+    <h1>Nuevo producto</h1>
+
+    <% if (hayErrores) { %>
+      <p class="admin-errores" role="alert">Revisa los campos marcados en rojo.</p>
+    <% } %>
+
+    <form class="admin-form" method="post" action="/admin/productos" novalidate>
+      <fieldset>
+        <legend>Datos del producto</legend>
+        <div class="admin-fila">
+          <div class="admin-campo">
+            <label for="sku">Código SKU</label>
+            <input <%- marca('sku') %> type="text" id="sku" name="sku" value="<%= d.sku || '' %>" maxlength="30" placeholder="AQ-MAN-500" required autofocus>
+            <%- aviso('sku') %>
+          </div>
+          <div class="admin-campo">
+            <label for="nombre">Nombre</label>
+            <input <%- marca('nombre') %> type="text" id="nombre" name="nombre" value="<%= d.nombre || '' %>" maxlength="120" placeholder="AQUAROMA Mango" required>
+            <%- aviso('nombre') %>
+          </div>
+        </div>
+
+        <div class="admin-fila admin-fila-3">
+          <div class="admin-campo">
+            <label for="idTipoAgua">Tipo de agua</label>
+            <select <%- marca('idTipoAgua') %> id="idTipoAgua" name="idTipoAgua" required>
+              <option value="">Elegir…</option>
+              <% opciones.tipos.forEach(o => { %><option value="<%= o.id %>" <%= sel(d.idTipoAgua, o.id) %>><%= o.nombre %></option><% }) %>
+            </select>
+            <%- aviso('idTipoAgua') %>
+          </div>
+          <div class="admin-campo">
+            <label for="idPresentacion">Presentación</label>
+            <select <%- marca('idPresentacion') %> id="idPresentacion" name="idPresentacion" required>
+              <option value="">Elegir…</option>
+              <% opciones.presentaciones.forEach(o => { %>
+                <option value="<%= o.id %>" <%= sel(d.idPresentacion, o.id) %>><%= o.volumen_ml %> ml · <%= o.tipo_envase || o.nombre %></option>
+              <% }) %>
+            </select>
+            <%- aviso('idPresentacion') %>
+          </div>
+          <div class="admin-campo">
+            <label for="idCategoria">Categoría (aroma)</label>
+            <select <%- marca('idCategoria') %> id="idCategoria" name="idCategoria" required>
+              <option value="">Elegir…</option>
+              <% opciones.categorias.forEach(o => { %><option value="<%= o.id %>" <%= sel(d.idCategoria, o.id) %>><%= o.nombre %></option><% }) %>
+            </select>
+            <%- aviso('idCategoria') %>
+          </div>
+        </div>
+
+        <div class="admin-fila">
+          <div class="admin-campo">
+            <label for="precio">Precio (CLP, IVA incluido)</label>
+            <input <%- marca('precio') %> type="number" id="precio" name="precio" value="<%= d.precioTexto || '' %>" min="1" step="1" placeholder="1490" required>
+            <%- aviso('precio') %>
+          </div>
+          <div class="admin-campo">
+            <label for="imagen">Imagen</label>
+            <select <%- marca('imagen') %> id="imagen" name="imagen" required>
+              <option value="">Elegir…</option>
+              <% imagenes.forEach(img => { %><option value="<%= img %>" <%= d.imagen === img ? 'selected' : '' %>><%= img %></option><% }) %>
+            </select>
+            <%- aviso('imagen') %>
+            <p class="admin-ayuda">Para usar una imagen nueva, cópiala a public/img/productos y recarga esta página.</p>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Textos de la tienda</legend>
+        <div class="admin-campo">
+          <label for="etiqueta">Descripción corta</label>
+          <input <%- marca('etiqueta') %> type="text" id="etiqueta" name="etiqueta" value="<%= d.etiqueta || '' %>" maxlength="40" placeholder="Tropical y dulce" required>
+          <%- aviso('etiqueta') %>
+          <p class="admin-ayuda">Se muestra en la tarjeta del catálogo y arriba del nombre en la ficha.</p>
+        </div>
+        <div class="admin-campo">
+          <label for="descripcionLarga">Descripción completa <span class="admin-opcional">(opcional)</span></label>
+          <textarea <%- marca('descripcionLarga') %> id="descripcionLarga" name="descripcionLarga" rows="4" maxlength="1000"><%= d.descripcionLarga || '' %></textarea>
+          <%- aviso('descripcionLarga') %>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Stock inicial <span class="admin-opcional">(opcional)</span></legend>
+        <div class="admin-fila">
+          <div class="admin-campo">
+            <label for="stockInicial">Unidades</label>
+            <input <%- marca('stockInicial') %> type="number" id="stockInicial" name="stockInicial" value="<%= d.stockTexto || '' %>" min="0" step="1" placeholder="0">
+            <%- aviso('stockInicial') %>
+          </div>
+          <div class="admin-campo">
+            <label for="idSucursal">Sucursal</label>
+            <select <%- marca('idSucursal') %> id="idSucursal" name="idSucursal">
+              <% opciones.sucursales.forEach(o => { %><option value="<%= o.id %>" <%= sel(d.idSucursal, o.id) %>><%= o.nombre %></option><% }) %>
+            </select>
+            <%- aviso('idSucursal') %>
+          </div>
+        </div>
+        <p class="admin-ayuda">Sin stock, el producto se ve en la tienda como "Agotado". El stock por sucursal se ajusta después en la HU-038.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Opciones</legend>
+        <%# Una casilla sin marcar no se envía: el controlador lo entiende como "no". %>
+        <label class="admin-check"><input type="checkbox" name="esPersonalizable" value="1" <%= d.esPersonalizable ? 'checked' : '' %>> Personalizable (el cliente puede ajustar el aroma)</label>
+        <label class="admin-check"><input type="checkbox" name="activo" value="1" <%= d.activo ? 'checked' : '' %>> Activo (se muestra en la tienda apenas se guarda)</label>
+      </fieldset>
+
+      <div class="admin-acciones">
+        <a href="/admin/productos" class="admin-cancelar">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Guardar producto</button>
+      </div>
+    </form>
+  </main>
+</body>
+</html>
