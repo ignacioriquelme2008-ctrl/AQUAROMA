@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Stock por sucursal | Administración | AQUAROMA', estilos: ['admin'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <%
+    // Ayudas para marcar los campos con error (igual que en el formulario de productos).
+    const marca = (grupo, campo) => grupo.errores[campo] ? 'class="campo-error" aria-invalid="true"' : '';
+    const aviso = (grupo, campo) => grupo.errores[campo] ? '<p class="admin-aviso">' + grupo.errores[campo].replace(/</g, '&lt;') + '</p>' : '';
+    const sel = (valor, id) => Number(valor) === id ? 'selected' : '';
+    // "productos" = filas de la tabla (puede venir filtrada); "todos" = opciones de los formularios.
+  %>
+  <!-- HU-038 (stock por sucursal y ajustes) y HU-039 (alertas de stock bajo).
+       Los datos llegan de adminStockController.ver. -->
+  <main class="admin">
+    <a href="/admin" class="admin-volver">← Volver al panel</a>
+    <div class="admin-cabecera">
+      <div>
+        <p class="eyebrow">Administración</p>
+        <h1>Stock por sucursal</h1>
+      </div>
+      <%# Criterio 3 de HU-039: filtro rápido "Ver solo stock bajo". %>
+      <% if (soloBajo) { %>
+        <a href="/admin/stock" class="admin-filtro activo">Ver todos los productos</a>
+      <% } else { %>
+        <a href="/admin/stock?bajo=1" class="admin-filtro">⚠ Ver solo stock bajo (<%= totalBajo %>)</a>
+      <% } %>
+    </div>
+
+    <% if (exito) { %><p class="admin-exito" role="status"><%= exito %></p><% } %>
+
+    <%# Criterio 1 de HU-038: existencias por sucursal. Criterio 1 de HU-039: filas en alerta resaltadas. %>
+    <table class="admin-tabla admin-tabla-stock">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <% sucursales.forEach(s => { %><th class="num"><%= s.nombre.replace('Aquaroma ', '') %><span class="admin-th-sub">unidades / mínimo</span></th><% }) %>
+          <th class="num">Total</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (productos.length === 0) { %>
+          <tr><td colspan="<%= sucursales.length + 3 %>" class="admin-vacio">No hay productos con stock bajo. 🎉</td></tr>
+        <% } %>
+        <% productos.forEach(p => { %>
+          <tr class="<%= p.bajo ? 'admin-fila-alerta' : '' %> <%= p.activo ? '' : 'admin-fila-inactiva' %>">
+            <td><strong><%= p.nombre %></strong> <span class="sku"><%= p.sku %></span><% if (!p.activo) { %> <span class="admin-chip inactivo">Inactivo</span><% } %></td>
+            <% sucursales.forEach(s => { const st = p.sucursales[s.id]; %>
+              <td class="num <%= st && st.bajo ? 'admin-celda-alerta' : '' %>">
+                <% if (st) { %><%= st.cantidad %> <span class="admin-minimo">/ <%= st.minimo %></span><% } else { %><span class="admin-minimo">—</span><% } %>
+              </td>
+            <% }) %>
+            <td class="num"><strong><%= p.total %></strong></td>
+            <td>
+              <% if (p.bajo) { %><span class="admin-chip alerta">⚠ Stock bajo</span>
+              <% } else if (p.activo) { %><span class="admin-chip activo">OK</span><% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <p class="admin-nota">"—" = el producto no se lleva en esa sucursal. Un producto queda en alerta cuando en alguna sucursal tiene igual o menos unidades que su mínimo.</p>
+
+    <div class="admin-dos-columnas">
+      <%# Criterios 2 y 3 de HU-038: ajuste con motivo obligatorio; no se permite quedar en negativo. %>
+      <form class="admin-form" method="post" action="/admin/stock/ajuste" novalidate>
+        <fieldset>
+          <legend>Ajustar stock</legend>
+          <div class="admin-fila">
+            <div class="admin-campo">
+              <label for="aj-producto">Producto</label>
+              <select <%- marca(ajuste, 'idProducto') %> id="aj-producto" name="idProducto" required>
+                <option value="">Elegir…</option>
+                <% todos.forEach(p => { %><option value="<%= p.id %>" <%= sel(ajuste.datos.idProducto, p.id) %>><%= p.nombre %><%= p.activo ? '' : ' (inactivo)' %></option><% }) %>
+              </select>
+              <%- aviso(ajuste, 'idProducto') %>
+            </div>
+            <div class="admin-campo">
+              <label for="aj-sucursal">Sucursal</label>
+              <select <%- marca(ajuste, 'idSucursal') %> id="aj-sucursal" name="idSucursal" required>
+                <option value="">Elegir…</option>
+                <% sucursales.forEach(s => { %><option value="<%= s.id %>" <%= sel(ajuste.datos.idSucursal, s.id) %>><%= s.nombre %></option><% }) %>
+              </select>
+              <%- aviso(ajuste, 'idSucursal') %>
+            </div>
+          </div>
+          <div class="admin-campo">
+            <label for="aj-cambio">Cambio de unidades</label>
+            <input <%- marca(ajuste, 'cambio') %> type="number" id="aj-cambio" name="cambio" value="<%= ajuste.datos.cambio || '' %>" step="1" placeholder="10 para sumar, -3 para restar" required>
+            <%- aviso(ajuste, 'cambio') %>
+          </div>
+          <div class="admin-campo">
+            <label for="aj-motivo">Motivo</label>
+            <input <%- marca(ajuste, 'motivo') %> type="text" id="aj-motivo" name="motivo" value="<%= ajuste.datos.motivo || '' %>" maxlength="200" placeholder="Reposición, conteo físico, botellas dañadas…" required>
+            <%- aviso(ajuste, 'motivo') %>
+            <p class="admin-ayuda">Queda registrado con tu usuario y la fecha.</p>
+          </div>
+          <div class="admin-acciones"><button type="submit" class="btn btn-primary">Guardar ajuste</button></div>
+        </fieldset>
+      </form>
+
+      <%# HU-039: umbral de alerta por producto y sucursal. %>
+      <form class="admin-form" method="post" action="/admin/stock/minimo" novalidate>
+        <fieldset>
+          <legend>Cambiar stock mínimo</legend>
+          <div class="admin-campo">
+            <label for="mi-producto">Producto</label>
+            <select <%- marca(minimo, 'idProducto') %> id="mi-producto" name="idProducto" required>
+              <option value="">Elegir…</option>
+              <% todos.forEach(p => { %><option value="<%= p.id %>" <%= sel(minimo.datos.idProducto, p.id) %>><%= p.nombre %><%= p.activo ? '' : ' (inactivo)' %></option><% }) %>
+            </select>
+            <%- aviso(minimo, 'idProducto') %>
+          </div>
+          <div class="admin-fila">
+            <div class="admin-campo">
+              <label for="mi-sucursal">Sucursal</label>
+              <select <%- marca(minimo, 'idSucursal') %> id="mi-sucursal" name="idSucursal" required>
+                <option value="">Elegir…</option>
+                <% sucursales.forEach(s => { %><option value="<%= s.id %>" <%= sel(minimo.datos.idSucursal, s.id) %>><%= s.nombre %></option><% }) %>
+              </select>
+              <%- aviso(minimo, 'idSucursal') %>
+            </div>
+            <div class="admin-campo">
+              <label for="mi-minimo">Stock mínimo</label>
+              <input <%- marca(minimo, 'minimo') %> type="number" id="mi-minimo" name="minimo" value="<%= minimo.datos.minimo || '' %>" min="0" step="1" placeholder="5" required>
+              <%- aviso(minimo, 'minimo') %>
+            </div>
+          </div>
+          <div class="admin-acciones"><button type="submit" class="btn btn-primary">Guardar mínimo</button></div>
+        </fieldset>
+      </form>
+    </div>
+
+    <%# Registro de los últimos ajustes: quién, cuándo, cuánto y por qué (criterio 2 de HU-038). %>
+    <h2 class="admin-subtitulo">Últimos movimientos</h2>
+    <table class="admin-tabla">
+      <thead><tr><th>Fecha</th><th>Producto</th><th>Sucursal</th><th>Movimiento</th><th class="num">Unidades</th><th>Motivo</th><th>Usuario</th></tr></thead>
+      <tbody>
+        <% if (movimientos.length === 0) { %><tr><td colspan="7" class="admin-vacio">Todavía no hay movimientos.</td></tr><% } %>
+        <% movimientos.forEach(m => { const resta = ['merma', 'salida_venta', 'salida_produccion', 'transferencia_salida'].includes(m.tipo); %>
+          <tr>
+            <td class="admin-fecha"><%= fechaHora(m.fecha) %></td>
+            <td><%= m.producto %></td>
+            <td><%= m.sucursal %></td>
+            <td><%= m.tipo === 'merma' ? 'Ajuste (resta)' : m.tipo === 'ajuste' ? 'Ajuste (suma)' : m.tipo %></td>
+            <td class="num <%= resta ? 'admin-resta' : 'admin-suma' %>"><%= resta ? '−' : '+' %><%= m.cantidad %></td>
+            <td><%= m.observacion %></td>
+            <td><%= m.usuario %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>

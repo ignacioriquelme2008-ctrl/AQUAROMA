@@ -1,7 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
+<%
+  // Este formulario sirve para CREAR (HU-036) y para EDITAR (HU-037).
+  // producto = el producto que se edita; null o ausente = producto nuevo.
+  const p = locals.producto || null;
+%>
 <head>
-  <%- include('../partials/head', { titulo: 'Nuevo producto | Administración | AQUAROMA', estilos: ['admin'] }) %>
+  <%- include('../partials/head', { titulo: (p ? 'Editar producto' : 'Nuevo producto') + ' | Administración | AQUAROMA', estilos: ['admin'] }) %>
 </head>
 <body>
   <%- include('../partials/navbar') %>
@@ -15,24 +20,38 @@
     const sel = (valor, id) => Number(valor) === id ? 'selected' : '';
     const hayErrores = Object.keys(errores).length > 0;
   %>
-  <!-- HU-036: formulario para crear un producto. Lo procesa adminProductosController.crear (POST /admin/productos). -->
+  <!-- HU-036: crear un producto (POST /admin/productos, adminProductosController.crear).
+       HU-037: editarlo (POST /admin/productos/:id, adminProductosController.guardarEdicion). -->
   <main class="admin admin-angosto">
     <a href="/admin/productos" class="admin-volver">← Volver a productos</a>
     <p class="eyebrow">Administración</p>
-    <h1>Nuevo producto</h1>
+    <h1><%= p ? 'Editar producto' : 'Nuevo producto' %></h1>
+    <% if (p) { %>
+      <%# Criterio 1 de HU-037: se guarda y se muestra la fecha de última modificación. %>
+      <p class="admin-sub">
+        SKU <strong><%= p.sku %></strong> · Creado el <%= fechaHora(p.creadoEn) %> ·
+        Última modificación: <%= p.actualizadoEn ? fechaHora(p.actualizadoEn) : 'sin cambios desde que se creó' %>
+      </p>
+    <% } %>
 
     <% if (hayErrores) { %>
       <p class="admin-errores" role="alert">Revisa los campos marcados en rojo.</p>
     <% } %>
 
-    <form class="admin-form" method="post" action="/admin/productos" novalidate>
+    <form class="admin-form" method="post" action="<%= p ? '/admin/productos/' + p.id : '/admin/productos' %>" novalidate>
       <fieldset>
         <legend>Datos del producto</legend>
         <div class="admin-fila">
           <div class="admin-campo">
             <label for="sku">Código SKU</label>
-            <input <%- marca('sku') %> type="text" id="sku" name="sku" value="<%= d.sku || '' %>" maxlength="30" placeholder="AQ-MAN-500" required autofocus>
-            <%- aviso('sku') %>
+            <% if (p) { %>
+              <%# El SKU no se edita: identifica al producto en los pedidos ya hechos. %>
+              <input type="text" id="sku" value="<%= p.sku %>" readonly aria-describedby="sku-ayuda">
+              <p class="admin-ayuda" id="sku-ayuda">El SKU no se puede cambiar.</p>
+            <% } else { %>
+              <input <%- marca('sku') %> type="text" id="sku" name="sku" value="<%= d.sku || '' %>" maxlength="30" placeholder="AQ-MAN-500" required autofocus>
+              <%- aviso('sku') %>
+            <% } %>
           </div>
           <div class="admin-campo">
             <label for="nombre">Nombre</label>
@@ -103,6 +122,10 @@
         </div>
       </fieldset>
 
+      <% if (p) { %>
+        <%# Al editar no se cambia el stock aquí: tiene su propia pantalla con motivo y registro (HU-038). %>
+        <p class="admin-ayuda">El stock de este producto se ajusta en <a href="/admin/stock">Stock por sucursal</a>.</p>
+      <% } else { %>
       <fieldset>
         <legend>Stock inicial <span class="admin-opcional">(opcional)</span></legend>
         <div class="admin-fila">
@@ -119,8 +142,9 @@
             <%- aviso('idSucursal') %>
           </div>
         </div>
-        <p class="admin-ayuda">Sin stock, el producto se ve en la tienda como "Agotado". El stock por sucursal se ajusta después en la HU-038.</p>
+        <p class="admin-ayuda">Sin stock, el producto se ve en la tienda como "Agotado". Después se ajusta en <a href="/admin/stock">Stock por sucursal</a>.</p>
       </fieldset>
+      <% } %>
 
       <fieldset>
         <legend>Opciones</legend>
@@ -131,7 +155,7 @@
 
       <div class="admin-acciones">
         <a href="/admin/productos" class="admin-cancelar">Cancelar</a>
-        <button type="submit" class="btn btn-primary">Guardar producto</button>
+        <button type="submit" class="btn btn-primary"><%= p ? 'Guardar cambios' : 'Guardar producto' %></button>
       </div>
     </form>
   </main>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Pedidos | Administración | AQUAROMA', estilos: ['admin'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <!-- HU-040: lista de pedidos con filtro por estado. Los datos llegan de adminPedidosController.listar. -->
+  <main class="admin">
+    <a href="/admin" class="admin-volver">← Volver al panel</a>
+    <p class="eyebrow">Administración</p>
+    <h1>Pedidos</h1>
+
+    <%# Criterio 1 de HU-040: filtro por estado, con la cantidad de pedidos en cada uno. %>
+    <% const total = Object.values(conteo).reduce((a, n) => a + n, 0); %>
+    <nav class="admin-filtros" aria-label="Filtrar por estado">
+      <a href="/admin/pedidos" class="admin-filtro <%= estado ? '' : 'activo' %>">Todos (<%= total %>)</a>
+      <% Object.keys(nombres).forEach(e => { %>
+        <a href="/admin/pedidos?estado=<%= e %>" class="admin-filtro <%= estado === e ? 'activo' : '' %>"><%= nombres[e] %> (<%= conteo[e] %>)</a>
+      <% }) %>
+    </nav>
+
+    <table class="admin-tabla">
+      <thead>
+        <tr><th>N.º</th><th>Fecha</th><th>Cliente</th><th class="num">Unidades</th><th class="num">Total</th><th>Estado</th><th></th></tr>
+      </thead>
+      <tbody>
+        <% if (pedidos.length === 0) { %>
+          <tr><td colspan="7" class="admin-vacio">No hay pedidos <%= estado ? 'en estado "' + nombres[estado] + '"' : '' %>.</td></tr>
+        <% } %>
+        <% pedidos.forEach(p => { %>
+          <tr>
+            <td class="sku">#<%= p.id %></td>
+            <td class="admin-fecha"><%= fechaHora(p.fecha) %></td>
+            <td><%= p.cliente %><br><span class="admin-minimo"><%= p.correo %></span></td>
+            <td class="num"><%= p.unidades %></td>
+            <td class="num"><%= clp(p.total + p.costo_envio) %></td>
+            <td><span class="admin-estado-pedido <%= p.estado %>"><%= nombres[p.estado] %></span></td>
+            <td><a href="/admin/pedidos/<%= p.id %>">Ver / cambiar estado →</a></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>

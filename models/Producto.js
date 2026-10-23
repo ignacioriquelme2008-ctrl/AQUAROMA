@@ -105,14 +105,14 @@ exports.obtenerDestacados = async (limite = 3) => {
 // Todos los productos (activos e inactivos) para la tabla del panel, con su stock total.
 exports.listarParaAdmin = async () => {
   const [filas] = await db.query(
-    `SELECT p.id_producto AS id, p.sku, p.nombre, p.precio_base AS precio, p.activo,
+    `SELECT p.id_producto AS id, p.sku, p.nombre, p.precio_base AS precio, p.activo, p.actualizado_en,
             c.nombre AS aroma, t.nombre AS tipo,
             COALESCE(SUM(i.cantidad), 0) AS stock
      FROM producto p
      LEFT JOIN categoria c ON c.id_categoria = p.id_categoria
      JOIN tipo_agua t ON t.id_tipo_agua = p.id_tipo_agua
      LEFT JOIN inventario i ON i.id_producto = p.id_producto
-     GROUP BY p.id_producto, p.sku, p.nombre, p.precio_base, p.activo, c.nombre, t.nombre
+     GROUP BY p.id_producto, p.sku, p.nombre, p.precio_base, p.activo, p.actualizado_en, c.nombre, t.nombre
      ORDER BY p.id_producto DESC`
   );
   return filas.map((f) => ({ ...f, precio: Number(f.precio), stock: Number(f.stock), activo: Boolean(f.activo) }));
@@ -186,5 +186,120 @@ exports.crear = async (d, idUsuario) => {
     throw err;
   } finally {
     conn.release();   // devuelve la conexión al pool, pase lo que pase
+  }
+};
+
+// ---------------------------------------------------------------------
+// HU-037: editar, activar/desactivar y eliminar productos.
+// ---------------------------------------------------------------------
+
+// Un producto (activo o no) con los datos que usa el formulario de edición.
+// "actualizado_en" es la fecha de última modificación: MySQL la pone sola en cada UPDATE.
+exports.obtenerParaEditar = async (id) => {
+  const [filas] = await db.query(
+    `SELECT id_producto AS id, sku, nombre, id_tipo_agua, id_presentacion, id_categoria, precio_base,
+            es_personalizable, descripcion, descripcion_larga, imagen, activo, creado_en, actualizado_en
+     FROM producto WHERE id_producto = ?`,
+    [id]
+  );
+  const f = filas[0];
+  if (!f) return null;
+  // Mismos nombres de campo que el formulario (los usa views/admin/producto-nuevo.ejs).
+  return {
+    id: f.id,
+    sku: f.sku,
+    nombre: f.nombre,
+    idTipoAgua: f.id_tipo_agua,
+    idPresentacion: f.id_presentacion,
+    idCategoria: f.id_categoria,
+    precioTexto: String(Number(f.precio_base)),
+    esPersonalizable: Boolean(f.es_personalizable),
+    etiqueta: f.descripcion || '',
+    descripcionLarga: f.descripcion_larga || '',
+    imagen: f.imagen,
+    activo: Boolean(f.activo),
+    creadoEn: f.creado_en,
+    actualizadoEn: f.actualizado_en,
+  };
+};
+
+// Guarda los cambios del formulario. El SKU no se cambia: identifica al producto en los pedidos.
+// También se actualiza el precio de su configuración base (la que usa el carrito, HU-026).
+exports.actualizar = async (id, d) => {
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+    await conn.query(
+      `UPDATE producto SET nombre = ?, id_tipo_agua = ?, id_presentacion = ?, id_categoria = ?, precio_base = ?,
+              es_personalizable = ?, descripcion = ?, descripcion_larga = ?, imagen = ?, activo = ?
+       WHERE id_producto = ?`,
+      [d.nombre, d.idTipoAgua, d.idPresentacion, d.idCategoria, d.precio, d.esPersonalizable,
+       d.etiqueta, d.descripcionLarga || null, d.imagen, d.activo, id]
+    );
+    await conn.query(
+      `UPDATE configuracion_bebida SET nombre_display = ?, precio_final = ?
+       WHERE id_producto = ? AND es_plantilla_global = TRUE AND id_cliente IS NULL`,
+      [d.nombre, d.precio, id]
+    );
+    await conn.commit();
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+};
+
+// Activa o desactiva un producto. Desactivado deja de verse en la tienda, pero sus pedidos,
+// recetas y movimientos de inventario se conservan (criterio 2 de HU-037).
+exports.cambiarActivo = async (id, activo) => {
+  const [r] = await db.query('UPDATE producto SET activo = ? WHERE id_producto = ?', [activo, id]);
+  return r.affectedRows > 0;
+};
+
+// ¿El producto aparece en algún pedido (también en un carrito guardado) o en una orden de producción?
+// Si es así, no se puede borrar: se perdería el historial de ventas (criterio 3 de HU-037).
+exports.tienePedidos = async (id) => {
+  const [filas] = await db.query(
+    `SELECT 1 FROM detalle_pedido dp
+     JOIN configuracion_bebida cb ON cb.id_configuracion = dp.id_configuracion
+     WHERE cb.id_producto = ?
+     UNION ALL
+     SELECT 1 FROM detalle_orden_produccion WHERE id_producto = ?
+     LIMIT 1`,
+    [id, id]
+  );
+  return filas.length > 0;
+};
+
+// Borra un producto que NUNCA se vendió, junto con lo que se creó con él (HU-036): su ficha de
+// preparación, su configuración base, su stock y los movimientos de ese stock.
+// El controlador revisa antes tienePedidos(); aquí se vuelve a revisar dentro de la transacción.
+exports.eliminar = async (id) => {
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [usado] = await conn.query(
+      `SELECT 1 FROM detalle_pedido dp JOIN configuracion_bebida cb ON cb.id_configuracion = dp.id_configuracion
+       WHERE cb.id_producto = ? LIMIT 1`,
+      [id]
+    );
+    if (usado.length > 0) {
+      const err = new Error('El producto tiene pedidos asociados.');
+      err.code = 'PRODUCTO_CON_PEDIDOS';
+      throw err;
+    }
+    await conn.query('DELETE FROM configuracion_bebida WHERE id_producto = ?', [id]);   // sus componentes se borran en cascada
+    await conn.query('DELETE FROM formulacion WHERE id_producto = ?', [id]);            // sus insumos se borran en cascada
+    await conn.query('DELETE FROM movimiento_inventario WHERE id_producto = ?', [id]);
+    await conn.query('DELETE FROM inventario WHERE id_producto = ?', [id]);
+    const [r] = await conn.query('DELETE FROM producto WHERE id_producto = ?', [id]);
+    await conn.commit();
+    return r.affectedRows > 0;
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
   }
 };

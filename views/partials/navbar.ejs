@@ -20,6 +20,8 @@
         <span class="nav-usuario">Hola, <%= locals.usuario.nombre %></span>
         <%# HU-006: el enlace al panel solo aparece si la sesión es de un Administrador. %>
         <% if (locals.usuario.esAdmin) { %><a href="/admin" class="nav-enlace nav-panel">Panel</a><% } %>
+        <%# HU-009 (criterio 3) y HU-032: el cliente llega a sus pedidos y su seguimiento desde el menú. %>
+        <% if (locals.usuario.idCliente) { %><a href="/pedidos" class="nav-enlace">Mis pedidos</a><% } %>
         <%# data-cerrar-sesion: public/js/carrito.js guarda el último cambio del carrito antes de salir (HU-026). %>
         <form method="post" action="/logout" data-cerrar-sesion><button type="submit" class="nav-enlace">Cerrar sesión</button></form>
       <% } else { %>

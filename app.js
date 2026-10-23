@@ -17,6 +17,7 @@ const catalogoRoutes = require('./routes/catalogoRoutes'); // catálogo y ficha 
 const carritoRoutes = require('./routes/carritoRoutes');   // carrito (y carrito guardado en la cuenta, HU-026)
 // Rutas del panel de administración (HU-006). Están protegidas por los middlewares de middlewares/auth.js.
 const adminRoutes = require('./routes/adminRoutes');
+const pedidosRoutes = require('./routes/pedidosRoutes'); // "Mis pedidos" y seguimiento del cliente (HU-032)
 
 const app = express();
 
@@ -26,6 +27,10 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Muestra precios en pesos chilenos. Queda disponible en TODAS las vistas.
 app.locals.clp = (valor) => '$' + valor.toLocaleString('es-CL') + ' CLP';
+// Muestra una fecha de MySQL como "22-10-2026, 21:45". También queda disponible en TODAS las vistas.
+app.locals.fechaHora = (fecha) => new Date(fecha).toLocaleString('es-CL', {
+  day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
+});
 
 // Permite leer formularios y servir archivos estáticos como CSS, JavaScript e imágenes.
 app.use(express.urlencoded({ extended: true })); // leer formularios
@@ -55,6 +60,7 @@ app.use('/', usuariosRoutes);
 app.use('/catalogo', catalogoRoutes);
 app.use('/carrito', carritoRoutes);
 app.use('/admin', adminRoutes);
+app.use('/pedidos', pedidosRoutes);
 
 // Si ninguna ruta respondió, la página no existe: se muestra "no encontrado" (404). Va siempre después de las rutas.
 app.use((req, res) => res.status(404).render('errores/no-encontrado'));

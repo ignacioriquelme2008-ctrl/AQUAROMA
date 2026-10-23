@@ -46,7 +46,8 @@
               <a href="/catalogo/<%= p.id %>" class="item-enlace">
                 <div class="img">
                   <img src="/img/productos/<%= p.imagen %>" alt="<%= p.nombre %>">
-                  <% if (p.stock === 0) { %><span class="badge out">Agotado</span><% } %>
+                  <%# HU-017: cada tarjeta indica si el producto está "Disponible" o "Agotado". %>
+                  <% if (p.stock === 0) { %><span class="badge out">Agotado</span><% } else { %><span class="badge disponible">Disponible</span><% } %>
                 </div>
                 <h3><%= p.nombre %></h3>
               </a>

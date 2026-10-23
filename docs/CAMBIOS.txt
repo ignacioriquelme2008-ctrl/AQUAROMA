@@ -616,6 +616,127 @@ c) Arreglo en public/js/carrito-pagina.js (cantidad escrita, HU-023)
 Base de datos: no cambió nada.
 
 
+17. Administración completa y seguimiento del cliente - 22 oct 2026
+-------------------------------------------------------------------
+Historias: HU-035, HU-037, HU-038, HU-039, HU-040, HU-032 y HU-017 (criterios 1 y 3).
+Además deja hecho el criterio 3 de HU-009 ("Mis pedidos" en el menú del cliente).
+
+IMPORTANTE: hay que volver a ejecutar database/aquaroma.sql (se agregó una columna y una
+tabla; ver docs/CAMBIOS_BASE_DE_DATOS.txt, punto 7). Sin eso, /admin y /admin/stock fallan.
+
+Archivos nuevos:
+  models/Inventario.js, models/Pedido.js, models/Mensaje.js
+  controllers/adminStockController.js, controllers/adminPedidosController.js,
+  controllers/pedidosController.js, routes/pedidosRoutes.js
+  views/admin/stock.ejs, views/admin/pedidos.ejs, views/admin/pedido.ejs,
+  views/pedidos/pedidos.ejs, views/pedidos/pedido.ejs
+  public/css/pedidos.css, public/js/admin-pedido.js
+Archivos cambiados:
+  app.js (ruta /pedidos y la función fechaHora para las vistas), routes/adminRoutes.js,
+  controllers/adminController.js, controllers/adminProductosController.js, models/Producto.js,
+  views/admin/panel.ejs, views/admin/productos.ejs, views/admin/producto-nuevo.ejs,
+  views/catalogo/catalogo.ejs, views/partials/navbar.ejs, public/css/admin.css,
+  public/css/base.css, database/aquaroma.sql
+
+a) HU-037: editar y desactivar productos (/admin/productos)
+   - Cada fila de la tabla tiene "Editar", "Desactivar"/"Activar" y "Eliminar", y una columna
+     "Últ. modificación".
+   - Editar usa el mismo formulario de HU-036 (views/admin/producto-nuevo.ejs, ahora sirve para
+     las dos cosas). El SKU no se cambia (identifica al producto en los pedidos). Arriba muestra
+     la fecha de creación y de última modificación (columna producto.actualizado_en, que MySQL
+     actualiza sola). Al guardar se valida igual que al crear (validarProducto) y se actualiza
+     también el precio de la configuración base del carrito.
+   - Desactivar: el producto sale del catálogo y su ficha da 404, pero sus pedidos se conservan.
+   - Eliminar: solo si el producto nunca estuvo en un pedido (ni en un carrito) ni en una orden
+     de producción. Si los tiene, no se borra y aparece el aviso "No se puede eliminar ... porque
+     tiene pedidos asociados" con un botón "Desactivar ahora" (criterio 3).
+
+b) HU-038: stock por sucursal (/admin/stock, permiso gestionar_stock)
+   - Tabla con las unidades de cada producto en Santiago y en Providencia, el total y el estado.
+   - "Ajustar stock": producto, sucursal, cambio (10 suma, -3 resta) y motivo OBLIGATORIO.
+     Queda un movimiento en movimiento_inventario con el usuario, la fecha y el motivo con el
+     antes/después ("Reposición (de 0 a 6 unidades)"). Como la columna cantidad del movimiento
+     no tiene signo, una suma queda como tipo 'ajuste' y una resta como 'merma'.
+   - Si el ajuste deja el stock negativo, no se guarda nada y se avisa en el campo (criterio 3).
+   - Todo en una transacción con la fila bloqueada (FOR UPDATE).
+   - "Últimos movimientos" muestra los 10 últimos ajustes con su usuario.
+   - El catálogo suma el stock de todas las sucursales al cargar, así que el cambio se ve al
+     instante en la tienda (criterio 4 de HU-038 y criterio 3 de HU-017).
+
+c) HU-039: alertas de stock bajo
+   - Nueva columna inventario.stock_minimo (5 por defecto). Se cambia en /admin/stock con
+     "Cambiar stock mínimo".
+   - Un producto activo con alguna sucursal en o bajo su mínimo queda con la fila en amarillo y
+     la etiqueta "⚠ Stock bajo" (criterio 1).
+   - El panel muestra "Stock bajo: N productos en alerta" (criterio 2) y lleva al filtro.
+   - Botón "Ver solo stock bajo (N)" (criterio 3).
+
+d) HU-040: gestión de pedidos (/admin/pedidos, permiso gestionar_pedidos)
+   - Lista de pedidos con filtros por estado y la cantidad en cada uno (criterio 1). Los pedidos
+     en estado 'carrito' (carritos guardados, HU-026) no aparecen.
+   - Detalle del pedido: cliente, despacho, productos y "Cambiar estado". Solo se ofrecen los
+     estados válidos (criterio 2):
+       confirmado -> pagado o cancelado
+       pagado     -> en preparación o cancelado
+       preparando -> enviado o cancelado
+       enviado    -> entregado
+       entregado y cancelado: ya no cambian.
+     El servidor vuelve a revisar la secuencia (Pedido.SIGUIENTES): un salto inválido enviado a
+     mano se rechaza con un aviso.
+   - Al elegir "Enviado" aparecen "Empresa de transporte" y "Código de seguimiento", que son
+     obligatorios (criterio 3). Se guardan en la tabla envio. Si el pedido aún no tiene envío
+     (lo creará HU-029 al comprar), se arma con la dirección principal del cliente.
+   - El envío sigue al pedido: en camino, entregado (con fecha) o cancelado.
+
+e) HU-032: seguimiento del cliente (/pedidos y /pedidos/<n>)
+   - "Mis pedidos" en el menú del cliente (también cumple el criterio 3 de HU-009). La lista
+     muestra número, fecha, unidades, total y estado.
+   - El seguimiento muestra una barra de progreso Confirmado > Pagado > En preparación >
+     Enviado > Entregado (criterio 1); con el pedido enviado, la empresa de transporte y el
+     código de seguimiento (criterio 2); y un aviso rojo si está cancelado (criterio 3).
+   - Se lee de la base al abrir la página, así refleja al instante lo que cambie el
+     administrador (criterio 4).
+   - Cada cliente ve solo sus pedidos: el de otro da "No encontrado". El administrador no tiene
+     esta sección (no es cliente): recibe "Acceso denegado".
+   - Esta lista también avanza HU-031 (historial de pedidos).
+
+f) HU-035: panel de resumen (/admin)
+   - Cifras: ventas acumuladas (pedidos pagados, en preparación, enviados o entregados, con
+     envío), pedidos por despachar, stock bajo y mensajes sin leer.
+   - Gráfico de barras con los pedidos por estado.
+   - Los últimos 10 pedidos con enlace a su detalle y los mensajes de contacto sin leer.
+   - Nueva tabla mensaje_contacto (la llenará el formulario de HU-012; por ahora tiene 3
+     mensajes de prueba).
+   - Solo entra el administrador (soloAdmin + permiso ver_panel_admin).
+
+g) HU-017: en el catálogo, cada tarjeta muestra la etiqueta verde "Disponible" o la roja
+   "Agotado" (criterio 1).
+
+Pruebas hechas (copia de la base en aquaroma_prueba, borrada después; app en el puerto 3001;
+navegador automático):
+  - Acceso: visitante -> login en /admin, /admin/stock, /admin/pedidos y /pedidos. Cliente ->
+    "Acceso denegado" (403) en todo /admin, también enviando los formularios a mano.
+    Administrador -> 403 en /pedidos.
+  - Panel: ventas $15.920 (4.000 + 2.980 + 8.940), 3 por despachar, 4 productos en alerta,
+    2 mensajes sin leer, gráfico y últimos 5 pedidos con enlace.
+  - HU-037: editar Limón (nombre y precio $1.590) -> se ve en la tienda y la fecha de
+    modificación cambia; precio -10 -> error en el campo; SKU enviado a mano -> se ignora.
+    Desactivar -> sale del catálogo (ficha 404) y el pedido #2 sigue mostrándolo. Eliminar
+    Limón -> bloqueado con el aviso. Producto nuevo sin ventas -> se elimina.
+  - HU-038/HU-039/HU-017: Frutilla +6 en Santiago -> el catálogo pasa de "Agotado" a
+    "Disponible" y la ficha dice "6 unidades disponibles"; sin motivo -> error; Menta -20 en
+    Providencia (hay 8) -> error y no se guarda; Menta -2 -> movimiento "Ajuste (resta) −2"
+    con el usuario; mínimo de Menta en Providencia a 6 -> queda en alerta; filtro y contador.
+  - HU-040/HU-032: pedido #5 confirmado -> enviado directo: rechazado; -> pagado ->
+    en preparación -> enviado sin transporte: error; con Starken / STK-778899: OK; enviado ->
+    pagado: rechazado; -> entregado. El cliente ve cada cambio con su barra, transporte y
+    código; el pedido cancelado muestra el aviso rojo. Otra cuenta de cliente no ve los
+    pedidos de Benjamin (404).
+  - Se revisaron en pantalla (1280 px): panel, stock, lista de productos, detalle de pedido y
+    seguimiento. Inicio, Nosotros, catálogo, ficha, carrito, login y registro siguen
+    funcionando.
+
+
 Cómo probar los cambios
 -----------------------
 1. npm run dev
@@ -661,3 +782,15 @@ Cómo probar los cambios
     Agregarlo otra vez -> 2. En /carrito, escribir 10 en la cantidad y hacer clic de
     inmediato en "Eliminar" de otro producto: se elimina a la primera y el contador
     coincide con la suma de las cantidades.
+16. Administración y seguimiento (punto 17). Primero volver a ejecutar aquaroma.sql.
+    a) Con admin@aquaroma.cl, /admin: ventas, por despachar, stock bajo (4), mensajes (2),
+       gráfico de pedidos y últimos pedidos.
+    b) Productos -> "Editar" en uno, cambiar el precio y guardar: se ve en la tienda y cambia
+       "Últ. modificación". "Desactivar": desaparece del catálogo. "Eliminar" en Menta:
+       aviso de que tiene pedidos.
+    c) Stock por sucursal: ajustar Frutilla +6 en Santiago con un motivo -> en /catalogo
+       Frutilla dice "Disponible". Restar más de lo que hay -> error. "Ver solo stock bajo".
+    d) Pedidos -> el pedido "Confirmado" -> Pagado -> En preparación -> Enviado (con empresa
+       y código) -> Entregado.
+    e) Con benjamin@email.cl, menú "Mis pedidos" -> ese pedido: barra de progreso y datos
+       del despacho. Un pedido cancelado muestra el aviso rojo.

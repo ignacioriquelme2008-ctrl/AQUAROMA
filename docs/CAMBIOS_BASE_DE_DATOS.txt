@@ -167,3 +167,34 @@ Al final de los datos de prueba se desactiva el producto de ejemplo
 No aparece en el catálogo ni en el inicio, y su ficha muestra "No encontrado". No se
 borra porque tiene un pedido, una receta (formulación) y una orden de producción
 asociados. Esto ya estaba así antes; solo se le agregó un comentario explicativo.
+
+
+7. Administración: stock mínimo, mensajes de contacto y datos de prueba (22 oct 2026)
+-------------------------------------------------------------------------------------
+Para HU-035, HU-038, HU-039 y HU-040. Hay que volver a ejecutar aquaroma.sql.
+Detalle de los cambios en el sitio: docs/CAMBIOS.txt, punto 17.
+
+  Tabla              Cambio                                              Historia
+  inventario         +1 columna: stock_minimo DECIMAL(12,3), 5 por       HU-039
+                     defecto (umbral de alerta por producto y sucursal)
+  mensaje_contacto   TABLA NUEVA: nombre, correo, asunto, mensaje,       HU-035 / HU-012
+                     leido y creado_en
+  pedido             +1 fila: pedido de prueba CONFIRMADO (3 Limón)      HU-040
+  detalle_pedido     +1 fila (la línea de ese pedido)                    HU-040
+  inventario         +3 filas: stock en Providencia (Limón 10, Menta 8,  HU-038
+                     Mango 3) y mínimo 10 para Durazno en Santiago
+  mensaje_contacto   +3 filas de prueba (2 sin leer)                     HU-035
+
+  - inventario.stock_minimo: un producto activo está en alerta cuando en alguna sucursal
+    tiene cantidad <= stock_minimo. Con los datos de prueba quedan 4 en alerta: Frutilla y
+    Arándano (0 en Santiago), Durazno (8 de 10) y Mango (3 de 5 en Providencia).
+  - mensaje_contacto: la usa el panel para mostrar los mensajes sin leer. El formulario de
+    HU-012 debe guardar ahí cada mensaje (leido = FALSE).
+  - El pedido de prueba HU-040 está en 'confirmado', que no cuenta como venta: no cambia
+    "Más vendido". Se encuentra con observacion = 'Pedido de prueba HU-040'.
+  - Ajustes de stock desde /admin/stock: se guardan en movimiento_inventario con
+    tipo_origen = 'ajuste_manual', tipo 'ajuste' si suman y 'merma' si restan (la columna
+    cantidad no tiene signo), y en observacion el motivo con el antes y el después.
+  - Al marcar un pedido "Enviado" se crea o actualiza su fila en envio (transportista,
+    tracking, fecha_envio y estado 'en_camino'). Si no existía, se copia la dirección
+    principal del cliente (cliente_direccion).

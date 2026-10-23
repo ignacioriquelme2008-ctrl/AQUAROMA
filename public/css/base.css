@@ -77,9 +77,10 @@ h3 { font-size: 15px; color: var(--navy); }
 .buy:hover:not(:disabled) { background: #1750b0; }
 .buy:disabled { background: #ececec; color: #444; cursor: not-allowed; }
 
-/* Etiqueta roja "Agotado" sobre la imagen de un producto (catálogo y ficha). */
+/* Etiqueta sobre la imagen de un producto: roja "Agotado" (catálogo y ficha) o verde "Disponible" (catálogo, HU-017). */
 .badge { position: absolute; top: 10px; right: 10px; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 6px; }
 .out { background: #e0343f; color: #fff; }
+.badge.disponible { background: var(--green); color: #fff; }
 
 /* ===== Menú (views/partials/navbar.ejs) ===== */
 /* La barra queda fija al scroll para que el usuario siempre tenga acceso a la navegación. */

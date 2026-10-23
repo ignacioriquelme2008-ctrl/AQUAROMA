@@ -190,6 +190,9 @@ CREATE TABLE inventario (
     id_insumo INT NULL,
     id_producto INT NULL,
     cantidad DECIMAL(12,3) NOT NULL DEFAULT 0 CHECK (cantidad >= 0),
+    -- Umbral de stock bajo de ese producto en esa sucursal (HU-039). Con cantidad <= stock_minimo,
+    -- el panel lo marca como alerta. El administrador lo cambia en /admin/stock.
+    stock_minimo DECIMAL(12,3) NOT NULL DEFAULT 5 CHECK (stock_minimo >= 0),
     FOREIGN KEY (id_sucursal) REFERENCES sucursal(id_sucursal),
     FOREIGN KEY (id_insumo) REFERENCES insumo(id_insumo),
     FOREIGN KEY (id_producto) REFERENCES producto(id_producto),
@@ -493,6 +496,18 @@ CREATE TABLE envio (
     CONSTRAINT chk_fechas_envio CHECK (
         fecha_entrega IS NULL OR fecha_envio IS NULL OR fecha_entrega >= fecha_envio
     )
+);
+
+-- Mensajes del formulario de contacto. Los guarda la HU-012 (formulario) y el panel de
+-- administración muestra los que no se han leído (HU-035).
+CREATE TABLE mensaje_contacto (
+    id_mensaje INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    correo VARCHAR(120) NOT NULL,
+    asunto VARCHAR(150) NOT NULL,
+    mensaje TEXT NOT NULL,
+    leido BOOLEAN NOT NULL DEFAULT FALSE,
+    creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ============================================================
@@ -1177,6 +1192,42 @@ INSERT INTO pedido (id_cliente, id_sucursal, estado, total, costo_envio, observa
 SET @pedido = LAST_INSERT_ID();
 INSERT INTO detalle_pedido (id_pedido, id_configuracion, cantidad, precio_unitario) VALUES
 (@pedido, @cfg_pepino, 10, 1490);
+
+-- Pedido 4 (CONFIRMADO, todavía no cuenta como venta): 3 Limón. Total = 3 x $1.490 = $4.470.
+-- Sirve para probar la gestión de pedidos del administrador (HU-040): es el primer paso de la
+-- secuencia confirmado -> pagado -> en preparación -> enviado -> entregado.
+INSERT INTO pedido (id_cliente, id_sucursal, estado, total, costo_envio, observacion) VALUES
+(1, 1, 'confirmado', 4470, 0, 'Pedido de prueba HU-040');
+SET @pedido = LAST_INSERT_ID();
+INSERT INTO detalle_pedido (id_pedido, id_configuracion, cantidad, precio_unitario) VALUES
+(@pedido, @cfg_limon, 3, 1490);
+
+-- ============================================================
+-- STOCK EN PROVIDENCIA Y STOCK MÍNIMO (HU-038, HU-039)
+-- ============================================================
+-- La sucursal 2 (Aquaroma Providencia) parte con algunos productos, para que la vista de stock
+-- por sucursal (/admin/stock) muestre las dos. Mango queda bajo su mínimo (3 de 5): alerta.
+INSERT INTO inventario (id_sucursal, id_producto, cantidad)
+SELECT 2, p.id_producto, datos.cantidad
+FROM (
+    SELECT 'AQ-LIM-500' AS sku, 10.000 AS cantidad
+    UNION ALL SELECT 'AQ-MEN-500', 8.000
+    UNION ALL SELECT 'AQ-MAN-500', 3.000
+) AS datos
+JOIN producto p ON p.sku = datos.sku;
+-- Durazno tiene 8 en Santiago: con un mínimo de 10 también aparece como stock bajo.
+UPDATE inventario i JOIN producto p ON p.id_producto = i.id_producto
+SET i.stock_minimo = 10
+WHERE p.sku = 'AQ-DUR-500' AND i.id_sucursal = 1;
+
+-- ============================================================
+-- MENSAJES DE CONTACTO DE PRUEBA (HU-035)
+-- ============================================================
+-- El panel de administración muestra los mensajes sin leer. Uno ya está leído.
+INSERT INTO mensaje_contacto (nombre, correo, asunto, mensaje, leido) VALUES
+('Camila Rojas', 'camila@email.cl', 'Venta por mayor', 'Hola, ¿venden cajas de 12 botellas para eventos?', FALSE),
+('Diego Soto', 'diego@email.cl', 'Consulta por envío', '¿Hacen despacho a Maipú?', FALSE),
+('Valentina Muñoz', 'vale@email.cl', 'Felicitaciones', 'Me encantó el agua de hibisco y rosa.', TRUE);
 
 -- Desactiva el producto antiguo de ejemplo "Aquaroma Clasica 500ml" (AQ-001) para que no
 -- aparezca en el catálogo ni en el inicio. No se borra porque tiene pedidos y una receta asociados.

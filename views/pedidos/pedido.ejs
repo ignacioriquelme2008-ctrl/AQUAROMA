@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Pedido #' + pedido.id + ' | AQUAROMA', estilos: ['pedidos'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <!-- HU-032: estado y seguimiento de un pedido del cliente. Datos: pedidosController.ver. -->
+  <main class="pedidos">
+    <a href="/pedidos" class="pedidos-volver">← Mis pedidos</a>
+    <p class="eyebrow">Seguimiento</p>
+    <h1>Pedido #<%= pedido.id %></h1>
+    <p class="pedidos-sub">Hecho el <%= fechaHora(pedido.fecha) %> · Estado actual: <strong><%= nombres[pedido.estado] %></strong></p>
+
+    <% if (pedido.estado === 'cancelado') { %>
+      <%# Criterio 3: una orden cancelada se indica de forma clara y visible. %>
+      <div class="pedidos-cancelado" role="alert">
+        <strong>Este pedido fue cancelado.</strong> No se despachará. Si tienes dudas, escríbenos.
+      </div>
+    <% } else { %>
+      <%# Criterio 1: barra de progreso con la secuencia del pedido. %>
+      <ol class="progreso" aria-label="Avance del pedido">
+        <% pasos.forEach((e, n) => { %>
+          <li class="<%= n < paso ? 'hecho' : n === paso ? 'actual' : '' %>" <%- n === paso ? 'aria-current="step"' : '' %>>
+            <span class="progreso-punto"><%= n < paso ? '✓' : n + 1 %></span>
+            <span class="progreso-nombre"><%= nombres[e] %></span>
+          </li>
+        <% }) %>
+      </ol>
+    <% } %>
+
+    <%# Criterio 2: con el pedido enviado (o ya entregado) se muestran transporte y código de seguimiento. %>
+    <% if (['enviado', 'entregado'].includes(pedido.estado) && pedido.envio) { %>
+      <section class="pedidos-caja pedidos-envio">
+        <h2>🚚 Despacho</h2>
+        <p>Empresa de transporte: <strong><%= pedido.envio.transportista %></strong></p>
+        <p>Código de seguimiento: <strong class="pedidos-tracking"><%= pedido.envio.tracking %></strong></p>
+        <% if (pedido.envio.fecha_envio) { %><p>Enviado el <%= fechaHora(pedido.envio.fecha_envio) %></p><% } %>
+        <% if (pedido.envio.fecha_entrega) { %><p>Entregado el <%= fechaHora(pedido.envio.fecha_entrega) %></p><% } %>
+        <p class="pedidos-direccion">A: <%= pedido.envio.calle %> <%= pedido.envio.numero || '' %>, <%= pedido.envio.comuna %>, <%= pedido.envio.region %></p>
+      </section>
+    <% } %>
+
+    <section class="pedidos-caja">
+      <h2>Productos</h2>
+      <table class="pedidos-tabla">
+        <thead><tr><th>Producto</th><th class="num">Cantidad</th><th class="num">Precio</th><th class="num">Subtotal</th></tr></thead>
+        <tbody>
+          <% pedido.items.forEach(i => { %>
+            <tr><td><%= i.nombre %></td><td class="num"><%= i.cantidad %></td><td class="num"><%= clp(i.precio_unitario) %></td><td class="num"><%= clp(i.subtotal) %></td></tr>
+          <% }) %>
+          <tr><td colspan="3" class="num">Envío</td><td class="num"><%= clp(pedido.costo_envio) %></td></tr>
+          <tr class="pedidos-total"><td colspan="3" class="num">Total</td><td class="num"><%= clp(pedido.total + pedido.costo_envio) %></td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

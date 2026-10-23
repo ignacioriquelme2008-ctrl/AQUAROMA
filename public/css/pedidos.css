@@ -1,0 +1,50 @@
+/* =====================================================================
+   pedidos.css: sección PEDIDOS del cliente.
+   Páginas: views/pedidos/pedidos.ejs (Mis pedidos) y views/pedidos/pedido.ejs (seguimiento, HU-032).
+   ===================================================================== */
+.pedidos { max-width: 900px; margin: 0 auto; padding: 40px 4vw 64px; }
+.pedidos-volver { display: inline-block; font-size: 14px; color: var(--blue); margin-bottom: 16px; }
+.pedidos-sub { margin-bottom: 24px; }
+.pedidos-vacio { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 28px; text-align: center; }
+.pedidos-vacio p { margin-bottom: 16px; }
+
+/* Lista de pedidos: cada fila es un enlace a su seguimiento. */
+.pedidos-lista { list-style: none; display: grid; gap: 10px; }
+.pedidos-item { display: grid; grid-template-columns: 1fr 1.3fr 1fr 1fr 1.1fr auto; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; font-size: 14px; transition: border-color .15s, box-shadow .15s; }
+.pedidos-item:hover { border-color: var(--primary); box-shadow: 0 4px 14px rgba(14, 165, 233, .15); }
+.pedidos-numero { font-weight: 700; color: var(--navy); }
+.pedidos-fecha { color: var(--text-muted); }
+.pedidos-ver { color: var(--blue); font-weight: 600; }
+
+/* Etiqueta de estado (también la usa el panel de administración con los mismos colores). */
+.pedidos-estado { justify-self: start; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #eef2f6; color: var(--ink); }
+.pedidos-estado.pagado, .pedidos-estado.preparando { background: var(--primary-light); color: var(--blue); }
+.pedidos-estado.enviado { background: #fdeedb; color: #a15a10; }
+.pedidos-estado.entregado { background: #e7f6ea; color: var(--green); }
+.pedidos-estado.cancelado { background: #fee2e2; color: #991b1b; }
+
+/* ===== Seguimiento (HU-032) ===== */
+/* Barra de progreso: un punto por estado unido por una línea. Hecho = verde, actual = azul. */
+.progreso { list-style: none; display: grid; grid-template-columns: repeat(5, 1fr); margin: 8px 0 28px; counter-reset: paso; }
+.progreso li { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; font-size: 14px; color: var(--text-muted); }
+.progreso li::before { content: ""; position: absolute; top: 17px; left: -50%; width: 100%; height: 4px; background: #dfe6ee; z-index: 0; }
+.progreso li:first-child::before { display: none; }
+.progreso-punto { position: relative; z-index: 1; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: #fff; border: 3px solid #dfe6ee; color: var(--text-muted); }
+.progreso li.hecho { color: var(--green); }
+.progreso li.hecho::before, .progreso li.actual::before { background: var(--green); }
+.progreso li.hecho .progreso-punto { background: var(--green); border-color: var(--green); color: #fff; }
+.progreso li.actual { color: var(--navy); font-weight: 700; }
+.progreso li.actual .progreso-punto { border-color: var(--blue); color: var(--blue); box-shadow: 0 0 0 5px var(--primary-light); }
+
+.pedidos-cancelado { background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; border-radius: 12px; padding: 16px 18px; margin-bottom: 24px; font-size: 15px; }
+.pedidos-caja { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
+.pedidos-caja p { margin-bottom: 4px; font-size: 14px; }
+.pedidos-envio { border-color: #f6d4a8; background: #fffaf3; }
+.pedidos-tracking { font-family: Consolas, monospace; font-size: 15px; color: var(--navy); }
+.pedidos-direccion { color: var(--text-muted); }
+
+.pedidos-tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
+.pedidos-tabla th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); padding: 8px 0; border-bottom: 1px solid var(--line); }
+.pedidos-tabla td { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.pedidos-tabla .num { text-align: right; font-variant-numeric: tabular-nums; }
+.pedidos-total td { font-weight: 700; color: var(--navy); border-bottom: 0; }

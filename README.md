@@ -39,7 +39,7 @@ aquaroma/
 │   └── db.js              Conexión a MySQL (pool de conexiones)
 ├── routes/                QUÉ URL atiende cada sección
 ├── controllers/           QUÉ HACER con cada petición: valida, pide datos al modelo y elige la vista
-├── models/                Consultas SQL, agrupadas por dato: Usuario, Producto, Carrito
+├── models/                Consultas SQL, agrupadas por dato: Usuario, Producto, Carrito, Pedido, Inventario, Mensaje
 ├── middlewares/
 │   └── auth.js            Guardias de acceso: sesión iniciada, solo administrador, permisos (HU-006)
 ├── utils/
@@ -71,8 +71,11 @@ aquaroma/
 | **Roles y permisos** | HU-006 | — | — | — | `Usuario.js` (permisos) | `views/errores/acceso-denegado.ejs` | — | — |
 | **Catálogo** | HU-013 a HU-017 | `/catalogo`, `/catalogo/:id` | `catalogoRoutes.js` | `catalogoController.js` | `Producto.js` | `views/catalogo/` | `catalogo.css`, `producto.css` | `catalogo-filtros.js` |
 | **Carrito** | HU-022 a HU-026 | `/carrito`, `/carrito/api` | `carritoRoutes.js` | `carritoController.js` | `Carrito.js` | `views/carrito/` | `carrito.css` | `carrito.js`, `carrito-pagina.js` |
-| **Administración** | HU-006 (después HU-035 a HU-040) | `/admin` | `adminRoutes.js` | `adminController.js` | — | `views/admin/panel.ejs` | `admin.css` | — |
-| **Admin: productos** | HU-036 (después HU-037) | `/admin/productos`, `/admin/productos/nuevo` | `adminRoutes.js` (permiso `gestionar_productos`) | `adminProductosController.js` | `Producto.js` (parte "ADMINISTRACIÓN") | `views/admin/productos.ejs`, `views/admin/producto-nuevo.ejs` | `admin.css` | — |
+| **Mis pedidos (cliente)** | HU-032 (y HU-031) | `/pedidos`, `/pedidos/:id` | `pedidosRoutes.js` (permiso `ver_mis_pedidos`) | `pedidosController.js` | `Pedido.js` | `views/pedidos/` | `pedidos.css` | — |
+| **Administración: panel** | HU-006, HU-035 | `/admin` | `adminRoutes.js` | `adminController.js` | `Pedido.js`, `Inventario.js`, `Mensaje.js` | `views/admin/panel.ejs` | `admin.css` | — |
+| **Admin: productos** | HU-036, HU-037 | `/admin/productos`, `/admin/productos/nuevo`, `/admin/productos/:id/editar` | `adminRoutes.js` (permiso `gestionar_productos`) | `adminProductosController.js` | `Producto.js` (parte "ADMINISTRACIÓN") | `views/admin/productos.ejs`, `views/admin/producto-nuevo.ejs` (crear y editar) | `admin.css` | — |
+| **Admin: stock** | HU-038, HU-039 | `/admin/stock` | `adminRoutes.js` (permiso `gestionar_stock`) | `adminStockController.js` | `Inventario.js` | `views/admin/stock.ejs` | `admin.css` | — |
+| **Admin: pedidos** | HU-040 | `/admin/pedidos`, `/admin/pedidos/:id` | `adminRoutes.js` (permiso `gestionar_pedidos`) | `adminPedidosController.js` | `Pedido.js` | `views/admin/pedidos.ejs`, `views/admin/pedido.ejs` | `admin.css` | `admin-pedido.js` |
 | **Errores** | — | cualquier URL que no existe, o un error del servidor | `app.js` (al final: 404 y manejador de errores) | — | — | `views/errores/` (`no-encontrado`, `error`, `acceso-denegado`) | `base.css` | — |
 
 Diseño para computador (HU-011): está repartido en todas las hojas CSS.
@@ -83,12 +86,13 @@ Diseño para computador (HU-011): está repartido en todas las hojas CSS.
 - `public/js/carrito-pagina.js` — solo en `/carrito`: dibuja los productos, cantidades, eliminar y el resumen.
 - `public/js/catalogo-filtros.js` — solo en `/catalogo`: filtros por aroma y tipo de agua.
 - `public/js/registro.js` — solo en `/registro`: revisa la contraseña mientras se escribe.
+- `public/js/admin-pedido.js` — solo en `/admin/pedidos/:id`: muestra los campos de transporte y seguimiento al elegir "Enviado".
 
 ---
 
 ## Cómo agregar una sección nueva
 
-Ejemplo para pedidos (HU-028 a HU-034). Se repite el mismo patrón de las demás secciones:
+Así se armó la sección de pedidos del cliente (HU-032). Se repite el mismo patrón de las demás secciones:
 
 1. `routes/pedidosRoutes.js` — las URL (por ejemplo `router.get('/', ...)`).
 2. `controllers/pedidosController.js` — qué hacer en cada URL.
@@ -100,4 +104,4 @@ Ejemplo para pedidos (HU-028 a HU-034). Se repite el mismo patrón de las demás
 
 Para proteger una ruta se usan los guardias de `middlewares/auth.js`: `requiereSesion`, `soloAdmin` o `requierePermiso('nombre_del_permiso')`.
 
-**Importante para HU-028 (confirmar pedido):** el carrito de cada cliente ya es un pedido en estado `'carrito'`. Al confirmar, hay que cambiar el estado de **ese** pedido a `'confirmado'` (no crear otro); así el carrito queda vacío solo. Detalle en `docs/CAMBIOS.txt`, punto 11.
+**Importante para HU-028 (confirmar pedido):** el carrito de cada cliente ya es un pedido en estado `'carrito'`. Al confirmar, hay que cambiar el estado de **ese** pedido a `'confirmado'` (no crear otro); así el carrito queda vacío solo. Detalle en `docs/CAMBIOS.txt`, punto 11. Las rutas de HU-028 a HU-034 se agregan en la sección de pedidos que ya existe (`pedidosRoutes.js`, `pedidosController.js`, `Pedido.js`); la secuencia de estados está en `Pedido.SIGUIENTES`.

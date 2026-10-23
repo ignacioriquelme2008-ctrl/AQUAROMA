@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Pedido #' + pedido.id + ' | Administración | AQUAROMA', estilos: ['admin'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <%
+    const marca = (campo) => formulario.errores[campo] ? 'class="campo-error" aria-invalid="true"' : '';
+    const aviso = (campo) => formulario.errores[campo] ? '<p class="admin-aviso">' + formulario.errores[campo].replace(/</g, '&lt;') + '</p>' : '';
+    const d = formulario.datos;
+  %>
+  <!-- HU-040: detalle de un pedido y cambio de estado. Los datos llegan de adminPedidosController.ver. -->
+  <main class="admin admin-angosto">
+    <a href="/admin/pedidos" class="admin-volver">← Volver a pedidos</a>
+    <p class="eyebrow">Administración</p>
+    <h1>Pedido #<%= pedido.id %></h1>
+    <p class="admin-sub">
+      <%= fechaHora(pedido.fecha) %> · <span class="admin-estado-pedido <%= pedido.estado %>"><%= nombres[pedido.estado] %></span>
+      <% if (pedido.observacion) { %> · <span class="admin-minimo"><%= pedido.observacion %></span><% } %>
+    </p>
+
+    <% if (exito) { %><p class="admin-exito" role="status"><%= exito %></p><% } %>
+
+    <div class="admin-dos-columnas">
+      <section class="admin-caja">
+        <h2>Cliente</h2>
+        <p><strong><%= pedido.nombre %> <%= pedido.apellido || '' %></strong><br><%= pedido.correo %><% if (pedido.telefono) { %><br><%= pedido.telefono %><% } %></p>
+      </section>
+      <section class="admin-caja">
+        <h2>Despacho</h2>
+        <% if (pedido.envio) { const e = pedido.envio; %>
+          <p><%= e.calle %> <%= e.numero || '' %><%= e.departamento ? ', ' + e.departamento : '' %>, <%= e.comuna %>, <%= e.region %></p>
+          <% if (e.transportista || e.tracking) { %><p>Transporte: <strong><%= e.transportista %></strong> · Seguimiento: <strong><%= e.tracking %></strong></p><% } %>
+        <% } else { %>
+          <p class="admin-minimo">Sin datos de despacho todavía. Al marcarlo "Enviado" se usa la dirección principal del cliente.</p>
+        <% } %>
+      </section>
+    </div>
+
+    <table class="admin-tabla">
+      <thead><tr><th>Producto</th><th class="num">Cantidad</th><th class="num">Precio</th><th class="num">Subtotal</th></tr></thead>
+      <tbody>
+        <% pedido.items.forEach(i => { %>
+          <tr><td><%= i.nombre %></td><td class="num"><%= i.cantidad %></td><td class="num"><%= clp(i.precio_unitario) %></td><td class="num"><%= clp(i.subtotal) %></td></tr>
+        <% }) %>
+        <tr><td colspan="3" class="num">Envío</td><td class="num"><%= clp(pedido.costo_envio) %></td></tr>
+        <tr><td colspan="3" class="num"><strong>Total</strong></td><td class="num"><strong><%= clp(pedido.total + pedido.costo_envio) %></strong></td></tr>
+      </tbody>
+    </table>
+
+    <%# Criterio 2 de HU-040: solo se ofrecen los estados válidos según la secuencia. %>
+    <h2 class="admin-subtitulo">Cambiar estado</h2>
+    <% if (siguientes.length === 0) { %>
+      <p class="admin-nota">Este pedido está "<%= nombres[pedido.estado] %>": ya no tiene más cambios de estado.</p>
+    <% } else { %>
+      <form class="admin-form" method="post" action="/admin/pedidos/<%= pedido.id %>/estado" novalidate>
+        <fieldset>
+          <legend>Próximo paso</legend>
+          <div class="admin-opciones">
+            <% siguientes.forEach((e, n) => { %>
+              <label class="admin-check"><input type="radio" name="estado" value="<%= e %>" <%= (d.estado ? d.estado === e : n === 0) ? 'checked' : '' %> data-estado> <%= nombres[e] %></label>
+            <% }) %>
+            <%- aviso('estado') %>
+          </div>
+          <%# Criterio 3 de HU-040: al pasar a "Enviado" se registran transporte y seguimiento. %>
+          <% if (siguientes.includes('enviado')) { %>
+            <div class="admin-fila" id="datos-envio">
+              <div class="admin-campo">
+                <label for="transportista">Empresa de transporte</label>
+                <input <%- marca('transportista') %> type="text" id="transportista" name="transportista" value="<%= d.transportista || '' %>" maxlength="100" placeholder="Starken, Chilexpress, Aquaroma Express…">
+                <%- aviso('transportista') %>
+              </div>
+              <div class="admin-campo">
+                <label for="tracking">Código de seguimiento</label>
+                <input <%- marca('tracking') %> type="text" id="tracking" name="tracking" value="<%= d.tracking || '' %>" maxlength="100" placeholder="TRK-12345">
+                <%- aviso('tracking') %>
+              </div>
+            </div>
+          <% } %>
+          <div class="admin-acciones"><button type="submit" class="btn btn-primary">Guardar estado</button></div>
+        </fieldset>
+      </form>
+      <!-- Muestra los campos de transporte solo al elegir "Enviado": public/js/admin-pedido.js. -->
+      <script src="/js/admin-pedido.js"></script>
+    <% } %>
+  </main>
+</body>
+</html>

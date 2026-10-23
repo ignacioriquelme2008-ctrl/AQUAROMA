@@ -1,12 +1,12 @@
 /* =====================================================================
-   admin.css: sección ADMINISTRACIÓN (HU-006; después HU-035 a HU-040).
-   Página: views/admin/panel.ejs. El enlace "Panel" del menú está en base.css.
+   admin.css: sección ADMINISTRACIÓN (HU-006 y HU-035 a HU-040).
+   Páginas: views/admin/*.ejs. El enlace "Panel" del menú está en base.css.
    ===================================================================== */
 .admin { max-width: 1100px; margin: 0 auto; padding: 40px 4vw 64px; }
 .admin h1 { color: var(--navy); margin-bottom: 8px; }
 .admin-sub { margin-bottom: 24px; }
 /* Una tarjeta por cada sección del panel. Las que el usuario no tiene permiso de ver quedan más claras. */
-.admin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.admin-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .admin-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
 .admin-card h2 { font-size: 18px; color: var(--navy); margin-bottom: 6px; }
 .admin-card p { font-size: 14px; color: var(--text-muted); }
@@ -32,7 +32,10 @@
 .admin-tabla th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); background: #f8fafc; padding: 10px 14px; border-bottom: 1px solid var(--line); }
 .admin-tabla td { padding: 10px 14px; border-bottom: 1px solid var(--line); }
 .admin-tabla tr:last-child td { border-bottom: 0; }
-.admin-tabla .num { text-align: right; font-variant-numeric: tabular-nums; }
+.admin-tabla .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.admin-tabla td.sku { white-space: nowrap; }
+/* La tabla de productos tiene muchas columnas (HU-037): usa más ancho de pantalla. */
+.admin-ancho { max-width: 1320px; }
 .admin-tabla .sku { font-family: Consolas, monospace; font-size: 13px; }
 .admin-tabla a { color: var(--navy); font-weight: 600; }
 .admin-fila-nueva td { background: #f0f9ff; }
@@ -63,3 +66,77 @@
 .admin-acciones .btn { padding: 12px 22px; border-radius: 8px; border: 0; font: inherit; font-weight: 600; cursor: pointer; }
 .admin-cancelar { color: var(--text-muted); font-size: 14px; }
 .admin-cabecera .eyebrow, .admin-angosto .eyebrow { margin-bottom: 8px; }
+
+/* ===== Piezas comunes de las páginas del panel (HU-035 a HU-040) ===== */
+.admin-subtitulo { font-size: 20px; margin: 28px 0 12px; }
+.admin-caja { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
+.admin-caja h2 { margin-bottom: 10px; }
+.admin-dos-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; margin-top: 20px; }
+.admin-dos-columnas .admin-form fieldset { margin: 0; }
+.admin-cabecera-chica { margin-bottom: 8px; }
+.admin-cabecera-chica h2 { margin: 0; }
+.admin-cabecera-chica a, .admin-acciones-fila a { color: var(--blue); font-weight: 600; font-size: 14px; }
+.admin-minimo { color: var(--text-muted); font-size: 13px; }
+.admin-fecha { white-space: nowrap; font-size: 13px; color: var(--text-muted); }
+.admin-vacio { text-align: center; color: var(--text-muted); padding: 24px !important; }
+.admin-tabla-simple { border: 0; }
+.admin-tabla + .admin-nota { margin-bottom: 8px; }
+
+/* Botones chicos dentro de una tabla (Desactivar, Eliminar) y formularios en línea. */
+.admin-acciones-fila { white-space: nowrap; }
+.admin-form-linea { display: inline; margin-left: 8px; }
+.admin-boton-chico { font: inherit; font-size: 13px; font-weight: 600; color: var(--navy); background: #fff; border: 1px solid #cfd8e3; border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+.admin-boton-chico:hover { background: #f1f5fa; }
+.admin-boton-peligro { color: #b42318; border-color: #f4c7c3; }
+.admin-boton-peligro:hover { background: #fff1f0; }
+.admin-errores .admin-form-linea { margin-left: 6px; }
+
+/* Opciones de "Próximo paso" del pedido (HU-040): un radio por estado permitido. */
+.admin-opciones { display: flex; flex-wrap: wrap; gap: 6px 24px; margin-bottom: 14px; }
+.admin-opciones .admin-aviso { flex-basis: 100%; margin-top: 0; }
+
+/* Filtros de pastilla: estados de pedido (HU-040) y "Ver solo stock bajo" (HU-039). */
+.admin-filtros { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 16px; }
+.admin-filtro { font-size: 14px; font-weight: 600; color: var(--navy); background: #fff; border: 1px solid #cfd8e3; border-radius: 999px; padding: 6px 14px; }
+.admin-filtro:hover { border-color: var(--primary); }
+.admin-filtro.activo { background: var(--navy); border-color: var(--navy); color: #fff; }
+
+/* ===== Stock por sucursal (HU-038, HU-039): views/admin/stock.ejs ===== */
+.admin-th-sub { display: block; font-size: 10px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.admin-tabla span.sku { color: var(--text-muted); margin-left: 4px; }
+.admin-fila-alerta td { background: #fff8e6; }
+.admin-celda-alerta { color: #b45309; font-weight: 700; }
+.admin-fila-inactiva td { color: var(--text-muted); }
+.admin-chip.alerta { color: #92400e; background: #fde68a; }
+.admin-suma { color: var(--green); font-weight: 600; }
+.admin-resta { color: #b42318; font-weight: 600; }
+
+/* ===== Pedidos (HU-040): etiqueta de estado, con los mismos colores que el seguimiento del cliente ===== */
+.admin-estado-pedido { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #eef2f6; color: var(--ink); }
+.admin-estado-pedido.pagado, .admin-estado-pedido.preparando { background: var(--primary-light); color: var(--blue); }
+.admin-estado-pedido.enviado { background: #fdeedb; color: #a15a10; }
+.admin-estado-pedido.entregado { background: #e7f6ea; color: var(--green); }
+.admin-estado-pedido.cancelado { background: #fee2e2; color: #991b1b; }
+
+/* ===== Resumen del panel (HU-035) ===== */
+.admin-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.admin-kpi { display: flex; flex-direction: column; gap: 4px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; color: inherit; }
+.admin-kpi strong { font-size: 26px; color: var(--navy); line-height: 1.2; }
+.admin-kpi-titulo { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+.admin-kpi-nota { font-size: 13px; color: var(--text-muted); }
+.admin-kpi-alerta { border-color: #f5c56b; background: #fff8e6; }
+.admin-kpi-alerta strong { color: #b45309; }
+.admin-kpi-aviso { border-color: #a5d8f3; background: #f0f9ff; }
+/* Gráfico de barras horizontales: pedidos por estado. */
+.admin-barras { list-style: none; display: grid; gap: 10px; }
+.admin-barras li { display: grid; grid-template-columns: 120px 1fr 32px; align-items: center; gap: 10px; font-size: 14px; }
+.admin-barra { height: 14px; background: #eef2f6; border-radius: 999px; overflow: hidden; }
+.admin-barra-relleno { display: block; height: 100%; min-width: 2px; border-radius: 999px; background: #94a3b8; }
+.admin-barra-relleno.pagado, .admin-barra-relleno.preparando { background: var(--primary); }
+.admin-barra-relleno.enviado { background: #f59e0b; }
+.admin-barra-relleno.entregado { background: var(--green); }
+.admin-barra-relleno.cancelado { background: var(--danger); }
+.admin-barra-n { text-align: right; font-weight: 700; color: var(--navy); }
+.admin-mensajes { list-style: none; display: grid; gap: 10px; }
+.admin-mensajes li { display: flex; flex-direction: column; font-size: 14px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.admin-mensajes li:last-child { border-bottom: 0; }
