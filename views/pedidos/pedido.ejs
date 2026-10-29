@@ -54,6 +54,8 @@
           <tr class="pedidos-total"><td colspan="3" class="num">Total</td><td class="num"><%= clp(pedido.total + pedido.costo_envio) %></td></tr>
         </tbody>
       </table>
+      <%# HU-028: el comprobante de la compra se puede volver a ver desde el seguimiento. %>
+      <a href="/pedidos/<%= pedido.id %>/comprobante" class="pedidos-comprobante">🧾 Ver comprobante de compra</a>
     </section>
   </main>
 </body>

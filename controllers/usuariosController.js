@@ -2,7 +2,9 @@
 // Valida los datos EN EL SERVIDOR y decide qué vista mostrar.
 const bcrypt = require('bcrypt');
 const Usuario = require('../models/Usuario');
+const Carrito = require('../models/Carrito');
 const { EMAIL_REGEX, PASS_REGEX, TEL_REGEX, LARGO_MAX, texto } = require('../utils/validaciones');
+const { normalizarItems } = require('../utils/carrito');
 
 // Hash de una clave cualquiera. Si el correo no existe se compara contra este hash, así el login
 // tarda lo mismo exista o no la cuenta, y nadie puede adivinar qué correos están registrados midiendo el tiempo.
@@ -108,25 +110,41 @@ exports.login = async (req, res) => {
 
     await Usuario.registrarAcceso(usuario.id_usuario);
 
+    // HU-026: un visitante puede armar un carrito antes de entrar. Se copia ANTES de regenerate,
+    // porque regenerate crea una sesión nueva y descarta la anterior (junto con req.session.carrito).
+    const carritoVisitante = normalizarItems(req.session.carrito);
+
     // Se crea una sesión nueva al entrar (regenerate). Así nadie puede reutilizar una sesión
     // que existía antes del login para hacerse pasar por este usuario.
-    req.session.regenerate((err) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).render('usuarios/login', vistaConError('Ocurrió un error. Inténtalo de nuevo.'));
-      }
-      req.session.usuario = {
-        id: usuario.id_usuario,
-        idCliente: usuario.id_cliente,
-        // El administrador no tiene fila en "cliente", por eso no tiene nombre: se muestra "Administrador".
-        nombre: usuario.nombre || (esAdmin ? 'Administrador' : usuario.correo),
-        roles,
-        permisos,
-        esAdmin,
-      };
-      // El administrador entra a su panel; el cliente vuelve a la página que pidió o al inicio.
-      res.redirect(volver || (esAdmin ? '/admin' : '/'));
+    await new Promise((resolve, reject) => {
+      req.session.regenerate((err) => (err ? reject(err) : resolve()));
     });
+
+    req.session.usuario = {
+      id: usuario.id_usuario,
+      idCliente: usuario.id_cliente,
+      // El administrador no tiene fila en "cliente", por eso no tiene nombre: se muestra "Administrador".
+      nombre: usuario.nombre || (esAdmin ? 'Administrador' : usuario.correo),
+      roles,
+      permisos,
+      esAdmin,
+    };
+
+    // HU-026, criterio 2: el carrito de visitante se suma al que ya estaba guardado en la cuenta.
+    if (usuario.id_cliente && carritoVisitante.length > 0) {
+      try {
+        await Carrito.fusionar(usuario.id_cliente, carritoVisitante);
+        req.session.carrito = [];
+      } catch (err) {
+        // Si la base falla, el carrito no se pierde: queda en la sesión y el controlador
+        // del carrito vuelve a intentar la fusión cuando la persona abra /carrito.
+        console.error('No se pudo unir el carrito de visitante:', err);
+        req.session.carrito = carritoVisitante;
+      }
+    }
+
+    // El administrador entra a su panel; el cliente vuelve a la página que pidió o al inicio.
+    res.redirect(volver || (esAdmin ? '/admin' : '/'));
   } catch (err) {
     console.error(err);
     res.status(500).render('usuarios/login', vistaConError('Ocurrió un error. Inténtalo de nuevo.'));

@@ -11,37 +11,37 @@
     <div class="layout">
       <aside>
         <p class="intro">Descubre nuestras aguas funcionales con ingredientes naturales.</p>
-        <form class="filters" id="filtros">
+        <%# HU-014 y HU-015: los filtros se envían al servidor con GET y el controlador decide qué productos mostrar. %>
+        <form class="filters" method="get" action="/catalogo">
           <fieldset>
             <legend>Aroma</legend>
-            <label><input type="checkbox" name="aroma" value="todos" checked> Todos</label>
+            <label><input type="checkbox" name="aroma" value="todos" <%= filtros.aromas.length === 0 ? 'checked' : '' %>> Todos</label>
             <%# Un filtro por cada aroma que tenga productos activos: un sabor nuevo en la base aparece solo. %>
-            <% const aromas = new Map(productos.map(p => [p.aromaSlug, p.aroma])); %>
-            <% aromas.forEach((nombre, slug) => { %>
-              <label><input type="checkbox" name="aroma" value="<%= slug %>"> <%= nombre %></label>
+            <% aromas.forEach((a) => { %>
+              <label><input type="checkbox" name="aroma" value="<%= a.slug %>" <%= filtros.aromas.includes(a.slug) ? 'checked' : '' %>> <%= a.nombre %></label>
             <% }) %>
           </fieldset>
           <fieldset>
             <legend>Tipo</legend>
-            <label><input type="radio" name="tipo" value="todos" checked> Todos</label>
-            <label><input type="radio" name="tipo" value="con-gas"> Con gas</label>
-            <label><input type="radio" name="tipo" value="sin-gas"> Sin gas</label>
-            <label><input type="radio" name="tipo" value="electrolitos"> Electrolitos</label>
+            <label><input type="radio" name="tipo" value="todos" <%= filtros.tipos.length === 0 ? 'checked' : '' %>> Todos</label>
+            <%# HU-015: un filtro por cada tipo de agua activo de la base (tabla tipo_agua). %>
+            <% tipos.forEach((t) => { %>
+              <label><input type="radio" name="tipo" value="<%= t.slug %>" <%= filtros.tipos.includes(t.slug) ? 'checked' : '' %>> <%= t.nombre %></label>
+            <% }) %>
           </fieldset>
-          <button type="reset" class="clear">Limpiar filtros ↻</button>
+          <button type="submit" class="aplicar">Filtrar</button>
+          <a class="clear" href="/catalogo">Limpiar filtros ↻</a>
         </form>
       </aside>
 
       <section>
-        <p class="count" id="count">Mostrando <%= productos.length %> productos</p>
-        <div class="grid" id="grid">
+        <p class="count">Mostrando <%= productos.length %> productos</p>
+        <div class="grid">
           <% const colores = { limon: 't-yellow', menta: 't-green', frutilla: 't-red', pepino: 't-green', durazno: 't-orange', arandano: 't-purple',
                                mango: 't-orange', 'frutos-rojos': 't-red', 'hibisco-y-rosa': 't-purple', 'limon-y-menta': 't-yellow', 'pepino-y-limon': 't-green' }; %>
           <!-- Cada tarjeta muestra los datos del modelo, incluida la imagen y la disponibilidad del producto. -->
           <% productos.forEach(p => { %>
-            <article class="item" data-aroma="<%= p.aromaSlug %>" data-tipo="<%= p.tipoSlug %>"
-                     data-id="<%= p.id %>" data-nombre="<%= p.nombre %>" data-precio="<%= p.precio %>"
-                     data-imagen="<%= p.imagen %>" data-aroma-nombre="<%= p.aroma %>">
+            <article class="item">
               <%# HU-016: la imagen y el nombre llevan a la ficha de detalle del producto. %>
               <a href="/catalogo/<%= p.id %>" class="item-enlace">
                 <div class="img">
@@ -54,19 +54,23 @@
               <p class="price"><%= clp(p.precio) %></p>
               <span class="tag <%= colores[p.aromaSlug] %>"><%= p.etiqueta %></span>
               <% if (p.stock > 0) { %>
-                <button class="buy">Agregar al carrito</button>
+                <%# HU-022: el botón envía el id al controlador; el nombre y el precio los pone el servidor. %>
+                <form method="post" action="/carrito/agregar" class="buy-form">
+                  <input type="hidden" name="id" value="<%= p.id %>">
+                  <input type="hidden" name="volver" value="<%= volver %>">
+                  <button type="submit" class="buy">Agregar al carrito</button>
+                </form>
               <% } else { %>
                 <button class="buy" disabled>Agotado</button>
               <% } %>
             </article>
           <% }) %>
         </div>
-        <p class="empty" id="empty" hidden>No se encontraron productos con estos filtros. Prueba quitar alguno.</p>
+        <% if (productos.length === 0) { %>
+          <p class="empty">No se encontraron productos con estos filtros. Prueba quitar alguno.</p>
+        <% } %>
       </section>
     </div>
   </div>
-
-  <!-- Filtros por aroma y tipo de agua: public/js/catalogo-filtros.js. Los botones "Agregar al carrito" los conecta public/js/carrito.js (se carga desde el menú). -->
-  <script src="/js/catalogo-filtros.js"></script>
 </body>
-</html> 
+</html>

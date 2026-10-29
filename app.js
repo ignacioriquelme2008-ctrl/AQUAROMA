@@ -15,9 +15,13 @@ const inicioRoutes = require('./routes/inicioRoutes');     // inicio y "Nosotros
 const usuariosRoutes = require('./routes/usuariosRoutes'); // registro, inicio y cierre de sesión
 const catalogoRoutes = require('./routes/catalogoRoutes'); // catálogo y ficha de cada producto
 const carritoRoutes = require('./routes/carritoRoutes');   // carrito (y carrito guardado en la cuenta, HU-026)
+const contactoRoutes = require('./routes/contactoRoutes'); // formulario de contacto (HU-012)
 // Rutas del panel de administración (HU-006). Están protegidas por los middlewares de middlewares/auth.js.
 const adminRoutes = require('./routes/adminRoutes');
 const pedidosRoutes = require('./routes/pedidosRoutes'); // "Mis pedidos" y seguimiento del cliente (HU-032)
+
+// Middleware que calcula el contador del carrito para el menú (HU-022).
+const { cargarCarrito } = require('./middlewares/carrito');
 
 const app = express();
 
@@ -34,9 +38,6 @@ app.locals.fechaHora = (fecha) => new Date(fecha).toLocaleString('es-CL', {
 
 // Permite leer formularios y servir archivos estáticos como CSS, JavaScript e imágenes.
 app.use(express.urlencoded({ extended: true })); // leer formularios
-// Leer datos en formato JSON: los usa el carrito guardado en la cuenta (HU-026, rutas /carrito/api).
-// "limit" evita que alguien mande un cuerpo enorme para saturar el servidor.
-app.use(express.json({ limit: '20kb' }));
 app.use(express.static(path.join(__dirname, 'public'))); // css, js, img
 
 // Sesión: recuerda quién inició sesión mientras navega
@@ -54,11 +55,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// Deja el contador del carrito y el aviso de la última acción en TODAS las vistas.
+// Va después de la sesión porque lee req.session.usuario y req.session.carrito.
+app.use(cargarCarrito);
+
 // Conecta las rutas de cada sección con su dirección.
 app.use('/', inicioRoutes);
 app.use('/', usuariosRoutes);
 app.use('/catalogo', catalogoRoutes);
 app.use('/carrito', carritoRoutes);
+app.use('/contacto', contactoRoutes);
 app.use('/admin', adminRoutes);
 app.use('/pedidos', pedidosRoutes);
 
@@ -67,17 +73,13 @@ app.use((req, res) => res.status(404).render('errores/no-encontrado'));
 
 // Manejador de errores global: Express lo reconoce porque recibe 4 parámetros (err, req, res, next).
 // Llegan aquí los errores que los controladores pasan con next(err) y los que produce Express solo
-// (por ejemplo, un JSON mal escrito o demasiado grande enviado a /carrito/api).
-// Así el visitante nunca ve el detalle técnico del error ni las carpetas del servidor.
+// (por ejemplo, un formulario demasiado grande). Así el visitante nunca ve el detalle técnico del
+// error ni las carpetas del servidor.
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);          // si ya se empezó a responder, Express lo cierra
   const estado = err.status >= 400 && err.status < 500 ? err.status : 500;   // 4xx = error de la petición, lo demás = 500
   if (estado === 500) console.error(err);          // el detalle completo queda solo en la terminal
   else console.warn(`Petición rechazada (${estado}) en ${req.method} ${req.originalUrl}: ${err.message}`);
-  // Las rutas /api las usa el JavaScript del navegador: se responde en JSON, igual que los demás errores de esa API.
-  if (req.originalUrl.split('?')[0].split('/').includes('api')) {
-    return res.status(estado).json({ error: estado === 500 ? 'Ocurrió un error en el servidor.' : 'La petición tiene un formato inválido.' });
-  }
   res.status(estado).render('errores/error', { estado });
 });
 

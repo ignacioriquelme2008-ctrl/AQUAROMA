@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Pedido #' + pedido.id + ' confirmado | AQUAROMA', estilos: ['pedidos'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <!-- HU-028: comprobante de compra. Es la pantalla que se muestra al confirmar el pedido.
+       Datos: pedidosController.comprobante. -->
+  <main class="pedidos">
+    <div class="pedidos-ok" role="status">
+      <span class="pedidos-ok-icono" aria-hidden="true">✅</span>
+      <div>
+        <p class="eyebrow">Compra confirmada</p>
+        <h1>¡Gracias por tu pedido!</h1>
+        <p>Tu número de orden es <strong class="pedidos-orden">#<%= pedido.id %></strong>. Guarda este comprobante.</p>
+      </div>
+    </div>
+
+    <%# Criterio 3: número único de orden y datos de la compra. %>
+    <section class="pedidos-caja">
+      <h2>🧾 Comprobante de compra</h2>
+      <dl class="pedidos-datos">
+        <div><dt>Número de orden</dt><dd>#<%= pedido.id %></dd></div>
+        <div><dt>Fecha</dt><dd><%= fechaHora(pedido.fecha) %></dd></div>
+        <div><dt>Estado</dt><dd><span class="pedidos-estado <%= pedido.estado %>"><%= nombres[pedido.estado] %></span></dd></div>
+        <div><dt>Cliente</dt><dd><%= pedido.nombre %> <%= pedido.apellido || '' %></dd></div>
+        <div><dt>Correo</dt><dd><%= pedido.correo %></dd></div>
+        <% if (pedido.sucursal) { %><div><dt>Despacha</dt><dd><%= pedido.sucursal %></dd></div><% } %>
+      </dl>
+    </section>
+
+    <%# Criterio 2: todos los ítems confirmados con su cantidad y monto. %>
+    <section class="pedidos-caja">
+      <h2>Productos</h2>
+      <table class="pedidos-tabla">
+        <thead><tr><th>Producto</th><th class="num">Cantidad</th><th class="num">Precio</th><th class="num">Subtotal</th></tr></thead>
+        <tbody>
+          <% pedido.items.forEach(i => { %>
+            <tr><td><%= i.nombre %></td><td class="num"><%= i.cantidad %></td><td class="num"><%= clp(i.precio_unitario) %></td><td class="num"><%= clp(i.subtotal) %></td></tr>
+          <% }) %>
+          <tr><td colspan="3" class="num">Subtotal (IVA incluido)</td><td class="num"><%= clp(pedido.total) %></td></tr>
+          <%# HU-025: desglose del IVA y del despacho. %>
+          <tr><td colspan="3" class="num">Neto (sin IVA)</td><td class="num"><%= clp(ventas.neto(pedido.total)) %></td></tr>
+          <tr><td colspan="3" class="num">IVA (19%)</td><td class="num"><%= clp(ventas.iva(pedido.total)) %></td></tr>
+          <tr><td colspan="3" class="num">Envío</td><td class="num"><%= pedido.costo_envio > 0 ? clp(pedido.costo_envio) : 'Gratis' %></td></tr>
+          <tr class="pedidos-total"><td colspan="3" class="num">Total</td><td class="num"><%= clp(pedido.total + pedido.costo_envio) %></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <%# HU-029 y HU-030: dónde se entrega y con qué medio se paga. %>
+    <section class="pedidos-caja">
+      <h2>🚚 Entrega y pago</h2>
+      <dl class="pedidos-datos">
+        <% if (pedido.envio) { const e = pedido.envio; %>
+          <div><dt>Dirección</dt><dd><%= e.calle %> <%= e.numero || '' %><%= e.departamento ? ', ' + e.departamento : '' %></dd></div>
+          <div><dt>Comuna</dt><dd><%= e.comuna %>, <%= e.region %></dd></div>
+          <% if (e.referencia) { %><div><dt>Referencia</dt><dd><%= e.referencia %></dd></div><% } %>
+        <% } else { %>
+          <div><dt>Dirección</dt><dd>Se coordina con la tienda</dd></div>
+        <% } %>
+        <div><dt>Medio de pago</dt><dd><%= pedido.pago ? pedido.pago.metodo : 'Por definir' %></dd></div>
+      </dl>
+    </section>
+
+    <div class="pedidos-acciones">
+      <a href="/pedidos/<%= pedido.id %>" class="btn btn-primary">Ver seguimiento</a>
+      <a href="/catalogo" class="btn btn-secundario">Seguir comprando</a>
+    </div>
+  </main>
+</body>
+</html>

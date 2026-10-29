@@ -27,12 +27,4 @@ function requierePermiso(nombrePermiso) {
   };
 }
 
-// HU-026: para las rutas /carrito/api, que usa public/js/carrito.js por detrás (no una persona).
-// Solo deja pasar a un CLIENTE con sesión (el administrador no tiene carrito, porque no compra).
-// En vez de redirigir al login responde un error 401 en JSON, que es lo que entiende el fetch.
-function soloClienteApi(req, res, next) {
-  if (req.session.usuario && req.session.usuario.idCliente) return next();
-  return res.status(401).json({ error: 'Inicia sesión como cliente para guardar tu carrito.' });
-}
-
-module.exports = { requiereSesion, soloAdmin, requierePermiso, soloClienteApi };
+module.exports = { requiereSesion, soloAdmin, requierePermiso };

@@ -17,8 +17,7 @@
       // Largo permitido de la contraseña: debe coincidir con la regla del controlador.
       const MIN = locals.PASS_MIN || 8, MAX = locals.PASS_MAX || 20;
     %>
-    <form class="auth-card" id="registro" method="post" action="/registro" novalidate
-      data-pass-min="<%= MIN %>" data-pass-max="<%= MAX %>">
+    <form class="auth-card" method="post" action="/registro" novalidate>
       <h1>Crear cuenta</h1>
       <p class="auth-sub">Regístrate para comprar en Aquaroma.</p>
 
@@ -58,13 +57,13 @@
         <label for="password">Contraseña</label>
         <input <%- marca('password') %> type="password" id="password" name="password" maxlength="<%= MAX %>" autocomplete="new-password" aria-describedby="reglas" required>
         <% if (err.password) { %><p class="auth-aviso"><%= err.password %></p><% } %>
-        <!-- Lista de requisitos: cada uno se marca en verde a medida que la contraseña lo cumple. -->
+        <!-- Requisitos de la contraseña. El servidor es el que valida (controllers/usuariosController.js). -->
         <ul class="auth-reglas" id="reglas">
-          <li data-regla="largo">Entre <%= MIN %> y <%= MAX %> caracteres</li>
-          <li data-regla="mayuscula">Una letra mayúscula</li>
-          <li data-regla="minuscula">Una letra minúscula</li>
-          <li data-regla="numero">Un número</li>
-          <li data-regla="especial">Un carácter especial (! @ # $ % & *)</li>
+          <li>Entre <%= MIN %> y <%= MAX %> caracteres</li>
+          <li>Una letra mayúscula</li>
+          <li>Una letra minúscula</li>
+          <li>Un número</li>
+          <li>Un carácter especial (! @ # $ % & *)</li>
         </ul>
       </div>
 
@@ -72,15 +71,11 @@
         <label for="confirmar">Repite la contraseña</label>
         <input <%- marca('confirmar') %> type="password" id="confirmar" name="confirmar" maxlength="<%= MAX %>" autocomplete="new-password" required>
         <% if (err.confirmar) { %><p class="auth-aviso"><%= err.confirmar %></p><% } %>
-        <p class="auth-aviso" id="avisoConfirmar" hidden>Las contraseñas no coinciden.</p>
       </div>
 
       <button type="submit" class="btn btn-primary auth-boton">Crear cuenta</button>
       <p class="auth-pie">¿Ya tienes cuenta? <a href="/login">Inicia sesión</a></p>
     </form>
   </main>
-
-  <!-- Validación del formulario en el navegador: public/js/registro.js. -->
-  <script src="/js/registro.js"></script>
 </body>
 </html>

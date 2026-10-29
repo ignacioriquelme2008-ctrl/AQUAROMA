@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Contacto | AQUAROMA', estilos: ['contacto'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <main class="contacto-wrap">
+    <section class="contacto-card">
+      <p class="eyebrow">Estamos para ayudarte</p>
+      <h1>Contacto</h1>
+      <p class="contacto-intro">Cuéntanos en qué podemos ayudarte y nuestro equipo revisará tu mensaje.</p>
+
+      <% if (locals.exito) { %>
+        <p class="contacto-exito" role="status">Gracias por escribirnos. Recibimos tu mensaje y lo revisaremos pronto.</p>
+      <% } %>
+
+      <% if (Object.keys(errores || {}).length > 0) { %>
+        <div class="contacto-errores" role="alert">
+          <p>Revisa estos datos antes de enviar:</p>
+          <ul><% Object.values(errores).forEach((e) => { %><li><%= e %></li><% }) %></ul>
+        </div>
+      <% } %>
+
+      <form method="post" action="/contacto" class="contacto-form">
+        <div class="contacto-campo">
+          <label for="nombre">Nombre</label>
+          <input id="nombre" name="nombre" type="text" maxlength="100" autocomplete="name" required
+                 value="<%= datos.nombre || '' %>" <%= errores.nombre ? 'aria-invalid="true"' : '' %>>
+          <% if (errores.nombre) { %><small class="contacto-error"><%= errores.nombre %></small><% } %>
+        </div>
+
+        <div class="contacto-campo">
+          <label for="correo">Correo electrónico</label>
+          <input id="correo" name="correo" type="email" maxlength="120" autocomplete="email" required
+                 value="<%= datos.correo || '' %>" <%= errores.correo ? 'aria-invalid="true"' : '' %>>
+          <% if (errores.correo) { %><small class="contacto-error"><%= errores.correo %></small><% } %>
+        </div>
+
+        <div class="contacto-campo">
+          <label for="asunto">Asunto</label>
+          <input id="asunto" name="asunto" type="text" maxlength="150" required
+                 value="<%= datos.asunto || '' %>" <%= errores.asunto ? 'aria-invalid="true"' : '' %>>
+          <% if (errores.asunto) { %><small class="contacto-error"><%= errores.asunto %></small><% } %>
+        </div>
+
+        <div class="contacto-campo">
+          <label for="mensaje">Mensaje</label>
+          <textarea id="mensaje" name="mensaje" rows="6" maxlength="5000" required
+                    <%= errores.mensaje ? 'aria-invalid="true"' : '' %>><%= datos.mensaje || '' %></textarea>
+          <% if (errores.mensaje) { %><small class="contacto-error"><%= errores.mensaje %></small><% } %>
+        </div>
+
+        <button type="submit" class="btn btn-primary contacto-enviar">Enviar mensaje</button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

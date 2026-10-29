@@ -1,4 +1,6 @@
 <header class="navbar">
+  <%# HU-022: el contador lo calcula el servidor (middlewares/carrito.js) antes de dibujar la página. %>
+  <% const unidades = locals.carritoCantidad || 0; %>
   <div class="nav-inner">
 
     <a href="/" class="logo">
@@ -10,8 +12,9 @@
     </a>
     <ul class="nav-links">
       <li><a href="/">Inicio</a></li>
-      <li><a href="/catalogo">Catálogo</a></li>
+      <li><a href="/catalogo">Productos</a></li>
       <li><a href="/nosotros">Nosotros</a></li>
+      <li><a href="/contacto">Contacto</a></li>
     </ul>
 
         <!-- La sesión decide si se muestra el nombre y el cierre, o los enlaces para entrar y registrarse. -->
@@ -22,19 +25,20 @@
         <% if (locals.usuario.esAdmin) { %><a href="/admin" class="nav-enlace nav-panel">Panel</a><% } %>
         <%# HU-009 (criterio 3) y HU-032: el cliente llega a sus pedidos y su seguimiento desde el menú. %>
         <% if (locals.usuario.idCliente) { %><a href="/pedidos" class="nav-enlace">Mis pedidos</a><% } %>
-        <%# data-cerrar-sesion: public/js/carrito.js guarda el último cambio del carrito antes de salir (HU-026). %>
-        <form method="post" action="/logout" data-cerrar-sesion><button type="submit" class="nav-enlace">Cerrar sesión</button></form>
+        <form method="post" action="/logout"><button type="submit" class="nav-enlace">Cerrar sesión</button></form>
       <% } else { %>
         <a href="/login" class="nav-enlace">Iniciar sesión</a>
         <a href="/registro" class="nav-enlace">Registrarse</a>
       <% } %>
-      <%# HU-022: el contador de artículos lo actualiza public/js/carrito.js cada vez que cambia el carrito. %>
-      <a href="/carrito" class="btn btn-primary">🛒 Carrito <span class="nav-contador" data-contador-carrito hidden>0</span></a>
+      <a href="/carrito" class="btn btn-primary">🛒 Carrito
+        <span class="nav-contador" <%= unidades > 0 ? '' : 'hidden' %>><%= unidades > 99 ? '99+' : unidades %></span>
+      </a>
     </div>
 
   </div>
 
-  <%# Carrito compartido por todas las páginas (HU-026). data-cliente le dice al script qué cliente
-      tiene la sesión iniciada; vacío = visitante (o administrador, que no tiene carrito guardado). %>
-  <script src="/js/carrito.js" data-cliente="<%= (locals.usuario && locals.usuario.idCliente) || '' %>"></script>
+  <%# Aviso de la última acción del carrito ("se agregó", "solo quedan X unidades"). Se muestra una vez. %>
+  <% if (locals.avisoCarrito) { %>
+    <p class="aviso-carrito" role="status"><%= locals.avisoCarrito %></p>
+  <% } %>
 </header>

@@ -12,40 +12,197 @@
   <h1>Carrito de Compras</h1>
   <p class="sub">Revisa tus productos y confirma tu pedido</p>
 
-  <div class="layout">
-    <!-- La sección principal muestra los productos seleccionados, mientras el resumen del lado sirve para ver el costo final. -->
-    <section class="panel">
-      <h2>💧 Productos</h2>
-      <div class="row head"><span>Producto</span><span>Aroma</span><span>Cantidad</span><span>Precio</span><span>Acciones</span></div>
-      <div id="items"></div>
+  <%# HU-028: si la confirmación falla (stock, dirección o pago), el controlador vuelve a mostrar la página con el motivo. %>
+  <% if (locals.error) { %>
+    <p class="confirm-error" role="alert"><%= error %></p>
+  <% } %>
+
+  <!-- La sección principal muestra los productos seleccionados, mientras el resumen del lado sirve para ver el costo final. -->
+  <section class="panel">
+    <h2>💧 Productos</h2>
+
+    <% if (items.length === 0) { %>
       <!-- Si no hay elementos, se informa al usuario que debe agregar productos antes de continuar. -->
-      <p class="empty" id="empty" hidden>Tu carrito está vacío. Agrega productos desde el catálogo.</p>
-      <div class="foot">
-        <a href="/catalogo">← Seguir comprando</a>
-      </div>
+      <p class="empty">Tu carrito está vacío. Agrega productos desde el catálogo.</p>
+    <% } else { %>
+      <div class="row head"><span>Producto</span><span>Aroma</span><span>Cantidad</span><span>Precio</span><span>Acciones</span></div>
+
+      <% items.forEach((i) => { %>
+        <div class="row item">
+          <div class="prod">
+            <img src="/img/productos/<%= i.imagen %>" alt="<%= i.nombre %>">
+            <div>
+              <strong><%= i.nombre %></strong>
+              <small>Botella con aroma</small>
+              <small>Aroma: <%= i.aroma %></small>
+              <% if (i.descripcionAroma) { %><small><%= i.descripcionAroma %></small><% } %>
+              <% if (i.intensidad) { %><small>Intensidad: <%= i.intensidad %> <%= i.intensidad === 1 ? 'dosis' : 'dosis' %></small><% } %>
+              <%# HU-027: compara todas las variantes del producto contra el stock disponible. %>
+              <% if (i.stockInsuficiente) { %>
+                <small class="stock-aviso">Tienes <%= i.unidadesEnCarrito %> en el carrito y solo quedan <%= i.stock %> <%= i.stock === 1 ? 'unidad' : 'unidades' %> disponibles en total. Reduce la cantidad para confirmar.</small>
+              <% } %>
+            </div>
+          </div>
+
+          <div class="aroma"><span class="ic" style="background:<%= i.color %>"><%= i.icono %></span><%= i.aroma %></div>
+
+          <%# HU-023: cada cambio de cantidad es un POST que resuelve el controlador. %>
+          <form class="qty" method="post" action="/carrito/cantidad">
+            <input type="hidden" name="id" value="<%= i.id %>">
+            <% if (i.idComponente) { %><input type="hidden" name="idComponente" value="<%= i.idComponente %>"><% } %>
+            <% if (i.intensidad) { %><input type="hidden" name="intensidad" value="<%= i.intensidad %>"><% } %>
+            <%# Primer botón (oculto): si se presiona Enter en la casilla, el formulario envía "fijar". %>
+            <button type="submit" name="accion" value="fijar" hidden></button>
+            <button type="submit" name="accion" value="restar" aria-label="Quitar una unidad de <%= i.nombre %>">−</button>
+             <input class="qty-input" type="number" name="qty" inputmode="numeric" min="1"
+                    max="<%= Math.max(i.qty, Math.min(Math.max(0, i.stock - (i.unidadesEnCarrito - i.qty)), 99)) %>" step="1" value="<%= i.qty %>"
+                   aria-label="Cantidad de <%= i.nombre %>">
+             <button type="submit" name="accion" value="sumar" aria-label="Agregar una unidad de <%= i.nombre %>"
+                     <%= i.unidadesEnCarrito >= i.stock || i.qty >= 99 ? 'disabled' : '' %>>+</button>
+          </form>
+
+          <div class="price"><b><%= clp(i.precio) %> c/u</b><b><%= clp(i.subtotal) %></b></div>
+
+          <%# HU-024: eliminar el producto del carrito. %>
+          <form class="del-form" method="post" action="/carrito/eliminar">
+            <input type="hidden" name="id" value="<%= i.id %>">
+            <% if (i.idComponente) { %><input type="hidden" name="idComponente" value="<%= i.idComponente %>"><% } %>
+            <% if (i.intensidad) { %><input type="hidden" name="intensidad" value="<%= i.intensidad %>"><% } %>
+            <button type="submit" class="del" aria-label="Eliminar <%= i.nombre %>">
+              <svg class="trash-icon" viewBox="0 0 24 24" aria-hidden="true"><g class="trash-body"><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/></g><path class="trash-lid" d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span class="del-label">Eliminar</span>
+            </button>
+          </form>
+        </div>
+      <% }) %>
+    <% } %>
+
+    <div class="foot">
+      <a href="/catalogo">← Seguir comprando</a>
+    </div>
+  </section>
+
+  <%# HU-028 a HU-030: un solo formulario envía la dirección y el medio de pago al controlador. %>
+  <form class="layout" method="post" action="/carrito/confirmar">
+    <% const datosForm = locals.datos || {}; %>
+    <% const elegida = datosForm.direccion || ''; %>
+    <% const hayPrincipal = direcciones.some((d) => d.principal); %>
+
+    <!-- HU-029 y HU-030: antes de confirmar se elige dónde se entrega el pedido y cómo se paga. -->
+    <section class="panel checkout">
+      <h2>🚚 Entrega y pago</h2>
+
+      <fieldset class="bloque">
+        <legend>Dirección de entrega</legend>
+
+        <% if (!locals.usuario) { %>
+          <p class="nota">Inicia sesión para guardar tu dirección y confirmar el pedido.</p>
+        <% } %>
+
+        <% direcciones.forEach((d, indice) => { %>
+          <% const marcada = elegida ? String(d.id) === elegida : (d.principal || (!hayPrincipal && indice === 0)); %>
+          <label class="opcion">
+            <input type="radio" name="direccion" value="<%= d.id %>" <%= marcada ? 'checked' : '' %>>
+            <span>
+              <strong><%= d.alias || 'Dirección' %><%= d.principal ? ' · principal' : '' %></strong>
+              <%= d.calle %> <%= d.numero || '' %><%= d.departamento ? ', ' + d.departamento : '' %>, <%= d.comuna %>, <%= d.region %>
+            </span>
+          </label>
+        <% }) %>
+
+        <% if (direcciones.length > 0) { %>
+          <label class="opcion">
+            <input type="radio" name="direccion" value="nueva" <%= elegida === 'nueva' ? 'checked' : '' %>>
+            <span><strong>Usar otra dirección</strong></span>
+          </label>
+        <% } %>
+
+        <!-- Dirección nueva. El servidor la guarda en la cuenta recién al confirmar el pedido. -->
+        <div class="nueva">
+          <p class="nueva-titulo"><%= direcciones.length > 0 ? 'Datos de la nueva dirección (solo si elegiste "Usar otra dirección")' : 'Dirección de entrega' %></p>
+          <div class="campo ancho">
+            <label for="calle">Calle</label>
+            <input id="calle" name="calle" type="text" maxlength="150" autocomplete="address-line1" placeholder="Av. Providencia" value="<%= datosForm.calle || '' %>">
+          </div>
+          <div class="campo">
+            <label for="numero">Número</label>
+            <input id="numero" name="numero" type="text" maxlength="20" autocomplete="address-line2" placeholder="1234" value="<%= datosForm.numero || '' %>">
+          </div>
+          <div class="campo">
+            <label for="departamento">Depto. / oficina <small>(opcional)</small></label>
+            <input id="departamento" name="departamento" type="text" maxlength="50" placeholder="Depto. 56" value="<%= datosForm.departamento || '' %>">
+          </div>
+          <div class="campo">
+            <label for="comuna">Comuna</label>
+            <input id="comuna" name="comuna" type="text" maxlength="100" autocomplete="address-level2" placeholder="Providencia" value="<%= datosForm.comuna || '' %>">
+          </div>
+          <div class="campo">
+            <label for="region">Región</label>
+            <select id="region" name="region" autocomplete="address-level1">
+              <% const REGIONES = ['Arica y Parinacota', 'Tarapacá', 'Antofagasta', 'Atacama', 'Coquimbo', 'Valparaíso',
+                   'Metropolitana', "O'Higgins", 'Maule', 'Ñuble', 'Biobío', 'La Araucanía', 'Los Ríos', 'Los Lagos',
+                   'Aysén', 'Magallanes']; %>
+              <% const regionElegida = datosForm.region || 'Metropolitana'; %>
+              <% REGIONES.forEach((r) => { %>
+                <option value="<%= r %>" <%= r === regionElegida ? 'selected' : '' %>><%= r %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="codigoPostal">Código postal <small>(opcional)</small></label>
+            <input id="codigoPostal" name="codigoPostal" type="text" maxlength="15" autocomplete="postal-code" placeholder="7500000" value="<%= datosForm.codigoPostal || '' %>">
+          </div>
+          <div class="campo ancho">
+            <label for="referencia">Referencia <small>(opcional)</small></label>
+            <input id="referencia" name="referencia" type="text" maxlength="255" placeholder="Frente a la plaza, timbre 3" value="<%= datosForm.referencia || '' %>">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="bloque">
+        <legend>Medio de pago</legend>
+        <% if (metodos.length === 0) { %>
+          <p class="nota">No hay medios de pago disponibles por ahora.</p>
+        <% } %>
+        <% const pagoElegido = datosForm.pago || ''; %>
+        <% metodos.forEach((m, i) => { %>
+          <% const marcado = pagoElegido ? String(m.id) === pagoElegido : i === 0; %>
+          <label class="opcion">
+            <input type="radio" name="pago" value="<%= m.id %>" <%= marcado ? 'checked' : '' %>>
+            <span><strong><%= m.nombre %></strong></span>
+          </label>
+        <% }) %>
+        <p class="nota">El pago queda pendiente hasta que la tienda lo confirme.</p>
+      </fieldset>
     </section>
 
-    <!-- El resumen del pedido deja claro el total y facilita la decisión final de compra. -->
+    <!-- El resumen del pedido deja claro el total y facilita la decisión final de compra.
+         HU-025: cantidad de productos, subtotal neto, IVA, envío y total. -->
     <aside class="panel summary">
       <h2>📄 Resumen del Pedido</h2>
       <dl>
-        <div><dt id="subLabel">Subtotal</dt><dd id="subtotal">$0</dd></div>
-        <!-- El costo de envío todavía no está definido; se decide al hacer "Confirmar pedido" (HU-028). -->
-        <div><dt>Envío</dt><dd>Por definir</dd></div>
+        <div><dt>Subtotal (<%= items.length %> <%= items.length === 1 ? 'producto' : 'productos' %>)</dt><dd><%= clp(totales.subtotal) %></dd></div>
+        <div class="linea"><dt>Neto (sin IVA)</dt><dd><%= clp(totales.neto) %></dd></div>
+        <div class="linea"><dt>IVA (19%)</dt><dd><%= clp(totales.iva) %></dd></div>
+        <div><dt>Envío</dt><dd class="<%= totales.envio === 0 ? 'free' : '' %>"><%= totales.envio === 0 ? 'Gratis' : clp(totales.envio) %></dd></div>
       </dl>
-      <div class="total"><span>Total</span><strong id="total">$0</strong></div>
-      <p class="iva">IVA incluido</p>
-      <%# HU-004: confirmar un pedido es una acción privada. Sin sesión, el botón lleva al login (public/js/carrito-pagina.js). %>
-      <button class="confirm" id="confirm" data-requiere-login="<%= locals.usuario ? '' : '1' %>">🔒 Confirmar Pedido</button>
+      <div class="total"><span>Total</span><strong><%= clp(totales.total) %></strong></div>
+      <p class="iva"><%= totales.envioGratis ? 'Tu pedido tiene envío gratis.' : 'Envío gratis desde ' + clp(ventas.ENVIO_GRATIS_DESDE) + '.' %></p>
+
+      <%# HU-004 y HU-028: confirmar un pedido es una acción privada. Sin sesión, se va al login. %>
+      <% if (locals.usuario && locals.usuario.idCliente) { %>
+        <button type="submit" class="confirm" <%= items.length && !items.some((i) => i.stockInsuficiente) ? '' : 'disabled' %>>🔒 Confirmar Pedido</button>
+      <% } else { %>
+        <a class="confirm confirm-enlace" href="/login?volver=%2Fcarrito">🔒 Inicia sesión para confirmar</a>
+      <% } %>
+
       <ul class="perks">
         <li><span>🍃</span>Agua sostenible</li>
         <li><span>💧</span>Origen natural</li>
         <li><span>♡</span>Hecha con propósito</li>
       </ul>
     </aside>
-  </div>
+  </form>
 </div>
-  <!-- Lo que hace la página (dibujar productos, cambiar cantidades, eliminar, resumen) está en public/js/carrito-pagina.js. -->
-  <script src="/js/carrito-pagina.js"></script>
 </body>
 </html>

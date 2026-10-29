@@ -1004,7 +1004,9 @@ INSERT INTO detalle_orden_produccion (id_orden, id_producto, id_configuracion, c
 (1, 1, 1, 2);
 
 INSERT INTO metodo_pago (nombre) VALUES
-('Debito');
+('Debito'),
+('Credito'),
+('Transferencia');
 
 INSERT INTO pago (id_pedido, id_metodo, monto, estado, referencia_externa, fecha_pago) VALUES
 (1, 1, 4000, 'aprobado', 'PAY-001', NOW());
@@ -1275,3 +1277,16 @@ FROM inventario i
 JOIN sucursal s ON i.id_sucursal = s.id_sucursal
 LEFT JOIN insumo ins ON i.id_insumo = ins.id_insumo
 LEFT JOIN producto prod ON i.id_producto = prod.id_producto;
+
+
+-- Select de todos los usuarios y su rol --
+
+SELECT
+    u.id_usuario,
+    u.correo,
+    u.id_cliente,
+    GROUP_CONCAT(r.nombre SEPARATOR ', ') AS roles
+FROM usuario u
+LEFT JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario
+LEFT JOIN rol r ON r.id_rol = ur.id_rol
+GROUP BY u.id_usuario, u.correo, u.id_cliente;

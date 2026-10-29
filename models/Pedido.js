@@ -103,11 +103,24 @@ exports.obtener = async (id, { idCliente = null } = {}) => {
   pedido.items = items.map((i) => ({ ...i, precio_unitario: Number(i.precio_unitario), subtotal: Number(i.subtotal) }));
 
   const [envios] = await db.query(
-    `SELECT calle, numero, departamento, comuna, region, transportista, tracking, fecha_envio, fecha_entrega, estado
+    `SELECT calle, numero, departamento, comuna, region, codigo_postal, referencia,
+            transportista, tracking, fecha_envio, fecha_entrega, estado
      FROM envio WHERE id_pedido = ?`,
     [id]
   );
   pedido.envio = envios[0] || null;
+
+  // HU-030: medio de pago con que se compró (el último registrado para el pedido).
+  const [pagos] = await db.query(
+    `SELECT mp.nombre AS metodo, pa.monto, pa.estado
+     FROM pago pa
+     JOIN metodo_pago mp ON mp.id_metodo = pa.id_metodo
+     WHERE pa.id_pedido = ?
+     ORDER BY pa.id_pago DESC LIMIT 1`,
+    [id]
+  );
+  pedido.pago = pagos[0] ? { ...pagos[0], monto: Number(pagos[0].monto) } : null;
+
   return pedido;
 };
 

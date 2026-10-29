@@ -25,6 +25,11 @@ label { display: flex; gap: 10px; align-items: center; font-size: 14px; padding:
 input { accent-color: var(--blue); width: 16px; height: 16px; }
 .clear { width: 100%; padding: 10px; border: 1px solid #cfd8e3; background: #fff; border-radius: 8px; font-size: 14px; color: var(--navy); cursor: pointer; }
 .clear:hover { background: #f1f5fa; }
+/* Botón "Filtrar": envía el formulario GET y el controlador vuelve a dibujar el catálogo. */
+.aplicar { width: 100%; padding: 10px; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; }
+.aplicar:hover { background: #1750b0; }
+/* "Limpiar filtros" es un enlace de vuelta a /catalogo (sin JavaScript). */
+a.clear { display: block; box-sizing: border-box; margin-top: 8px; text-align: center; text-decoration: none; }
 
 /* ===== Lista de productos ===== */
 .count { font-size: 13px; margin-bottom: 8px; }

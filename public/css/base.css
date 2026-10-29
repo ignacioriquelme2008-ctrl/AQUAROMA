@@ -76,6 +76,8 @@ h3 { font-size: 15px; color: var(--navy); }
 .buy { display: block; width: 100%; padding: 10px; border: 0; border-radius: 6px; background: var(--blue); color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; }
 .buy:hover:not(:disabled) { background: #1750b0; }
 .buy:disabled { background: #ececec; color: #444; cursor: not-allowed; }
+/* El botón va dentro de un formulario POST, que no debe agregar espacio extra. */
+.buy-form { margin: 0; }
 
 /* Etiqueta sobre la imagen de un producto: roja "Agotado" (catálogo y ficha) o verde "Disponible" (catálogo, HU-017). */
 .badge { position: absolute; top: 10px; right: 10px; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 6px; }
@@ -129,10 +131,14 @@ h3 { font-size: 15px; color: var(--navy); }
 }
 .nav-links a:hover { color: var(--primary); background: var(--primary-light); }
 
+
 /* Botón del carrito: solo en el menú, forma de pastilla. */
 .navbar .btn { padding: 10px 20px; border-radius: 999px; gap: 8px; }
-/* HU-022: número de artículos dentro del botón del carrito. */
+/* HU-022: número de artículos dentro del botón del carrito. Lo calcula el servidor. */
 .nav-contador { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: #fff; color: var(--blue); font-size: 13px; font-weight: 700; line-height: 22px; text-align: center; }
+
+/* Aviso de la última acción del carrito ("se agregó", "solo quedan X unidades"). */
+.aviso-carrito { margin: 0 -24px; padding: 10px 24px; background: #e8f7ee; border-top: 1px solid #b7e4c7; color: #14532d; font-size: 14px; text-align: center; }
 
 /* Parte derecha del menú: nombre del usuario, "Panel", "Cerrar sesión" o "Iniciar sesión / Registrarse". */
 .nav-acciones { display: flex; align-items: center; gap: 6px; }
@@ -151,3 +157,14 @@ h3 { font-size: 15px; color: var(--navy); }
 .auth-card h1 { font-size: 30px; margin-bottom: 14px; }
 .auth-sub { font-size: 14px; margin-bottom: 22px; }
 .auth-boton { width: 100%; justify-content: center; border: 0; cursor: pointer; font-family: inherit; margin-top: 6px; }
+
+/* El menú conserva todos sus accesos en tablet y móvil; cambia de fila antes de apretarse. */
+@media (max-width: 980px) {
+  .navbar { padding: 0 16px; }
+  .nav-inner { height: auto; min-height: 72px; flex-wrap: wrap; justify-content: center; gap: 4px 12px; padding: 8px 0; }
+  .nav-links { flex: 1 1 100%; justify-content: center; flex-wrap: wrap; gap: 2px; padding: 0; }
+  .nav-links a { padding: 7px 10px; font-size: 13px; }
+  .nav-acciones { justify-content: center; flex-wrap: wrap; gap: 3px; }
+  .nav-enlace { padding: 7px 8px; font-size: 13px; }
+  .navbar .btn { padding: 8px 14px; }
+}

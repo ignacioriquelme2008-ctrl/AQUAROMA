@@ -48,3 +48,19 @@
 .pedidos-tabla td { padding: 8px 0; border-bottom: 1px solid var(--line); }
 .pedidos-tabla .num { text-align: right; font-variant-numeric: tabular-nums; }
 .pedidos-total td { font-weight: 700; color: var(--navy); border-bottom: 0; }
+
+/* ===== Comprobante de compra (HU-028) ===== */
+.pedidos-ok { display: flex; align-items: center; gap: 16px; background: #e7f6ea; border: 1px solid #b7e2c0; border-radius: 14px; padding: 18px 22px; margin-bottom: 22px; }
+.pedidos-ok-icono { font-size: 34px; line-height: 1; }
+.pedidos-ok .eyebrow { margin-bottom: 4px; color: var(--green); }
+.pedidos-ok h1 { font-size: 25px; margin-bottom: 4px; }
+.pedidos-ok p { font-size: 14px; }
+.pedidos-orden { font-size: 18px; color: var(--navy); }
+.pedidos-datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px 22px; margin-top: 8px; }
+.pedidos-datos dt { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin-bottom: 3px; }
+.pedidos-datos dd { font-size: 14px; color: var(--ink); }
+.pedidos-nota { margin-top: 12px; font-size: 13px; color: var(--text-muted); }
+.pedidos-acciones { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.pedidos-acciones .btn-secundario { background: #fff; color: var(--blue); border: 1px solid var(--line); }
+.pedidos-acciones .btn-secundario:hover { border-color: var(--primary); }
+.pedidos-comprobante { display: inline-block; margin-top: 14px; color: var(--blue); font-weight: 600; font-size: 14px; }

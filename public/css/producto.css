@@ -21,6 +21,19 @@
 .ficha-datos div { display: flex; justify-content: space-between; padding: 10px 0; font-size: 14px; border-bottom: 1px solid var(--line); }
 .ficha-datos dt { font-weight: 600; color: var(--navy); }
 
+/* HU-018: alternativas de aroma con una breve descripción de sus notas sensoriales. */
+.aromas-config { border: 0; border-top: 1px solid var(--line); margin: 0 0 18px; padding: 14px 0 0; }
+.aromas-config legend { padding: 0 0 8px; font-weight: 700; color: var(--navy); }
+.aroma-opcion { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
+.aroma-opcion:has(input:checked) { border-color: var(--blue); background: #f4f8ff; }
+.aroma-opcion input { margin-top: 4px; accent-color: var(--blue); }
+.aroma-opcion strong, .aroma-opcion small { display: block; }
+.aroma-opcion strong { color: var(--navy); font-size: 14px; }
+.aroma-opcion small { margin-top: 3px; color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+.intensidad-campo { display: block; margin: 12px 0 6px; color: var(--navy); font-size: 13px; font-weight: 700; }
+#intensidad-aroma { width: 100%; padding: 10px 12px; border: 1px solid #d3dbe6; border-radius: 8px; background: #fff; color: var(--navy); font: inherit; }
+#intensidad-aroma:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+
 /* Disponibilidad (HU-017): pastilla verde "N unidades disponibles" o roja "Agotado". */
 .estado { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
 .disponible { background: #d1fae5; color: #047857; }

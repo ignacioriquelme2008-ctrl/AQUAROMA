@@ -31,6 +31,20 @@ exports.obtenerTodos = async () => {
   }));
 };
 
+// Opciones del filtro "Tipo" del catálogo (HU-015). Salen de la tabla tipo_agua, no van escritas
+// a mano en la vista: si mañana se agrega un tipo de agua en la base, aparece solo en el filtro.
+// Solo se listan los tipos activos que hoy tienen algún producto activo (los demás filtrarían vacío).
+exports.tiposConProductos = async () => {
+  const [filas] = await db.query(
+    `SELECT DISTINCT t.id_tipo_agua AS id, t.nombre
+     FROM tipo_agua t
+     JOIN producto p ON p.id_tipo_agua = t.id_tipo_agua AND p.activo = TRUE
+     WHERE t.activo = TRUE
+     ORDER BY t.id_tipo_agua`
+  );
+  return filas.map((f) => ({ id: f.id, nombre: f.nombre, slug: slug(f.nombre) }));
+};
+
 // Un producto activo con todos los datos de su ficha (HU-016): aroma, tipo de agua, presentación en ml y stock total.
 // Devuelve null si no existe o está desactivado.
 exports.obtenerPorId = async (id) => {
@@ -39,6 +53,7 @@ exports.obtenerPorId = async (id) => {
             p.descripcion AS etiqueta, p.descripcion_larga, p.imagen,
             c.nombre AS aroma, t.nombre AS tipo,
             pr.volumen_ml, pr.tipo_envase,
+            p.es_personalizable AS personalizable,
             COALESCE(SUM(i.cantidad), 0) AS stock
      FROM producto p
      JOIN categoria c ON p.id_categoria = c.id_categoria
@@ -47,13 +62,90 @@ exports.obtenerPorId = async (id) => {
      LEFT JOIN inventario i ON i.id_producto = p.id_producto
      WHERE p.id_producto = ? AND p.activo = TRUE
      GROUP BY p.id_producto, p.nombre, p.precio_base, p.descripcion, p.descripcion_larga, p.imagen,
-              c.nombre, t.nombre, pr.volumen_ml, pr.tipo_envase`,
+               c.nombre, t.nombre, pr.volumen_ml, pr.tipo_envase, p.es_personalizable`,
     [id]
   );
   if (!filas[0]) return null;
 
   const f = filas[0];
-  return { ...f, precio: Number(f.precio), stock: Number(f.stock) };
+  return { ...f, precio: Number(f.precio), stock: Number(f.stock), personalizable: Boolean(f.personalizable) };
+};
+
+// Aromas que se pueden elegir en la ficha de un producto personalizable (HU-018).
+// El nombre y la descripción sensorial salen del componente activo en la base de datos.
+exports.aromasDisponibles = async () => {
+  const [filas] = await db.query(
+    `SELECT id_componente AS id, nombre, descripcion
+     FROM componente
+     WHERE activo = TRUE AND tipo IN ('aroma', 'mixto')
+     ORDER BY nombre, id_componente`
+  );
+  return filas;
+};
+
+// Comprueba una selección recibida por formulario: el producto debe permitir personalización
+// y el componente debe ser un aroma activo. Nunca se confía en el nombre que mande el navegador.
+exports.obtenerAromaParaProducto = async (idProducto, idComponente) => {
+  const [filas] = await db.query(
+    `SELECT c.id_componente AS id, c.nombre, c.descripcion
+     FROM producto p
+     JOIN componente c ON c.id_componente = ?
+     WHERE p.id_producto = ? AND p.activo = TRUE AND p.es_personalizable = TRUE
+       AND c.activo = TRUE AND c.tipo IN ('aroma', 'mixto')`,
+    [idComponente, idProducto]
+  );
+  return filas[0] || null;
+};
+
+// Productos de un carrito [{ id, qty }] con los datos que muestra la página del carrito
+// (HU-022 a HU-025): nombre, aroma, imagen, precio ACTUAL y stock total. Conserva el orden
+// recibido y descarta los productos que ya no existen o fueron desactivados (HU-037).
+exports.detallarCarrito = async (items) => {
+  if (!items || items.length === 0) return [];
+
+  const [filas] = await db.query(
+    `SELECT p.id_producto AS id, p.nombre, p.precio_base AS precio, p.imagen,
+            c.nombre AS aroma, COALESCE(SUM(i.cantidad), 0) AS stock
+     FROM producto p
+     JOIN categoria c ON c.id_categoria = p.id_categoria
+     LEFT JOIN inventario i ON i.id_producto = p.id_producto
+     WHERE p.activo = TRUE AND p.id_producto IN (?)
+     GROUP BY p.id_producto, p.nombre, p.precio_base, p.imagen, c.nombre`,
+    [items.map((i) => i.id)]
+  );
+  const porId = new Map(filas.map((f) => [f.id, f]));
+  const idsComponentes = [...new Set(items.map((i) => i.idComponente).filter(Boolean))];
+  let aromas = new Map();
+  if (idsComponentes.length > 0) {
+    const [componentes] = await db.query(
+      `SELECT id_componente AS id, nombre, descripcion
+       FROM componente WHERE tipo IN ('aroma', 'mixto') AND id_componente IN (?)`,
+      [idsComponentes]
+    );
+    aromas = new Map(componentes.map((c) => [c.id, c]));
+  }
+
+  return items
+    .filter((i) => porId.has(i.id))
+    .map((i) => {
+      const p = porId.get(i.id);
+      const precio = Number(p.precio);
+      const aromaElegido = i.idComponente ? aromas.get(i.idComponente) : null;
+      return {
+        id: p.id,
+        nombre: p.nombre,
+        aroma: aromaElegido ? aromaElegido.nombre : p.aroma,
+        aromaElegido: aromaElegido ? aromaElegido.nombre : null,
+        descripcionAroma: aromaElegido ? aromaElegido.descripcion : null,
+        idComponente: aromaElegido ? aromaElegido.id : null,
+        intensidad: aromaElegido ? Number(i.intensidad) || 1 : null,
+        imagen: p.imagen,
+        precio,
+        stock: Number(p.stock),
+        qty: i.qty,
+        subtotal: precio * i.qty,
+      };
+    });
 };
 
 // Productos destacados del inicio: solo activos, disponibles primero y luego los más vendidos

@@ -30,11 +30,19 @@
         <strong><%= stockBajo > 0 ? '⚠ ' : '' %><%= stockBajo %></strong>
         <span class="admin-kpi-nota"><%= stockBajo === 1 ? 'producto en alerta' : 'productos en alerta' %></span>
       </a>
-      <div class="admin-kpi <%= mensajes.total > 0 ? 'admin-kpi-aviso' : '' %>">
-        <span class="admin-kpi-titulo">Mensajes sin leer</span>
-        <strong><%= mensajes.total %></strong>
-        <span class="admin-kpi-nota">del formulario de contacto</span>
-      </div>
+      <% if (puedeVerMensajes) { %>
+        <a class="admin-kpi admin-kpi-enlace <%= mensajes.total > 0 ? 'admin-kpi-aviso' : '' %>" href="/admin/mensajes">
+          <span class="admin-kpi-titulo">Mensajes sin leer</span>
+          <strong><%= mensajes.total %></strong>
+          <span class="admin-kpi-nota">del formulario de contacto · Ver mensajes →</span>
+        </a>
+      <% } else { %>
+        <div class="admin-kpi <%= mensajes.total > 0 ? 'admin-kpi-aviso' : '' %>">
+          <span class="admin-kpi-titulo">Mensajes sin leer</span>
+          <strong><%= mensajes.total %></strong>
+          <span class="admin-kpi-nota">del formulario de contacto</span>
+        </div>
+      <% } %>
     </div>
 
     <div class="admin-dos-columnas">
@@ -55,7 +63,10 @@
 
       <%# Criterio 2 de HU-035: mensajes recibidos sin leer. %>
       <section class="admin-caja">
-        <h2>Mensajes sin leer</h2>
+        <div class="admin-cabecera admin-cabecera-chica">
+          <h2>Mensajes sin leer</h2>
+          <% if (puedeVerMensajes) { %><a href="/admin/mensajes">Ver todos →</a><% } %>
+        </div>
         <% if (mensajes.ultimos.length === 0) { %>
           <p class="admin-minimo">No hay mensajes nuevos.</p>
         <% } else { %>

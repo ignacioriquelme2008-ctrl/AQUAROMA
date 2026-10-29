@@ -8,6 +8,7 @@ const pedidosController = require('../controllers/pedidosController');
 router.use(requiereSesion, requierePermiso('ver_mis_pedidos'));
 
 router.get('/', pedidosController.listar);                       // Mis pedidos
+router.get('/:id(\\d+)/comprobante', pedidosController.comprobante); // HU-028: comprobante de compra
 router.get('/:id(\\d+)', pedidosController.ver);                 // HU-032: estado y seguimiento (solo números)
 
 module.exports = router;

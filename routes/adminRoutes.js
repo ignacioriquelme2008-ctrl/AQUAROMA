@@ -6,6 +6,7 @@ const adminController = require('../controllers/adminController');
 const adminProductosController = require('../controllers/adminProductosController');
 const adminStockController = require('../controllers/adminStockController');
 const adminPedidosController = require('../controllers/adminPedidosController');
+const adminMensajesController = require('../controllers/adminMensajesController');
 
 // router.use aplica los dos guardias a TODAS las rutas de este archivo:
 // 1) requiereSesion: sin sesión -> al login.   2) soloAdmin: si no es administrador -> "Acceso denegado".
@@ -37,5 +38,10 @@ const puedeGestionarPedidos = requierePermiso('gestionar_pedidos');
 router.get('/pedidos', puedeGestionarPedidos, adminPedidosController.listar);
 router.get('/pedidos/:id(\\d+)', puedeGestionarPedidos, adminPedidosController.ver);
 router.post('/pedidos/:id(\\d+)/estado', puedeGestionarPedidos, adminPedidosController.cambiarEstado);
+
+// HU-012: lectura de mensajes enviados por clientes y visitantes.
+const puedeVerMensajes = requierePermiso('ver_mensajes');
+router.get('/mensajes', puedeVerMensajes, adminMensajesController.listar);
+router.post('/mensajes/:id(\\d+)/leido', puedeVerMensajes, adminMensajesController.marcarLeido);
 
 module.exports = router;

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Mensajes de contacto | AQUAROMA', estilos: ['admin'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <main class="admin admin-ancho">
+    <a class="admin-volver" href="/admin">← Volver al panel</a>
+    <p class="eyebrow">Administración</p>
+    <h1>Mensajes de contacto</h1>
+    <p class="admin-sub">Mensajes recibidos desde el formulario de AQUAROMA.</p>
+
+    <% if (mensajes.length === 0) { %>
+      <section class="admin-caja"><p class="admin-vacio">Todavía no hay mensajes de contacto.</p></section>
+    <% } else { %>
+      <div class="mensajes-contacto">
+        <% mensajes.forEach((m) => { %>
+          <article class="admin-caja mensaje-contacto <%= m.leido ? 'mensaje-leido' : 'mensaje-nuevo' %>">
+            <div class="mensaje-contacto-cabecera">
+              <div>
+                <span class="admin-estado <%= m.leido ? 'admin-estado-lista' : '' %>"><%= m.leido ? 'Leído' : 'Nuevo' %></span>
+                <h2><%= m.asunto %></h2>
+                <p class="admin-minimo"><strong><%= m.nombre %></strong> · <a href="mailto:<%= m.correo %>"><%= m.correo %></a></p>
+              </div>
+              <time class="admin-fecha" datetime="<%= new Date(m.creado_en).toISOString() %>"><%= fechaHora(m.creado_en) %></time>
+            </div>
+            <p class="mensaje-contacto-texto"><%= m.mensaje %></p>
+            <% if (!m.leido) { %>
+              <form method="post" action="/admin/mensajes/<%= m.id %>/leido">
+                <button class="admin-boton-chico" type="submit">Marcar como leído</button>
+              </form>
+            <% } %>
+          </article>
+        <% }) %>
+      </div>
+    <% } %>
+  </main>
+</body>
+</html>

@@ -15,11 +15,10 @@
 /* HU-002: campos con error marcados en rojo (los que devuelve el servidor y los que el navegador detecta al enviar). */
 .auth-campo input.campo-error, .auth-campo input:user-invalid { border-color: var(--danger); background: #fff5f5; }
 
-/* Requisitos de la contraseña: cada uno se marca en verde cuando se cumple (public/js/registro.js). */
+/* Requisitos de la contraseña: lista informativa; la validación real está en el servidor. */
 .auth-reglas { list-style: none; padding: 0; margin-top: 10px; display: grid; gap: 4px; font-size: 13px; color: var(--text-muted); }
+/* La lista es solo informativa: el servidor valida la contraseña (controllers/usuariosController.js). */
 .auth-reglas li::before { content: "○"; display: inline-block; width: 18px; }
-.auth-reglas li.ok { color: var(--green); }
-.auth-reglas li.ok::before { content: "✓"; font-weight: 700; }
 
 /* Mensajes de error: uno bajo cada campo y una lista arriba del formulario. */
 .auth-aviso { font-size: 13px; color: var(--danger); margin-top: 6px; }

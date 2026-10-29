@@ -11,9 +11,7 @@
     <a href="/catalogo" class="ficha-volver">← Volver al catálogo</a>
 
     <% const agotado = producto.stock <= 0; %>
-    <!-- Los data-* son los datos que usa public/js/carrito.js para agregar el producto al carrito. -->
-    <article class="ficha" data-id="<%= producto.id %>" data-nombre="<%= producto.nombre %>" data-precio="<%= producto.precio %>"
-             data-imagen="<%= producto.imagen %>" data-aroma-nombre="<%= producto.aroma %>">
+    <article class="ficha">
       <div class="ficha-img">
         <img src="/img/productos/<%= producto.imagen %>" alt="<%= producto.nombre %>">
         <% if (agotado) { %><span class="badge out">Agotado</span><% } %>
@@ -42,15 +40,38 @@
           </div>
         </dl>
 
+        <% if (producto.personalizable && aromas.length > 0) { %>
+          <%# HU-018: los aromas se ofrecen solo si el producto permite personalización; cada opción incluye sus notas. %>
+          <fieldset class="aromas-config">
+            <legend>Elige tu aroma</legend>
+            <% aromas.forEach((aroma, indice) => { %>
+              <label class="aroma-opcion">
+                <input type="radio" name="idComponente" form="agregar-carrito" value="<%= aroma.id %>" <%= indice === 0 ? 'checked' : '' %> required>
+                <span><strong><%= aroma.nombre %></strong><small><%= aroma.descripcion || 'Aroma natural y equilibrado.' %></small></span>
+              </label>
+            <% }) %>
+            <%# HU-019: la lista limita la selección visual a una cantidad válida entre 1 y 5 dosis. %>
+            <label class="intensidad-campo" for="intensidad-aroma">Intensidad del aroma</label>
+            <select id="intensidad-aroma" name="intensidad" form="agregar-carrito" required>
+              <% [1, 2, 3, 4, 5].forEach((dosis) => { %>
+                <option value="<%= dosis %>" <%= dosis === 1 ? 'selected' : '' %>><%= dosis %> <%= dosis === 1 ? 'dosis' : 'dosis' %></option>
+              <% }) %>
+            </select>
+          </fieldset>
+        <% } %>
+
         <% if (agotado) { %>
           <button type="button" class="buy" disabled>Agotado</button>
         <% } else { %>
-          <button type="button" class="buy">Agregar al carrito</button>
+          <%# HU-018 y HU-022: el servidor valida el aroma; el nombre y el precio siempre salen de la base. %>
+          <form id="agregar-carrito" method="post" action="/carrito/agregar" class="buy-form">
+            <input type="hidden" name="id" value="<%= producto.id %>">
+            <input type="hidden" name="volver" value="<%= volver %>">
+            <button type="submit" class="buy">Agregar al carrito</button>
+          </form>
         <% } %>
       </div>
     </article>
   </main>
-
-  <!-- El botón "Agregar al carrito" lo conecta public/js/carrito.js, que se carga desde el menú (partials/navbar.ejs). -->
 </body>
 </html>

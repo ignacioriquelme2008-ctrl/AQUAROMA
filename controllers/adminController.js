@@ -16,7 +16,7 @@ exports.panel = async (req, res, next) => {
       { titulo: 'Productos', descripcion: 'Crear, editar y desactivar productos del catálogo.', permiso: 'gestionar_productos', url: '/admin/productos' },   // HU-036, HU-037
       { titulo: 'Stock por sucursal', descripcion: 'Ver y ajustar el inventario, con alertas de stock bajo.', permiso: 'gestionar_stock', url: '/admin/stock' },   // HU-038, HU-039
       { titulo: 'Pedidos', descripcion: 'Revisar los pedidos y actualizar su estado de envío.', permiso: 'gestionar_pedidos', url: '/admin/pedidos' },   // HU-040
-      { titulo: 'Mensajes de contacto', descripcion: 'Leer los mensajes enviados desde el formulario de contacto.', permiso: 'ver_mensajes' },
+      { titulo: 'Mensajes de contacto', descripcion: 'Leer los mensajes enviados desde el formulario de contacto.', permiso: 'ver_mensajes', url: '/admin/mensajes' }, // HU-012
     ];
     const permisos = req.session.usuario.permisos || [];
 
@@ -35,6 +35,7 @@ exports.panel = async (req, res, next) => {
       nombres: Pedido.NOMBRES,
       puedeVerPedidos: permisos.includes('gestionar_pedidos'),
       puedeVerStock: permisos.includes('gestionar_stock'),
+      puedeVerMensajes: permisos.includes('ver_mensajes'),
     });
   } catch (err) {
     next(err);

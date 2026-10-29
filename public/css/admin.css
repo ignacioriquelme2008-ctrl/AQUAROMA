@@ -127,6 +127,8 @@
 .admin-kpi-alerta { border-color: #f5c56b; background: #fff8e6; }
 .admin-kpi-alerta strong { color: #b45309; }
 .admin-kpi-aviso { border-color: #a5d8f3; background: #f0f9ff; }
+.admin-kpi-enlace { text-decoration: none; transition: border-color .15s, box-shadow .15s; }
+.admin-kpi-enlace:hover { border-color: var(--primary); box-shadow: 0 4px 14px rgba(14, 165, 233, .15); }
 /* Gráfico de barras horizontales: pedidos por estado. */
 .admin-barras { list-style: none; display: grid; gap: 10px; }
 .admin-barras li { display: grid; grid-template-columns: 120px 1fr 32px; align-items: center; gap: 10px; font-size: 14px; }
@@ -140,3 +142,12 @@
 .admin-mensajes { list-style: none; display: grid; gap: 10px; }
 .admin-mensajes li { display: flex; flex-direction: column; font-size: 14px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
 .admin-mensajes li:last-child { border-bottom: 0; }
+.mensajes-contacto { display: grid; gap: 14px; }
+.mensaje-contacto { margin: 0; }
+.mensaje-contacto h2 { margin: 2px 0 4px; color: var(--navy); font-size: 18px; }
+.mensaje-contacto-cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; }
+.mensaje-contacto-cabecera a { color: var(--blue); }
+.mensaje-contacto-texto { margin: 14px 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
+.mensaje-nuevo { border-left: 4px solid var(--primary); }
+.mensaje-leido { border-left: 4px solid #cbd5e1; }
+@media (max-width: 600px) { .mensaje-contacto-cabecera { flex-direction: column; gap: 6px; } }

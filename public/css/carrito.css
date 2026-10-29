@@ -19,19 +19,22 @@
 .prod strong { display: block; color: var(--navy); font-size: 14px; }
 .prod small { display: block; font-size: 12px; line-height: 1.45; }
 .aroma { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--navy); }
-/* Círculo de color con el ícono del aroma (los colores están en public/js/carrito-pagina.js). */
+/* Círculo de color con el ícono del aroma (los elige el controlador, que los entrega a la vista). */
 .ic { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none; }
 
 /* Botones − / + y casilla para escribir la cantidad (HU-023). */
-.qty { display: flex; align-items: center; justify-content: center; border: 1px solid #d3dbe6; border-radius: 8px; width: fit-content; margin: auto; }
+.qty { display: flex; align-items: center; justify-content: center; border: 1px solid #d3dbe6; border-radius: 8px; width: fit-content; margin: 0 auto; }
 .qty button { border: 0; background: none; width: 32px; height: 34px; font-size: 18px; cursor: pointer; color: var(--navy); }
-.qty button:hover { background: #f1f5fa; }
+.qty button:hover:not(:disabled) { background: #f1f5fa; }
+.qty button:disabled { color: #c9d3e0; cursor: not-allowed; }
 .qty .qty-input { width: 46px; height: 34px; border: 0; border-left: 1px solid #d3dbe6; border-right: 1px solid #d3dbe6; text-align: center; font: inherit; font-weight: 700; color: var(--navy); background: #fff; -moz-appearance: textfield; }
 .qty .qty-input::-webkit-outer-spin-button, .qty .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .qty .qty-input:focus { outline: 2px solid var(--blue); outline-offset: -2px; }
 
 .price { font-size: 18px; font-weight: 700; color: var(--blue); margin: 2px 0 8px; text-align: center; }
-.price b { display: block; font-size: 14px; color: var(--navy); }
+.price b { display: block; font-size: 14px; color: var(--navy); white-space: nowrap; }
+/* HU-027: aviso cuando la cantidad guardada supera el stock que queda. */
+.stock-aviso { color: #b45309; font-weight: 600; }
 
 /* ===== Botón "Eliminar" con animación (HU-024) ===== */
 .del {
@@ -56,6 +59,8 @@
 }
 .del:hover { background: #5b21b6; transform: translateY(-2px); }
 .del:active { background: #2e1065; transform: scale(0.96); }
+/* El botón "Eliminar" va dentro de su propio formulario POST (HU-024). */
+.del-form { display: flex; justify-content: center; margin: 0; }
 
 /* Al eliminar: el botón se achica, la papelera tiembla, se abre la tapa y aparece un ✓ verde. */
 .del.is-success { width: 42px; min-width: 42px; padding: 0; animation: eliminar-exito 0.8s ease both; }
@@ -111,15 +116,45 @@ dl div { display: flex; justify-content: space-between; padding: 10px 0; font-si
 .confirm { width: 100%; padding: 14px; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
 .confirm:hover:not(:disabled) { background: #1750b0; }
 .confirm:disabled { background: #c9d3e0; cursor: not-allowed; }
+/* Sin sesión, el botón se reemplaza por un enlace al login con el mismo aspecto. */
+.confirm-enlace { display: block; box-sizing: border-box; text-align: center; text-decoration: none; }
+/* HU-028: aviso cuando la confirmación no se pudo completar (carrito vacío, sin stock). */
+.confirm-error { margin-top: 12px; background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; border-radius: 8px; padding: 10px 12px; font-size: 14px; }
 .secure { font-size: 12px; margin: 12px 0 16px; }
 .perks { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); padding: 14px 0 0; text-align: center; font-size: 12px; }
 .perks li + li { border-left: 1px solid var(--line); }
 .perks span { display: block; font-size: 20px; margin-bottom: 4px; }
 
-@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
-@media (max-width: 640px) {
+/* ===== Entrega y pago (HU-029 y HU-030) ===== */
+.layout { margin-top: 20px; }
+.checkout h2 { margin-bottom: 12px; }
+.bloque { border: 0; padding: 0; margin: 0 0 18px; }
+.bloque legend { padding: 0 0 8px; font-size: 14px; font-weight: 700; color: var(--navy); }
+.opcion { display: flex; align-items: flex-start; gap: 10px; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; cursor: pointer; }
+.opcion:hover { border-color: #b9cbe4; }
+.opcion:has(input:checked) { border-color: var(--blue); background: #f4f8ff; }
+.opcion input { margin-top: 3px; accent-color: var(--blue); }
+.opcion strong { color: var(--navy); }
+.nota { margin: 4px 0 10px; font-size: 12px; color: #64748b; }
+.nueva { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 12px; padding: 12px; border: 1px dashed var(--line); border-radius: 8px; }
+.nueva-titulo { grid-column: 1 / -1; margin: 0 0 2px; font-size: 12px; font-weight: 700; color: var(--navy); }
+.campo { display: flex; flex-direction: column; gap: 4px; }
+.campo.ancho { grid-column: 1 / -1; }
+.campo label { font-size: 12px; font-weight: 600; color: var(--navy); }
+.campo label small { font-weight: 400; color: #64748b; }
+.campo input, .campo select { padding: 9px 10px; border: 1px solid #d3dbe6; border-radius: 6px; background: #fff; font: inherit; font-size: 13px; color: var(--navy); }
+.campo input:focus, .campo select:focus { outline: 2px solid var(--blue); outline-offset: -2px; }
+.linea { padding: 4px 0; font-size: 13px; color: #64748b; }
+@media (max-width: 640px) { .nueva { grid-template-columns: 1fr; } }
+
+/* En pantallas angostas la fila deja de tener 5 columnas: el producto ocupa todo el ancho
+   y los datos se reparten en dos columnas, para que ningún precio ni botón se corte. */
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
   .head { display: none; }
   .row { grid-template-columns: 1fr 1fr; }
   .prod { grid-column: 1 / -1; }
+  /* La imagen se achica para que la fila no quede tan alta en pantallas angostas. */
+  .prod img { width: 120px; height: 212px; }
   .price { text-align: left; }
 }
