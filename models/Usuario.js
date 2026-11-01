@@ -81,3 +81,36 @@ exports.crear = async ({ nombre, apellido, telefono, correo, password }) => {
 exports.registrarAcceso = async (idUsuario) => {
   await db.query('UPDATE usuario SET ultimo_acceso = NOW() WHERE id_usuario = ?', [idUsuario]);
 };
+
+// HU-007: datos que el cliente ve en su perfil. El correo se lee de "usuario" (es lo que usa
+// para iniciar sesión) y solo se muestra: cambiarlo obligaría a tocar dos tablas a la vez.
+exports.obtenerPerfil = async (idUsuario) => {
+  const [filas] = await db.query(
+    `SELECT u.correo, c.nombre, c.apellido, c.telefono, c.fecha_registro
+     FROM usuario u
+     JOIN cliente c ON c.id_cliente = u.id_cliente
+     WHERE u.id_usuario = ?`,
+    [idUsuario]
+  );
+  return filas[0] || null;
+};
+
+// HU-007: solo el hash. El controlador lo compara con bcrypt antes de dejar cambiar la contraseña.
+exports.obtenerPasswordHash = async (idUsuario) => {
+  const [[fila]] = await db.query('SELECT password_hash FROM usuario WHERE id_usuario = ?', [idUsuario]);
+  return fila ? fila.password_hash : null;
+};
+
+// HU-007: datos personales editables. El correo no se toca a propósito (decisión D1 del plan).
+exports.actualizarDatos = async (idCliente, { nombre, apellido, telefono }) => {
+  await db.query(
+    'UPDATE cliente SET nombre = ?, apellido = ?, telefono = ? WHERE id_cliente = ?',
+    [nombre, apellido, telefono, idCliente]
+  );
+};
+
+// HU-007: guarda la contraseña nueva ya hasheada, igual que en el registro (nunca en texto plano).
+exports.cambiarPassword = async (idUsuario, password) => {
+  const hash = await bcrypt.hash(password, 10);
+  await db.query('UPDATE usuario SET password_hash = ? WHERE id_usuario = ?', [hash, idUsuario]);
+};

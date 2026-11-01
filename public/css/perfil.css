@@ -1,0 +1,65 @@
+/* =====================================================================
+   perfil.css: sección PERFIL del cliente (HU-007).
+   Página: views/perfil/perfil.ejs
+   Los formularios y los mensajes reutilizan las clases de usuarios.css
+   (.auth-campo, .auth-errores, .auth-exito y .auth-fila). Aquí va solo
+   lo propio de esta sección: la tarjeta ancha, los bloques, la lista de
+   direcciones y los campos de dirección.
+   ===================================================================== */
+
+/* La tarjeta del perfil es más ancha que la del login: tiene tres bloques. */
+.perfil { display: flex; justify-content: center; padding: 40px 16px 64px; }
+.perfil-card { width: 100%; max-width: 780px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 32px 30px; }
+.perfil-card h1 { font-size: 30px; margin-bottom: 10px; }
+
+/* Cada bloque (datos, contraseña, direcciones) se separa con una línea. */
+.perfil-bloque { padding-top: 26px; margin-top: 26px; border-top: 1px solid var(--line); }
+.perfil-bloque h2 { font-size: 19px; color: var(--navy); margin-bottom: 4px; }
+.perfil-bloque h3 { font-size: 16px; color: var(--navy); margin-bottom: 12px; }
+.perfil-nota { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+
+/* Datos que se muestran pero no se pueden cambiar (el correo). */
+.auth-campo input[readonly] { background: #f1f5f9; color: var(--text-muted); cursor: not-allowed; }
+.auth-campo p.auth-aviso { margin-top: 6px; }
+
+/* Botones secundarios de la lista de direcciones (los .btn base son para enlaces). */
+.perfil-card button.btn { border: 0; cursor: pointer; font-family: inherit; }
+.btn-ghost { background: #fff; color: var(--navy); border: 1px solid #cfd8e3; }
+.btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+.btn-danger { background: #fff; color: #991b1b; border: 1px solid #fecaca; }
+.btn-danger:hover { background: #fee2e2; }
+.btn-mini { padding: 7px 14px; font-size: 13px; }
+
+/* Lista de direcciones guardadas. */
+.perfil-direcciones { display: grid; gap: 12px; margin-bottom: 24px; }
+.perfil-direccion { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.perfil-direccion-cabecera { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.perfil-direccion-cabecera strong { color: var(--navy); }
+.perfil-direccion p { font-size: 14px; line-height: 1.55; margin-top: 6px; }
+.perfil-referencia { color: var(--text-muted); font-size: 13px; }
+.perfil-badge { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #1f5e2a; background: #e7f6ea; border: 1px solid #bfe5c6; border-radius: 999px; padding: 2px 8px; }
+
+/* Fila de acciones de cada dirección. */
+.perfil-acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.perfil-acciones form { margin: 0; }
+
+/* Formulario de edición: se abre con el resumen, sin JavaScript. */
+.perfil-editar { margin-top: 12px; }
+.perfil-editar summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--blue); }
+.perfil-editar[open] summary { margin-bottom: 12px; }
+.perfil-editar form { padding-top: 4px; }
+.perfil-editar .btn { margin-top: 12px; }
+
+/* Campos de una dirección (van en views/perfil/_campos-direccion.ejs). */
+.perfil-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.perfil-campo { display: flex; flex-direction: column; gap: 5px; }
+.perfil-campo.ancho { grid-column: 1 / -1; }
+.perfil-campo label { font-size: 13px; font-weight: 600; color: var(--navy); }
+.perfil-campo label small { font-weight: 400; color: var(--text-muted); }
+.perfil-campo input, .perfil-campo select { height: 42px; padding: 0 11px; font: inherit; font-size: 14px; color: var(--text); background: #fff; border: 1px solid #cfd8e3; border-radius: 8px; }
+.perfil-campo input:focus, .perfil-campo select:focus { outline: 3px solid var(--primary-light); border-color: var(--primary); }
+
+@media (max-width: 560px) {
+  .perfil-card { padding: 24px 18px; }
+  .perfil-campos { grid-template-columns: 1fr; }
+}

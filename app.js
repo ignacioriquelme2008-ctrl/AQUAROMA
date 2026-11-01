@@ -19,6 +19,7 @@ const contactoRoutes = require('./routes/contactoRoutes'); // formulario de cont
 // Rutas del panel de administración (HU-006). Están protegidas por los middlewares de middlewares/auth.js.
 const adminRoutes = require('./routes/adminRoutes');
 const pedidosRoutes = require('./routes/pedidosRoutes'); // "Mis pedidos" y seguimiento del cliente (HU-032)
+const perfilRoutes = require('./routes/perfilRoutes');   // perfil del cliente: datos, contraseña y direcciones (HU-007)
 
 // Middleware que calcula el contador del carrito para el menú (HU-022).
 const { cargarCarrito } = require('./middlewares/carrito');
@@ -67,6 +68,7 @@ app.use('/carrito', carritoRoutes);
 app.use('/contacto', contactoRoutes);
 app.use('/admin', adminRoutes);
 app.use('/pedidos', pedidosRoutes);
+app.use('/perfil', perfilRoutes);
 
 // Si ninguna ruta respondió, la página no existe: se muestra "no encontrado" (404). Va siempre después de las rutas.
 app.use((req, res) => res.status(404).render('errores/no-encontrado'));

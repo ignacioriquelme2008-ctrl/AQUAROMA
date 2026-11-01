@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Mi perfil | AQUAROMA', estilos: ['usuarios', 'perfil'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <%
+    // Datos que manda el controlador. Los formularios con errores vuelven a mostrar lo escrito.
+    const datos = locals.datos || {};
+    const errores = locals.errores || {};
+    const passwordErrores = locals.passwordErrores || {};
+    const direccionErrores = locals.direccionErrores || {};
+    const datosDir = locals.direccionDatos || {};
+    const editando = locals.direccionEditando || null;
+
+    // Todas las listas de errores de un formulario, en un arreglo (el objeto es {campo: mensaje}).
+    const listaErrores = (grupo) => Object.values(grupo || {}).filter(Boolean);
+
+    // Las 16 regiones, igual que en el carrito (HU-029): la dirección se guarda con el mismo texto.
+    const REGIONES = ['Arica y Parinacota', 'Tarapacá', 'Antofagasta', 'Atacama', 'Coquimbo', 'Valparaíso',
+      'Metropolitana', "O'Higgins", 'Maule', 'Ñuble', 'Biobío', 'La Araucanía', 'Los Ríos', 'Los Lagos',
+      'Aysén', 'Magallanes'];
+  %>
+
+  <main class="perfil">
+    <div class="perfil-card">
+      <h1>Mi perfil</h1>
+      <p class="auth-sub">Revisa tus datos y administra tu contraseña y tus direcciones de entrega.</p>
+
+      <%# HU-007 criterio 4: mensaje verde después de cualquier cambio (?ok=datos|password|...). %>
+      <% if (locals.exito) { %><p class="auth-exito" role="status"><%= exito %></p><% } %>
+
+      <!-- HU-007 criterio 1: nombre, apellido, correo y teléfono. -->
+      <section class="perfil-bloque">
+        <h2>Datos personales</h2>
+        <p class="perfil-nota">El correo no se puede cambiar: es con lo que inicias sesión.</p>
+
+        <form method="post" action="/perfil/datos" novalidate>
+          <% if (listaErrores(errores).length) { %>
+            <ul class="auth-errores" role="alert">
+              <% listaErrores(errores).forEach((mensaje) => { %><li><%= mensaje %></li><% }) %>
+            </ul>
+          <% } %>
+
+          <div class="auth-fila">
+            <div class="auth-campo">
+              <label for="nombre">Nombre</label>
+              <input id="nombre" name="nombre" type="text" maxlength="100" autocomplete="given-name"
+                     class="<%= errores.nombre ? 'campo-error' : '' %>" value="<%= datos.nombre || '' %>" required>
+            </div>
+            <div class="auth-campo">
+              <label for="apellido">Apellido</label>
+              <input id="apellido" name="apellido" type="text" maxlength="100" autocomplete="family-name"
+                     class="<%= errores.apellido ? 'campo-error' : '' %>" value="<%= datos.apellido || '' %>" required>
+            </div>
+          </div>
+
+          <div class="auth-fila">
+            <div class="auth-campo">
+              <label for="telefono">Teléfono</label>
+              <input id="telefono" name="telefono" type="tel" maxlength="20" autocomplete="tel"
+                     class="<%= errores.telefono ? 'campo-error' : '' %>" value="<%= datos.telefono || '' %>" required>
+            </div>
+            <div class="auth-campo">
+              <label for="correo">Correo electrónico</label>
+              <input id="correo" type="email" value="<%= perfil.correo %>" readonly aria-readonly="true">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </form>
+      </section>
+
+      <!-- HU-007 criterios 3 y 4: cambiar la contraseña pidiendo la actual. -->
+      <section class="perfil-bloque">
+        <h2>Contraseña</h2>
+        <p class="perfil-nota">Para cambiarla necesitas tu contraseña actual.</p>
+
+        <form method="post" action="/perfil/password" novalidate>
+          <% if (listaErrores(passwordErrores).length) { %>
+            <ul class="auth-errores" role="alert">
+              <% listaErrores(passwordErrores).forEach((mensaje) => { %><li><%= mensaje %></li><% }) %>
+            </ul>
+          <% } %>
+
+          <div class="auth-campo">
+            <label for="actual">Contraseña actual</label>
+            <input id="actual" name="actual" type="password" autocomplete="current-password"
+                   class="<%= passwordErrores.actual ? 'campo-error' : '' %>" required>
+          </div>
+
+          <div class="auth-fila">
+            <div class="auth-campo">
+              <label for="nueva">Contraseña nueva</label>
+              <input id="nueva" name="nueva" type="password" autocomplete="new-password"
+                     class="<%= passwordErrores.nueva ? 'campo-error' : '' %>" required>
+            </div>
+            <div class="auth-campo">
+              <label for="confirmar">Repetir contraseña nueva</label>
+              <input id="confirmar" name="confirmar" type="password" autocomplete="new-password"
+                     class="<%= passwordErrores.confirmar ? 'campo-error' : '' %>" required>
+            </div>
+          </div>
+
+          <!-- La validación real es la del servidor (utils/validaciones.js); esto solo informa. -->
+          <ul class="auth-reglas">
+            <li>Entre 8 y 20 caracteres.</li>
+            <li>Al menos una mayúscula, una minúscula, un número y un carácter especial.</li>
+          </ul>
+
+          <button type="submit" class="btn btn-primary">Cambiar contraseña</button>
+        </form>
+      </section>
+
+      <!-- HU-007 criterio 2: direcciones de entrega (ver, agregar, editar, marcar principal y eliminar). -->
+      <section class="perfil-bloque">
+        <h2>Direcciones de entrega</h2>
+        <p class="perfil-nota">La dirección principal es la que viene marcada al confirmar un pedido.</p>
+
+        <% if (direcciones.length === 0) { %>
+          <p class="perfil-nota">Todavía no tienes direcciones guardadas. Agrega la primera aquí abajo.</p>
+        <% } else { %>
+          <div class="perfil-direcciones">
+            <% direcciones.forEach((d) => { %>
+              <% const esEdicion = editando === d.id; %>
+              <article class="perfil-direccion">
+                <div class="perfil-direccion-cabecera">
+                  <strong><%= d.alias || 'Dirección' %></strong>
+                  <% if (d.principal) { %><span class="perfil-badge">Principal</span><% } %>
+                </div>
+                <p>
+                  <%= d.calle %> <%= d.numero || '' %><%= d.departamento ? ', ' + d.departamento : '' %><br>
+                  <%= d.comuna %>, <%= d.region %><%= d.codigoPostal ? ' · CP ' + d.codigoPostal : '' %>
+                </p>
+                <% if (d.referencia) { %><p class="perfil-referencia">Referencia: <%= d.referencia %></p><% } %>
+
+                <div class="perfil-acciones">
+                  <% if (!d.principal) { %>
+                    <form method="post" action="/perfil/direcciones/<%= d.id %>/principal">
+                      <button type="submit" class="btn btn-ghost btn-mini">Hacer principal</button>
+                    </form>
+                  <% } %>
+                  <form method="post" action="/perfil/direcciones/<%= d.id %>/eliminar"
+                        onsubmit="return confirm('¿Quitar esta dirección de tu cuenta?');">
+                    <button type="submit" class="btn btn-danger btn-mini">Eliminar</button>
+                  </form>
+                </div>
+
+                <!-- Editar: el formulario se abre solo si esta dirección volvió con errores. -->
+                <details class="perfil-editar" <%= esEdicion ? 'open' : '' %>>
+                  <summary>Editar esta dirección</summary>
+                  <form method="post" action="/perfil/direcciones/<%= d.id %>" novalidate>
+                    <% if (esEdicion && listaErrores(direccionErrores).length) { %>
+                      <ul class="auth-errores" role="alert">
+                        <% listaErrores(direccionErrores).forEach((mensaje) => { %><li><%= mensaje %></li><% }) %>
+                      </ul>
+                    <% } %>
+                    <%- include('_campos-direccion', { prefijo: 'dir' + d.id + '-', valores: esEdicion ? datosDir : d, REGIONES }) %>
+                    <button type="submit" class="btn btn-primary btn-mini">Guardar dirección</button>
+                  </form>
+                </details>
+              </article>
+            <% }) %>
+          </div>
+        <% } %>
+
+        <h3>Agregar una dirección</h3>
+        <form method="post" action="/perfil/direcciones" novalidate>
+          <% if (!editando && listaErrores(direccionErrores).length) { %>
+            <ul class="auth-errores" role="alert">
+              <% listaErrores(direccionErrores).forEach((mensaje) => { %><li><%= mensaje %></li><% }) %>
+            </ul>
+          <% } %>
+          <%- include('_campos-direccion', { prefijo: 'nueva-', valores: editando ? {} : datosDir, REGIONES }) %>
+          <button type="submit" class="btn btn-primary">Guardar dirección</button>
+        </form>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

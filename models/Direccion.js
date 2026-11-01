@@ -66,22 +66,7 @@ exports.obtenerDeClienteEn = async (conn, idCliente, idDireccion) => {
 // Se exporta porque el carrito la usa al confirmar (HU-029): la dirección y el pedido se
 // guardan en la MISMA transacción.
 async function crearEn(conn, idCliente, d) {
-  const [ubicaciones] = await conn.query(
-    `SELECT id_ubicacion FROM ubicacion
-     WHERE region = ? AND comuna = ? AND pais = 'Chile'
-     ORDER BY id_ubicacion LIMIT 1`,
-    [d.region, d.comuna]
-  );
-  let idUbicacion;
-  if (ubicaciones[0]) {
-    idUbicacion = ubicaciones[0].id_ubicacion;
-  } else {
-    const [nuevaUbicacion] = await conn.query(
-      `INSERT INTO ubicacion (region, comuna, pais) VALUES (?, ?, 'Chile')`,
-      [d.region, d.comuna]
-    );
-    idUbicacion = nuevaUbicacion.insertId;
-  }
+  const idUbicacion = await ubicacionEn(conn, d.region, d.comuna);
 
   const [nueva] = await conn.query(
     `INSERT INTO direccion (id_ubicacion, calle, numero, departamento, codigo_postal, referencia)
@@ -129,4 +114,128 @@ exports.crear = async (idCliente, d) => {
   } finally {
     conn.release();
   }
+};
+
+// HU-007: busca la ubicación (región + comuna) de una dirección o la crea si no existe.
+// Se llama dentro de una transacción, igual que crearEn().
+async function ubicacionEn(conn, region, comuna) {
+  const [filas] = await conn.query(
+    `SELECT id_ubicacion FROM ubicacion
+     WHERE region = ? AND comuna = ? AND pais = 'Chile'
+     ORDER BY id_ubicacion LIMIT 1`,
+    [region, comuna]
+  );
+  if (filas[0]) return filas[0].id_ubicacion;
+
+  const [nueva] = await conn.query(
+    `INSERT INTO ubicacion (region, comuna, pais) VALUES (?, ?, 'Chile')`,
+    [region, comuna]
+  );
+  return nueva.insertId;
+}
+
+// HU-007: edita una dirección guardada del cliente (calle, comuna, región, alias...).
+// Devuelve los datos nuevos, o null si esa dirección no existe o es de otra persona.
+exports.actualizar = async (idCliente, idDireccion, d) => {
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    const [filas] = await conn.query(
+      `SELECT d.id_direccion
+       FROM cliente_direccion cd
+       JOIN direccion d ON d.id_direccion = cd.id_direccion
+       WHERE cd.id_cliente = ? AND d.id_direccion = ?
+       FOR UPDATE`,
+      [idCliente, idDireccion]
+    );
+    if (!filas[0]) {
+      await conn.rollback();
+      return null;
+    }
+
+    const idUbicacion = await ubicacionEn(conn, d.region, d.comuna);
+    await conn.query(
+      `UPDATE direccion
+       SET id_ubicacion = ?, calle = ?, numero = ?, departamento = ?, codigo_postal = ?, referencia = ?
+       WHERE id_direccion = ?`,
+      [idUbicacion, d.calle, d.numero || null, d.departamento || null, d.codigoPostal || null, d.referencia || null, idDireccion]
+    );
+    await conn.query(
+      'UPDATE cliente_direccion SET alias = ? WHERE id_cliente = ? AND id_direccion = ?',
+      [d.alias || null, idCliente, idDireccion]
+    );
+
+    await conn.commit();
+    return { ...d, id: Number(idDireccion) };
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+};
+
+// HU-007: borra una dirección del cliente. Si era la principal y quedan otras, la primera
+// que quede pasa a principal: el cliente nunca se queda con direcciones sin ninguna marcada.
+exports.eliminar = async (idCliente, idDireccion) => {
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    const [filas] = await conn.query(
+      `SELECT es_principal FROM cliente_direccion
+       WHERE id_cliente = ? AND id_direccion = ?
+       FOR UPDATE`,
+      [idCliente, idDireccion]
+    );
+    if (!filas[0]) {
+      await conn.rollback();
+      return null;
+    }
+    const eraPrincipal = Boolean(filas[0].es_principal);
+
+    // Primero la relación cliente <-> dirección (el FK la exige), después la dirección.
+    // La fila de "ubicacion" NO se borra: la comparten otras direcciones de la misma comuna.
+    await conn.query('DELETE FROM cliente_direccion WHERE id_cliente = ? AND id_direccion = ?', [idCliente, idDireccion]);
+    await conn.query('DELETE FROM direccion WHERE id_direccion = ?', [idDireccion]);
+
+    if (eraPrincipal) {
+      const [restantes] = await conn.query(
+        'SELECT id_direccion FROM cliente_direccion WHERE id_cliente = ? ORDER BY id_direccion LIMIT 1',
+        [idCliente]
+      );
+      if (restantes[0]) {
+        await conn.query(
+          'UPDATE cliente_direccion SET es_principal = TRUE WHERE id_cliente = ? AND id_direccion = ?',
+          [idCliente, restantes[0].id_direccion]
+        );
+      }
+    }
+
+    await conn.commit();
+    return true;
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+};
+
+// HU-007: deja una sola dirección como principal (la elegida) para ese cliente.
+// Devuelve false si la dirección no está en su cuenta.
+exports.marcarPrincipal = async (idCliente, idDireccion) => {
+  const [filas] = await db.query(
+    'SELECT 1 FROM cliente_direccion WHERE id_cliente = ? AND id_direccion = ?',
+    [idCliente, idDireccion]
+  );
+  if (!filas[0]) return false;
+
+  // (id_direccion = ?) devuelve 1 en la elegida y 0 en el resto, en una sola consulta.
+  await db.query(
+    'UPDATE cliente_direccion SET es_principal = (id_direccion = ?) WHERE id_cliente = ?',
+    [idDireccion, idCliente]
+  );
+  return true;
 };

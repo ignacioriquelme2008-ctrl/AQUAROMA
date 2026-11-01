@@ -1,0 +1,47 @@
+<%#
+  Campos de una dirección de entrega (HU-007 y HU-029).
+  Los usan el formulario de "agregar" y el de cada dirección guardada, para que los dos
+  pidan exactamente lo mismo. Los id llevan un prefijo para no repetirse en la página.
+  Espera: prefijo (texto), valores (objeto con lo ya escrito) y REGIONES (lista).
+%>
+<% const v = locals.valores || {}; %>
+<% const p = locals.prefijo || 'dir-'; %>
+<div class="perfil-campos">
+  <div class="perfil-campo ancho">
+    <label for="<%= p %>alias">Nombre de la dirección <small>(opcional)</small></label>
+    <input id="<%= p %>alias" name="alias" type="text" maxlength="50" placeholder="Casa, Trabajo..." value="<%= v.alias || '' %>">
+  </div>
+  <div class="perfil-campo ancho">
+    <label for="<%= p %>calle">Calle</label>
+    <input id="<%= p %>calle" name="calle" type="text" maxlength="150" autocomplete="address-line1" placeholder="Av. Providencia" value="<%= v.calle || '' %>" required>
+  </div>
+  <div class="perfil-campo">
+    <label for="<%= p %>numero">Número</label>
+    <input id="<%= p %>numero" name="numero" type="text" maxlength="20" autocomplete="address-line2" placeholder="1234" value="<%= v.numero || '' %>">
+  </div>
+  <div class="perfil-campo">
+    <label for="<%= p %>departamento">Depto. / oficina <small>(opcional)</small></label>
+    <input id="<%= p %>departamento" name="departamento" type="text" maxlength="50" placeholder="Depto. 56" value="<%= v.departamento || '' %>">
+  </div>
+  <div class="perfil-campo">
+    <label for="<%= p %>comuna">Comuna</label>
+    <input id="<%= p %>comuna" name="comuna" type="text" maxlength="100" autocomplete="address-level2" placeholder="Providencia" value="<%= v.comuna || '' %>" required>
+  </div>
+  <div class="perfil-campo">
+    <label for="<%= p %>region">Región</label>
+    <% const regionElegida = v.region || 'Metropolitana'; %>
+    <select id="<%= p %>region" name="region" autocomplete="address-level1">
+      <% (locals.REGIONES || []).forEach((r) => { %>
+        <option value="<%= r %>" <%= r === regionElegida ? 'selected' : '' %>><%= r %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="perfil-campo">
+    <label for="<%= p %>codigoPostal">Código postal <small>(opcional)</small></label>
+    <input id="<%= p %>codigoPostal" name="codigoPostal" type="text" maxlength="15" autocomplete="postal-code" placeholder="7500000" value="<%= v.codigoPostal || '' %>">
+  </div>
+  <div class="perfil-campo ancho">
+    <label for="<%= p %>referencia">Referencia <small>(opcional)</small></label>
+    <input id="<%= p %>referencia" name="referencia" type="text" maxlength="255" placeholder="Frente a la plaza, timbre 3" value="<%= v.referencia || '' %>">
+  </div>
+</div>

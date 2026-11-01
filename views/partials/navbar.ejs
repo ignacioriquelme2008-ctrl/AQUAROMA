@@ -25,6 +25,8 @@
         <% if (locals.usuario.esAdmin) { %><a href="/admin" class="nav-enlace nav-panel">Panel</a><% } %>
         <%# HU-009 (criterio 3) y HU-032: el cliente llega a sus pedidos y su seguimiento desde el menú. %>
         <% if (locals.usuario.idCliente) { %><a href="/pedidos" class="nav-enlace">Mis pedidos</a><% } %>
+        <%# HU-007: el perfil solo existe para los clientes (el administrador no tiene ficha de cliente). %>
+        <% if (locals.usuario.idCliente) { %><a href="/perfil" class="nav-enlace">Mi perfil</a><% } %>
         <form method="post" action="/logout"><button type="submit" class="nav-enlace">Cerrar sesión</button></form>
       <% } else { %>
         <a href="/login" class="nav-enlace">Iniciar sesión</a>

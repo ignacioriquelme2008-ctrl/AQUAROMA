@@ -17,6 +17,15 @@ function soloAdmin(req, res, next) {
   return res.status(403).render('errores/acceso-denegado');
 }
 
+// HU-007: solo deja pasar a las cuentas que tienen ficha de cliente.
+// El administrador no tiene fila en "cliente", así que no tiene perfil: sin esta comprobación
+// entraría a /perfil sin datos y con las direcciones de nadie.
+// Va siempre DESPUÉS de requiereSesion, porque necesita saber quién es el usuario.
+function requiereCliente(req, res, next) {
+  if (req.session.usuario && req.session.usuario.idCliente) return next();
+  return res.status(403).render('errores/acceso-denegado');
+}
+
 // Revisa un permiso concreto de la tabla "permiso" (HU-006, criterio 4).
 // Ejemplo para HU-036:  router.post('/admin/productos', requiereSesion, requierePermiso('gestionar_productos'), ...)
 function requierePermiso(nombrePermiso) {
@@ -27,4 +36,4 @@ function requierePermiso(nombrePermiso) {
   };
 }
 
-module.exports = { requiereSesion, soloAdmin, requierePermiso };
+module.exports = { requiereSesion, soloAdmin, requiereCliente, requierePermiso };
