@@ -18,4 +18,9 @@ router.post('/direcciones/:id(\\d+)', perfilController.editarDireccion);     // 
 router.post('/direcciones/:id(\\d+)/principal', perfilController.marcarPrincipal);
 router.post('/direcciones/:id(\\d+)/eliminar', perfilController.eliminarDireccion);
 
+// HU-021: configuraciones favoritas. La primera llega desde el carrito ("Guardar como favorita").
+router.post('/favoritos', perfilController.crearFavorito);
+router.post('/favoritos/:id(\\d+)/carrito', perfilController.favoritoAlCarrito);
+router.post('/favoritos/:id(\\d+)/eliminar', perfilController.eliminarFavorito);
+
 module.exports = router;

@@ -198,6 +198,15 @@ exports.contar = async (idCliente) => {
   return Number(fila.unidades) || 0;
 };
 
+// HU-021: crea (o reutiliza) la preparación personalizada de una bebida fuera del carrito, para
+// guardarla como favorita. Usa la misma función que el carrito, así la favorita apunta a la MISMA
+// fila de "configuracion_bebida" (sin preparaciones ni precios duplicados).
+// Devuelve el id de la configuración, o null si el producto o el aroma no son válidos.
+exports.guardarConfiguracionPersonalizada = async (idCliente, { idProducto, idComponente, intensidad, precio, nombreProducto }) => {
+  return enTransaccion((conn) =>
+    configuracionPersonalizada(conn, idCliente, idProducto, idComponente, intensidad, precio, nombreProducto));
+};
+
 // Guarda el carrito completo que ya validó el controlador (cada vez que el cliente cambia algo).
 exports.guardar = async (idCliente, items) => {
   await enTransaccion(async (conn) => {

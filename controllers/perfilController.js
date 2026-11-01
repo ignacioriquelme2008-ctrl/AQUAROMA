@@ -5,7 +5,11 @@
 const bcrypt = require('bcrypt');
 const Usuario = require('../models/Usuario');
 const Direccion = require('../models/Direccion');
+const Producto = require('../models/Producto');
+const Carrito = require('../models/Carrito');
+const Favorito = require('../models/Favorito');
 const { PASS_REGEX, TEL_REGEX, LARGO_MAX, texto, leerDireccionNueva } = require('../utils/validaciones');
+const { MAX_CANTIDAD } = require('../utils/carrito');
 
 // Texto del mensaje verde según lo que se acaba de guardar.
 const EXITOS = {
@@ -15,6 +19,7 @@ const EXITOS = {
   direccionEditada: 'Actualizamos la dirección de entrega.',
   direccionEliminada: 'Quitamos la dirección de entrega.',
   principal: 'Esa dirección quedó como principal.',
+  favoritaEliminada: 'Quitamos esa configuración de tus favoritas.',
 };
 
 // Largo de cliente_direccion.alias (el resto de los campos lo revisa leerDireccionNueva).
@@ -27,15 +32,18 @@ const idClienteDe = (req) => req.session.usuario.idCliente;
 // Junta lo que necesita la vista y la dibuja. Se usa en el GET y también cuando un formulario
 // llega con errores: en ese caso con código 400 y los valores que la persona había escrito.
 async function renderPerfil(req, res, estado, extra = {}) {
-  const [perfil, direcciones] = await Promise.all([
+  const idCliente = idClienteDe(req);
+  const [perfil, direcciones, favoritos] = await Promise.all([
     Usuario.obtenerPerfil(req.session.usuario.id),
-    Direccion.listarDeCliente(idClienteDe(req)),
+    Direccion.listarDeCliente(idCliente),
+    Favorito.listarDeCliente(idCliente),
   ]);
   if (!perfil) return res.status(404).render('errores/no-encontrado');
 
   return res.status(estado).render('perfil/perfil', {
     perfil,
     direcciones,
+    favoritos,
     exito: null,
     errores: {},
     datos: { nombre: perfil.nombre, apellido: perfil.apellido, telefono: perfil.telefono },
@@ -208,6 +216,126 @@ exports.eliminarDireccion = async (req, res, next) => {
       return res.status(404).render('errores/no-encontrado', { mensaje: 'Esa dirección no está en tu cuenta.' });
     }
     res.redirect('/perfil?ok=direccionEliminada');
+  } catch (err) {
+    next(err);
+  }
+};
+
+// =====================================================================
+// HU-021: configuraciones favoritas.
+// El botón "Guardar como favorita" vive en el carrito, porque cada línea ya trae el producto,
+// el aroma y la intensidad elegidos.
+// =====================================================================
+
+// Largo de configuracion_favorita.alias.
+const LARGO_FAVORITA = 60;
+
+// Deja un aviso para la próxima página y vuelve al carrito (el mismo mecanismo que usa el carrito
+// para "se agregó" o "solo quedan X unidades"; el menú lo muestra una sola vez).
+function volverAlCarrito(req, res, mensaje) {
+  req.session.avisoCarrito = mensaje;
+  return res.redirect('/carrito');
+}
+
+// POST /perfil/favoritos -> criterio 1: guardar la preparación del carrito con un nombre.
+exports.crearFavorito = async (req, res, next) => {
+  const alias = texto(req.body.alias).trim().replace(/\s+/g, ' ');   // sin espacios repetidos
+
+  if (!alias) return volverAlCarrito(req, res, 'Ponle un nombre a tu configuración favorita.');
+  if (alias.length > LARGO_FAVORITA) {
+    return volverAlCarrito(req, res, `El nombre puede tener hasta ${LARGO_FAVORITA} caracteres.`);
+  }
+
+  try {
+    const id = Number(req.body.id);
+    const producto = Number.isInteger(id) && id > 0 ? await Producto.obtenerPorId(id) : null;
+    if (!producto) return volverAlCarrito(req, res, 'Ese producto ya no está disponible.');
+
+    // El aroma y la intensidad se validan contra la base, nunca contra lo que manda el navegador.
+    const idComponente = Number(texto(req.body.idComponente).trim());
+    const aroma = Number.isInteger(idComponente) && idComponente > 0
+      ? await Producto.obtenerAromaParaProducto(id, idComponente)
+      : null;
+    if (!aroma) return volverAlCarrito(req, res, 'El aroma elegido no está disponible para este producto.');
+
+    const intensidad = Number(texto(req.body.intensidad).trim());
+    if (!Number.isInteger(intensidad) || intensidad < 1 || intensidad > 5) {
+      return volverAlCarrito(req, res, 'Elige una intensidad del aroma entre 1 y 5 dosis.');
+    }
+
+    // La preparación se crea (o se reutiliza) con la misma función que usa el carrito.
+    const idConfiguracion = await Carrito.guardarConfiguracionPersonalizada(idClienteDe(req), {
+      idProducto: id,
+      idComponente,
+      intensidad,
+      precio: producto.precio,
+      nombreProducto: producto.nombre,
+    });
+    if (!idConfiguracion) return volverAlCarrito(req, res, 'No pudimos guardar esa combinación. Inténtalo de nuevo.');
+
+    await Favorito.crear(idClienteDe(req), idConfiguracion, alias);
+    return volverAlCarrito(req, res, `Guardaste "${alias}" como favorita. La encuentras en tu perfil.`);
+  } catch (err) {
+    // UNIQUE (id_cliente, alias): el cliente ya tiene una favorita con ese nombre.
+    if (err.code === 'ER_DUP_ENTRY') {
+      return volverAlCarrito(req, res, 'Ya tienes una favorita con ese nombre. Elige otro.');
+    }
+    next(err);
+  }
+};
+
+// POST /perfil/favoritos/:id/eliminar -> criterio 3 (quitar de favoritas).
+exports.eliminarFavorito = async (req, res, next) => {
+  try {
+    const quitada = await Favorito.eliminar(idClienteDe(req), Number(req.params.id));
+    if (!quitada) {
+      return res.status(404).render('errores/no-encontrado', { mensaje: 'Esa favorita no está en tu cuenta.' });
+    }
+    res.redirect('/perfil?ok=favoritaEliminada');
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST /perfil/favoritos/:id/carrito -> criterio 3: agregar la favorita al carrito con un clic.
+// Se suman las unidades con las mismas reglas del carrito (stock y tope de 99 por producto).
+exports.favoritoAlCarrito = async (req, res, next) => {
+  try {
+    const idCliente = idClienteDe(req);
+    const favorita = await Favorito.obtenerDeCliente(idCliente, Number(req.params.id));
+    if (!favorita) {
+      return res.status(404).render('errores/no-encontrado', { mensaje: 'Esa favorita no está en tu cuenta.' });
+    }
+    if (!favorita.disponible) {
+      return volverAlCarrito(req, res, `"${favorita.alias}" no está disponible por ahora.`);
+    }
+
+    const lineas = await Carrito.obtenerLineas(idCliente);
+    const actual = lineas.find((l) => l.id === favorita.idProducto
+      && (l.idComponente || null) === favorita.idComponente
+      && (l.intensidad || null) === favorita.intensidad);
+    const antes = actual ? actual.qty : 0;
+    const tope = Math.min(favorita.stock, MAX_CANTIDAD);
+    const unidadesProducto = lineas
+      .filter((l) => l.id === favorita.idProducto)
+      .reduce((total, l) => total + l.qty, 0);
+
+    if (unidadesProducto >= tope) {
+      return volverAlCarrito(req, res, `Ya tienes el máximo disponible de "${favorita.producto}" (${tope}).`);
+    }
+
+    const despues = antes + 1;
+    if (actual) actual.qty = despues;
+    else {
+      lineas.push({
+        id: favorita.idProducto,
+        qty: despues,
+        ...(favorita.idComponente ? { idComponente: favorita.idComponente, intensidad: favorita.intensidad } : {}),
+      });
+    }
+    await Carrito.guardar(idCliente, lineas);
+
+    return volverAlCarrito(req, res, `Agregaste "${favorita.alias}" al carrito.`);
   } catch (err) {
     next(err);
   }

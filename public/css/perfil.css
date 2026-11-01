@@ -59,7 +59,24 @@
 .perfil-campo input, .perfil-campo select { height: 42px; padding: 0 11px; font: inherit; font-size: 14px; color: var(--text); background: #fff; border: 1px solid #cfd8e3; border-radius: 8px; }
 .perfil-campo input:focus, .perfil-campo select:focus { outline: 3px solid var(--primary-light); border-color: var(--primary); }
 
+/* HU-021: configuraciones favoritas del cliente. */
+.perfil-favoritas { display: grid; gap: 12px; }
+.perfil-favorita { display: grid; grid-template-columns: 82px 1fr auto; gap: 14px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.perfil-favorita img { width: 82px; height: 104px; object-fit: cover; border-radius: 6px; }
+.perfil-favorita-info strong { display: block; color: var(--navy); font-size: 15px; }
+.perfil-favorita-info p { font-size: 13px; line-height: 1.5; }
+.perfil-favorita-aroma { color: var(--text-muted); }
+.perfil-favorita-precio { font-weight: 700; color: var(--navy); }
+.perfil-favorita-acciones { display: flex; flex-direction: column; gap: 8px; }
+.perfil-favorita-acciones form { margin: 0; }
+/* La favorita existe, pero su producto está desactivado o sin stock. */
+.perfil-badge-off { color: #991b1b; background: #fee2e2; border-color: #fecaca; }
+.perfil-card button.btn:disabled { opacity: .45; cursor: not-allowed; }
+
 @media (max-width: 560px) {
   .perfil-card { padding: 24px 18px; }
   .perfil-campos { grid-template-columns: 1fr; }
+  .perfil-favorita { grid-template-columns: 70px 1fr; }
+  .perfil-favorita img { width: 70px; height: 92px; }
+  .perfil-favorita-acciones { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; }
 }

@@ -380,6 +380,22 @@ CREATE TABLE configuracion_componente (
     FOREIGN KEY (id_componente) REFERENCES componente(id_componente) ON DELETE RESTRICT
 );
 
+-- HU-021: configuraciones favoritas del cliente.
+-- La preparación en sí NO se duplica: ya vive en configuracion_bebida + configuracion_componente
+-- (la misma fila que crea el carrito al elegir aroma e intensidad). Aquí solo se guarda el nombre
+-- con el que el cliente la bautizó y a quién pertenece.
+-- UNIQUE (id_cliente, alias): un cliente no puede tener dos favoritas con el mismo nombre.
+CREATE TABLE configuracion_favorita (
+    id_favorita INT AUTO_INCREMENT PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    id_configuracion INT NOT NULL,
+    alias VARCHAR(60) NOT NULL,
+    creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_favorita UNIQUE (id_cliente, alias),
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE CASCADE,
+    FOREIGN KEY (id_configuracion) REFERENCES configuracion_bebida(id_configuracion) ON DELETE CASCADE
+);
+
 CREATE TABLE pedido (
     id_pedido INT AUTO_INCREMENT PRIMARY KEY,
     id_cliente INT NOT NULL,

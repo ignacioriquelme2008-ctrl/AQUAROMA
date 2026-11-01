@@ -158,3 +158,17 @@ dl div { display: flex; justify-content: space-between; padding: 10px 0; font-si
   .prod img { width: 120px; height: 212px; }
   .price { text-align: left; }
 }
+
+/* =====================================================================
+   HU-021: guardar una preparación del carrito como favorita.
+   Va dentro de la celda del producto y se abre con el resumen, sin JavaScript.
+   ===================================================================== */
+.fav-form { margin-top: 8px; }
+.fav-form summary { display: inline-block; cursor: pointer; font-size: 12px; font-weight: 700; color: var(--blue); }
+.fav-form summary:hover { text-decoration: underline; }
+.fav-form[open] summary { margin-bottom: 6px; }
+.fav-form form { display: flex; gap: 6px; align-items: center; }
+.fav-form input[type="text"] { flex: 1; min-width: 0; height: 32px; padding: 0 8px; font: inherit; font-size: 12px; color: var(--navy); background: #fff; border: 1px solid #d3dbe6; border-radius: 6px; }
+.fav-form input[type="text"]:focus { outline: 2px solid var(--blue); outline-offset: -2px; }
+.fav-boton { height: 32px; padding: 0 10px; border: 0; border-radius: 6px; background: var(--blue); color: #fff; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.fav-boton:hover { background: #1750b0; }

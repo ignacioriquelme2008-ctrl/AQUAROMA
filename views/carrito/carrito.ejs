@@ -41,6 +41,21 @@
               <% if (i.stockInsuficiente) { %>
                 <small class="stock-aviso">Tienes <%= i.unidadesEnCarrito %> en el carrito y solo quedan <%= i.stock %> <%= i.stock === 1 ? 'unidad' : 'unidades' %> disponibles en total. Reduce la cantidad para confirmar.</small>
               <% } %>
+              <%# HU-021: guardar esta preparación (producto + aroma + intensidad) con un nombre propio.
+                  Solo aparece en las líneas personalizadas y para clientes con sesión iniciada. %>
+              <% if (locals.usuario && locals.usuario.idCliente && i.idComponente) { %>
+                <details class="fav-form">
+                  <summary>★ Guardar como favorita</summary>
+                  <form method="post" action="/perfil/favoritos">
+                    <input type="hidden" name="id" value="<%= i.id %>">
+                    <input type="hidden" name="idComponente" value="<%= i.idComponente %>">
+                    <input type="hidden" name="intensidad" value="<%= i.intensidad %>">
+                    <input type="text" name="alias" maxlength="60" placeholder="Ej: Mi limón suave" required
+                           aria-label="Nombre de la configuración favorita">
+                    <button type="submit" class="fav-boton">Guardar</button>
+                  </form>
+                </details>
+              <% } %>
             </div>
           </div>
 

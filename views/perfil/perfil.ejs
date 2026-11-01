@@ -14,6 +14,8 @@
     const direccionErrores = locals.direccionErrores || {};
     const datosDir = locals.direccionDatos || {};
     const editando = locals.direccionEditando || null;
+    // HU-021: preparaciones que el cliente guardó con un nombre propio.
+    const favoritos = locals.favoritos || [];
 
     // Todas las listas de errores de un formulario, en un arreglo (el objeto es {campo: mensaje}).
     const listaErrores = (grupo) => Object.values(grupo || {}).filter(Boolean);
@@ -176,6 +178,46 @@
           <%- include('_campos-direccion', { prefijo: 'nueva-', valores: editando ? {} : datosDir, REGIONES }) %>
           <button type="submit" class="btn btn-primary">Guardar dirección</button>
         </form>
+      </section>
+
+      <!-- HU-021: configuraciones favoritas. Se guardan desde el carrito y aquí se pueden pedir
+           de nuevo o quitar de la lista. -->
+      <section class="perfil-bloque">
+        <h2>Mis favoritas</h2>
+        <p class="perfil-nota">Tus mezclas guardadas. Puedes pedirlas de nuevo o quitarlas de la lista.</p>
+
+        <% if (favoritos.length === 0) { %>
+          <p class="perfil-nota">
+            Todavía no guardaste ninguna mezcla. Arma una en el catálogo y guárdala desde el carrito
+            con "★ Guardar como favorita".
+          </p>
+        <% } else { %>
+          <div class="perfil-favoritas">
+            <% favoritos.forEach((f) => { %>
+              <article class="perfil-favorita">
+                <img src="/img/productos/<%= f.imagen %>" alt="<%= f.producto %>">
+                <div class="perfil-favorita-info">
+                  <strong><%= f.alias %></strong>
+                  <p><%= f.producto %></p>
+                  <p class="perfil-favorita-aroma">
+                    Aroma: <%= f.aroma || 'sin aroma' %> · Intensidad: <%= f.intensidad ? f.intensidad + '/5' : '—' %>
+                  </p>
+                  <p class="perfil-favorita-precio"><%= clp(f.precio) %></p>
+                  <% if (!f.disponible) { %><span class="perfil-badge perfil-badge-off">No disponible</span><% } %>
+                </div>
+                <div class="perfil-favorita-acciones">
+                  <form method="post" action="/perfil/favoritos/<%= f.id %>/carrito">
+                    <button type="submit" class="btn btn-primary btn-mini" <%= f.disponible ? '' : 'disabled' %>>Agregar al carrito</button>
+                  </form>
+                  <form method="post" action="/perfil/favoritos/<%= f.id %>/eliminar"
+                        onsubmit="return confirm('¿Quitar esta configuración de tus favoritas?');">
+                    <button type="submit" class="btn btn-danger btn-mini">Quitar</button>
+                  </form>
+                </div>
+              </article>
+            <% }) %>
+          </div>
+        <% } %>
       </section>
     </div>
   </main>
