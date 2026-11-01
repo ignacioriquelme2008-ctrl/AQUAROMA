@@ -11,11 +11,10 @@ const Producto = require('../models/Producto');
 const Direccion = require('../models/Direccion');
 const MetodoPago = require('../models/MetodoPago');
 const ventas = require('../config/ventas');
-const { texto } = require('../utils/validaciones');
+const { texto, leerDireccionNueva } = require('../utils/validaciones');
 const { MAX_CANTIDAD, normalizarItems } = require('../utils/carrito');
 
 // Largo de cada campo de la dirección, igual que las columnas de la base.
-const LARGO_DIRECCION = { calle: 150, numero: 20, departamento: 50, comuna: 100, region: 100, codigoPostal: 15, referencia: 255 };
 
 // Ícono y color del círculo de cada aroma (solo presentación de la vista del carrito).
 const ESTILOS_AROMA = {
@@ -269,27 +268,6 @@ exports.eliminar = async (req, res, next) => {
   }
 };
 
-// HU-029: revisa la dirección nueva escrita en el carrito. Devuelve { datos } o { error }.
-function leerDireccionNueva(fuente) {
-  const d = {
-    calle: texto(fuente.calle).trim(),
-    numero: texto(fuente.numero).trim(),
-    departamento: texto(fuente.departamento).trim(),
-    comuna: texto(fuente.comuna).trim(),
-    region: texto(fuente.region).trim(),
-    codigoPostal: texto(fuente.codigoPostal).trim(),
-    referencia: texto(fuente.referencia).trim(),
-  };
-  if (!d.calle) return { error: 'Ingresa la calle de la dirección de entrega.' };
-  if (!d.comuna) return { error: 'Ingresa la comuna de la dirección de entrega.' };
-  if (!d.region) return { error: 'Ingresa la región de la dirección de entrega.' };
-  for (const [campo, largo] of Object.entries(LARGO_DIRECCION)) {
-    if (d[campo] && d[campo].length > largo) {
-      return { error: `Uno de los datos de la dirección es demasiado largo (máximo ${largo} caracteres).` };
-    }
-  }
-  return { datos: d };
-}
 
 // POST /carrito/confirmar -> HU-028: confirma la compra y genera la orden.
 // El carrito que se confirma es el guardado en la cuenta: el navegador ya no manda líneas,
