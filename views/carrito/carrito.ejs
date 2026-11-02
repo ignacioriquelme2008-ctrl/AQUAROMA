@@ -17,7 +17,12 @@
     <p class="confirm-error" role="alert"><%= error %></p>
   <% } %>
 
-  <!-- La sección principal muestra los productos seleccionados, mientras el resumen del lado sirve para ver el costo final. -->
+  <% const datosForm = locals.datos || {}; %>
+  <% const elegida = datosForm.direccion || ''; %>
+  <% const hayPrincipal = direcciones.some((d) => d.principal); %>
+  <!-- Los productos y el checkout quedan a la izquierda; el resumen, en una columna lateral angosta. -->
+  <div class="carrito-layout">
+    <div class="carrito-columna">
   <section class="panel">
     <h2>💧 Productos</h2>
 
@@ -97,22 +102,15 @@
     </div>
   </section>
 
-  <%# HU-028 a HU-030: un solo formulario envía la dirección y el medio de pago al controlador. %>
-  <form class="layout" method="post" action="/carrito/confirmar">
-    <% const datosForm = locals.datos || {}; %>
-    <% const elegida = datosForm.direccion || ''; %>
-    <% const hayPrincipal = direcciones.some((d) => d.principal); %>
-
-    <!-- HU-029 y HU-030: antes de confirmar se elige dónde se entrega el pedido y cómo se paga. -->
+  <%# HU-028 a HU-030: solo el formulario de checkout envía dirección y medio de pago. %>
+    <% if (locals.usuario && locals.usuario.idCliente) { %>
+    <form id="confirmar-pedido" class="checkout-form" method="post" action="/carrito/confirmar">
+    <!-- HU-029 y HU-030: solo clientes autenticados eligen dónde se entrega y cómo se paga. -->
     <section class="panel checkout">
       <h2>🚚 Entrega y pago</h2>
 
       <fieldset class="bloque">
         <legend>Dirección de entrega</legend>
-
-        <% if (!locals.usuario) { %>
-          <p class="nota">Inicia sesión para guardar tu dirección y confirmar el pedido.</p>
-        <% } %>
 
         <% direcciones.forEach((d, indice) => { %>
           <% const marcada = elegida ? String(d.id) === elegida : (d.principal || (!hayPrincipal && indice === 0)); %>
@@ -190,23 +188,26 @@
         <p class="nota">El pago queda pendiente hasta que la tienda lo confirme.</p>
       </fieldset>
     </section>
+    </form>
+    <% } %>
+    </div>
 
     <!-- El resumen del pedido deja claro el total y facilita la decisión final de compra.
-         HU-025: cantidad de productos, subtotal neto, IVA, envío y total. -->
+         HU-025: cantidad de productos, subtotal neto, IVA y total de productos. -->
     <aside class="panel summary">
       <h2>📄 Resumen del Pedido</h2>
       <dl>
         <div><dt>Subtotal (<%= items.length %> <%= items.length === 1 ? 'producto' : 'productos' %>)</dt><dd><%= clp(totales.subtotal) %></dd></div>
         <div class="linea"><dt>Neto (sin IVA)</dt><dd><%= clp(totales.neto) %></dd></div>
         <div class="linea"><dt>IVA (19%)</dt><dd><%= clp(totales.iva) %></dd></div>
-        <div><dt>Envío</dt><dd class="<%= totales.envio === 0 ? 'free' : '' %>"><%= totales.envio === 0 ? 'Gratis' : clp(totales.envio) %></dd></div>
+        <div><dt>Entrega</dt><dd>Por definir</dd></div>
       </dl>
-      <div class="total"><span>Total</span><strong><%= clp(totales.total) %></strong></div>
-      <p class="iva"><%= totales.envioGratis ? 'Tu pedido tiene envío gratis.' : 'Envío gratis desde ' + clp(ventas.ENVIO_GRATIS_DESDE) + '.' %></p>
+      <div class="total"><span>Total de productos</span><strong><%= clp(totales.total) %></strong></div>
+      <p class="iva">El costo de entrega se coordinará con la tienda y no está incluido en este total.</p>
 
       <%# HU-004 y HU-028: confirmar un pedido es una acción privada. Sin sesión, se va al login. %>
       <% if (locals.usuario && locals.usuario.idCliente) { %>
-        <button type="submit" class="confirm" <%= items.length && !items.some((i) => i.stockInsuficiente) ? '' : 'disabled' %>>🔒 Confirmar Pedido</button>
+        <button type="submit" form="confirmar-pedido" class="confirm" <%= items.length && !items.some((i) => i.stockInsuficiente) ? '' : 'disabled' %>>🔒 Confirmar Pedido</button>
       <% } else { %>
         <a class="confirm confirm-enlace" href="/login?volver=%2Fcarrito">🔒 Inicia sesión para confirmar</a>
       <% } %>
@@ -217,7 +218,7 @@
         <li><span>♡</span>Hecha con propósito</li>
       </ul>
     </aside>
-  </form>
+  </div>
 </div>
 </body>
 </html>

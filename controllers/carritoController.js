@@ -36,19 +36,16 @@ const rutaSegura = (ruta) => (typeof ruta === 'string' && ruta.startsWith('/') &
 
 const idClienteDe = (req) => (req.session.usuario && req.session.usuario.idCliente) || null;
 
-// HU-025: totales del resumen. Los precios incluyen IVA; el envío es gratis desde el mínimo.
+// HU-025: totales del resumen. Los precios incluyen IVA; el costo de entrega queda por definir.
 function calcularTotales(items) {
   const subtotal = items.reduce((suma, i) => suma + i.subtotal, 0);
   const unidades = items.reduce((suma, i) => suma + i.qty, 0);
-  const envio = items.length > 0 ? ventas.costoEnvio(subtotal) : 0;
   return {
     unidades,
     subtotal,
     neto: ventas.neto(subtotal),
     iva: ventas.iva(subtotal),
-    envio,
-    total: subtotal + envio,
-    envioGratis: items.length > 0 && subtotal >= ventas.ENVIO_GRATIS_DESDE,
+    total: subtotal,
   };
 }
 

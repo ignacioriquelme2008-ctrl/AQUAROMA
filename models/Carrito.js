@@ -11,7 +11,6 @@
 const db = require('../config/db');
 const Direccion = require('./Direccion');
 const MetodoPago = require('./MetodoPago');
-const ventas = require('../config/ventas');
 const { MAX_CANTIDAD } = require('../utils/carrito');
 
 // Busca el carrito activo del cliente y, si no tiene, lo crea. Se usa DENTRO de una transacción.
@@ -253,7 +252,7 @@ class ConfirmacionError extends Error {
 // HU-029: exige una dirección de entrega (guardada o nueva) y crea la fila de "envio".
 // HU-030: exige un medio de pago activo y crea la fila de "pago" pendiente.
 // Si algo falla (por ejemplo, ya no hay stock), no se guarda nada y el carrito sigue intacto.
-// Devuelve { id, total, costoEnvio } para que la pantalla muestre el número de orden y el comprobante.
+// Devuelve { id, total, costoEnvio } para mostrar la orden; el costo de entrega queda por definir.
 exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => {
   return enTransaccion(async (conn) => {
     // El carrito que se confirma es el que está guardado (el controlador solo manda las líneas
@@ -358,8 +357,8 @@ exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => 
       );
     }
 
-    // HU-025: el envío depende del subtotal (gratis desde el mínimo). Se guarda en el pedido.
-    const costoEnvio = ventas.costoEnvio(total);
+    // El costo de entrega se coordina con la tienda después de confirmar; no se suma al pago.
+    const costoEnvio = 0;
 
     // HU-029: el despacho queda con la dirección copiada al momento de comprar. Si el cliente
     // cambia después su dirección, el pedido conserva la que se usó para la entrega.
@@ -370,11 +369,11 @@ exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => 
        direccion.region, direccion.codigoPostal, direccion.referencia]
     );
 
-    // HU-030: el pago queda registrado como pendiente por el total de la compra (productos + envío).
+    // HU-030: el pago queda pendiente por los productos; la entrega aún no tiene precio definido.
     // Se aprueba cuando el administrador confirma el pago en el panel (HU-040).
     await conn.query(
       `INSERT INTO pago (id_pedido, id_metodo, monto, estado) VALUES (?, ?, ?, 'pendiente')`,
-      [idPedido, metodo.id, total + costoEnvio]
+      [idPedido, metodo.id, total]
     );
 
     // El pedido deja de ser carrito: el cliente queda sin carrito guardado (HU-026, criterio 3).

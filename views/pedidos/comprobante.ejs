@@ -41,11 +41,11 @@
             <tr><td><%= i.nombre %></td><td class="num"><%= i.cantidad %></td><td class="num"><%= clp(i.precio_unitario) %></td><td class="num"><%= clp(i.subtotal) %></td></tr>
           <% }) %>
           <tr><td colspan="3" class="num">Subtotal (IVA incluido)</td><td class="num"><%= clp(pedido.total) %></td></tr>
-          <%# HU-025: desglose del IVA y del despacho. %>
+          <%# HU-025: desglose del IVA y el costo pendiente de entrega. %>
           <tr><td colspan="3" class="num">Neto (sin IVA)</td><td class="num"><%= clp(ventas.neto(pedido.total)) %></td></tr>
           <tr><td colspan="3" class="num">IVA (19%)</td><td class="num"><%= clp(ventas.iva(pedido.total)) %></td></tr>
-          <tr><td colspan="3" class="num">Envío</td><td class="num"><%= pedido.costo_envio > 0 ? clp(pedido.costo_envio) : 'Gratis' %></td></tr>
-          <tr class="pedidos-total"><td colspan="3" class="num">Total</td><td class="num"><%= clp(pedido.total + pedido.costo_envio) %></td></tr>
+          <tr><td colspan="3" class="num">Entrega</td><td class="num"><%= pedido.costo_envio > 0 ? clp(pedido.costo_envio) : 'Por definir' %></td></tr>
+          <tr class="pedidos-total"><td colspan="3" class="num">Total de productos</td><td class="num"><%= clp(pedido.total) %></td></tr>
         </tbody>
       </table>
     </section>

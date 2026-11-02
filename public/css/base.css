@@ -132,10 +132,43 @@ h3 { font-size: 15px; color: var(--navy); }
 .nav-links a:hover { color: var(--primary); background: var(--primary-light); }
 
 
-/* Botón del carrito: solo en el menú, forma de pastilla. */
-.navbar .btn { padding: 10px 20px; border-radius: 999px; gap: 8px; }
-/* HU-022: número de artículos dentro del botón del carrito. Lo calcula el servidor. */
-.nav-contador { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: #fff; color: var(--blue); font-size: 13px; font-weight: 700; line-height: 22px; text-align: center; }
+/* Botón circular del carrito; el contador queda superpuesto y no altera el ancho del menú. */
+.navbar .nav-cart {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  background: #0878e8;
+  color: #fff;
+  text-decoration: none;
+}
+.navbar .nav-cart:hover { background: #0667c9; }
+.nav-cart-icon { display: block; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+/* HU-022: cuenta real de unidades del middleware, superpuesta sin ocupar espacio en el menú. */
+.nav-contador {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  width: max-content;
+  height: 20px;
+  padding: 0 3px;
+  border: 1px solid #0878e8;
+  border-radius: 50%;
+  background: #fff;
+  color: #102f70;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
 
 /* Aviso de la última acción del carrito ("se agregó", "solo quedan X unidades"). */
 .aviso-carrito { margin: 0 -24px; padding: 10px 24px; background: #e8f7ee; border-top: 1px solid #b7e4c7; color: #14532d; font-size: 14px; text-align: center; }
@@ -166,5 +199,4 @@ h3 { font-size: 15px; color: var(--navy); }
   .nav-links a { padding: 7px 10px; font-size: 13px; }
   .nav-acciones { justify-content: center; flex-wrap: wrap; gap: 3px; }
   .nav-enlace { padding: 7px 8px; font-size: 13px; }
-  .navbar .btn { padding: 8px 14px; }
 }

@@ -2,19 +2,21 @@
    carrito.css: sección CARRITO (HU-022 a HU-026).
    Página: views/carrito/carrito.ejs.
    ===================================================================== */
-.wrap { max-width: 1100px; margin: auto; padding: 28px 4vw 60px; }
+.wrap { max-width: 1400px; margin: auto; padding: 28px 4vw 60px; }
 .sub { margin: 6px 0 20px; font-size: 15px; }
 /* Dos columnas: productos a la izquierda y resumen del pedido a la derecha. */
-.layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+.carrito-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; margin-top: 20px; }
+.carrito-columna { display: grid; gap: 20px; min-width: 0; }
+.checkout-form { margin: 0; }
 .panel { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
 
 /* ===== Lista de productos ===== */
-/* Cada fila tiene 5 columnas: producto, aroma, cantidad, precio y acciones. */
-.row { display: grid; grid-template-columns: 2.4fr 1.4fr 1fr 1fr 150px; gap: 12px; align-items: center; }
+/* En escritorio se conserva la fila horizontal; minmax(0, ...) evita que invada el resumen. */
+.row { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) 120px; gap: 8px; align-items: center; min-width: 0; }
 .head { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 10px 0; border-bottom: 1px solid var(--line); font-weight: 600; }
 .head span:nth-child(n+3) { text-align: center; }
-.item { background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; padding: 14px 0; }
-.prod { display: flex; gap: 14px; align-items: center; }
+.item { background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; padding: 14px 0; min-width: 0; }
+.prod { display: flex; gap: 14px; align-items: center; min-width: 0; }
 .prod img { width: 170px; height: 300px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
 .prod strong { display: block; color: var(--navy); font-size: 14px; }
 .prod small { display: block; font-size: 12px; line-height: 1.45; }
@@ -31,7 +33,7 @@
 .qty .qty-input::-webkit-outer-spin-button, .qty .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .qty .qty-input:focus { outline: 2px solid var(--blue); outline-offset: -2px; }
 
-.price { font-size: 18px; font-weight: 700; color: var(--blue); margin: 2px 0 8px; text-align: center; }
+.price { min-width: 0; font-size: 18px; font-weight: 700; color: var(--blue); margin: 2px 0 8px; text-align: center; }
 .price b { display: block; font-size: 14px; color: var(--navy); white-space: nowrap; }
 /* HU-027: aviso cuando la cantidad guardada supera el stock que queda. */
 .stock-aviso { color: #b45309; font-weight: 600; }
@@ -60,7 +62,7 @@
 .del:hover { background: #5b21b6; transform: translateY(-2px); }
 .del:active { background: #2e1065; transform: scale(0.96); }
 /* El botón "Eliminar" va dentro de su propio formulario POST (HU-024). */
-.del-form { display: flex; justify-content: center; margin: 0; }
+.del-form { display: flex; justify-content: center; width: 100%; min-width: 0; margin: 0; }
 
 /* Al eliminar: el botón se achica, la papelera tiembla, se abre la tapa y aparece un ✓ verde. */
 .del.is-success { width: 42px; min-width: 42px; padding: 0; animation: eliminar-exito 0.8s ease both; }
@@ -126,7 +128,6 @@ dl div { display: flex; justify-content: space-between; padding: 10px 0; font-si
 .perks span { display: block; font-size: 20px; margin-bottom: 4px; }
 
 /* ===== Entrega y pago (HU-029 y HU-030) ===== */
-.layout { margin-top: 20px; }
 .checkout h2 { margin-bottom: 12px; }
 .bloque { border: 0; padding: 0; margin: 0 0 18px; }
 .bloque legend { padding: 0 0 8px; font-size: 14px; font-weight: 700; color: var(--navy); }
@@ -147,16 +148,17 @@ dl div { display: flex; justify-content: space-between; padding: 10px 0; font-si
 .linea { padding: 4px 0; font-size: 13px; color: #64748b; }
 @media (max-width: 640px) { .nueva { grid-template-columns: 1fr; } }
 
-/* En pantallas angostas la fila deja de tener 5 columnas: el producto ocupa todo el ancho
-   y los datos se reparten en dos columnas, para que ningún precio ni botón se corte. */
-@media (max-width: 900px) {
-  .layout { grid-template-columns: 1fr; }
+/* En pantallas medianas, el producto ocupa todo el ancho y sus controles pasan a dos columnas. */
+@media (max-width: 1150px) {
   .head { display: none; }
-  .row { grid-template-columns: 1fr 1fr; }
+  .row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .prod { grid-column: 1 / -1; }
-  /* La imagen se achica para que la fila no quede tan alta en pantallas angostas. */
   .prod img { width: 120px; height: 212px; }
   .price { text-align: left; }
+}
+
+@media (max-width: 900px) {
+  .carrito-layout { grid-template-columns: 1fr; }
 }
 
 /* =====================================================================
