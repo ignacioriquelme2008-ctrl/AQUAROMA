@@ -37,6 +37,11 @@
 .progreso li.actual .progreso-punto { border-color: var(--blue); color: var(--blue); box-shadow: 0 0 0 5px var(--primary-light); }
 
 .pedidos-cancelado { background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; border-radius: 12px; padding: 16px 18px; margin-bottom: 24px; font-size: 15px; }
+.pedidos-aviso-cancelacion { background: #e7f6ea; border: 1px solid #b7e2c0; color: #1f5e2a; border-radius: 10px; padding: 12px 14px; margin: 0 0 18px; font-size: 14px; }
+.pedidos-cancelar-form { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 0 0 20px; }
+.pedidos-cancelar-form p { margin: 0; color: var(--text-muted); font-size: 13px; }
+.pedidos-cancelar { padding: 10px 16px; border: 1px solid #fecaca; border-radius: 8px; background: #fff5f5; color: #991b1b; font: inherit; font-weight: 700; cursor: pointer; }
+.pedidos-cancelar:hover { background: #fee2e2; }
 .pedidos-caja { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
 .pedidos-caja p { margin-bottom: 4px; font-size: 14px; }
 .pedidos-envio { border-color: #f6d4a8; background: #fffaf3; }

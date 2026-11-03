@@ -33,10 +33,12 @@ const SIGUIENTES = {
 
 // Estados que cuentan como venta (los mismos de "Más vendido" y de vw_ventas_consolidadas).
 const ESTADOS_VENTA = ['pagado', 'preparando', 'enviado', 'entregado'];
+const ESTADOS_CANCELABLES = ['confirmado', 'pagado', 'preparando'];
 
 exports.ESTADOS = ESTADOS;
 exports.NOMBRES = NOMBRES;
 exports.SIGUIENTES = SIGUIENTES;
+exports.ESTADOS_CANCELABLES = ESTADOS_CANCELABLES;
 
 const aNumero = (f) => ({ ...f, total: Number(f.total), costo_envio: Number(f.costo_envio) });
 
@@ -146,6 +148,93 @@ class CambioInvalidoError extends Error {
 }
 exports.CambioInvalidoError = CambioInvalidoError;
 
+// HU-034: cancelar, devolver al inventario y dejar una solicitud de reembolso pendiente
+// (sin llamar a un proveedor de pagos ni registrar un reembolso como ejecutado).
+async function cancelarEnTransaccion(conn, id, idUsuario, idClienteEsperado = null) {
+  const [pedidos] = await conn.query(
+    `SELECT id_pedido, id_cliente, id_sucursal, estado
+     FROM pedido WHERE id_pedido = ? AND (? IS NULL OR id_cliente = ?) FOR UPDATE`,
+    [id, idClienteEsperado, idClienteEsperado]
+  );
+  const pedido = pedidos[0];
+  if (!pedido || pedido.estado === 'carrito') throw new CambioInvalidoError('Ese pedido no existe en tu cuenta.');
+  if (!ESTADOS_CANCELABLES.includes(pedido.estado)) {
+    throw new CambioInvalidoError('Este pedido ya no se puede cancelar directamente porque salió a despacho o fue entregado.');
+  }
+
+  const [pagos] = await conn.query(
+    `SELECT id_pago, monto, estado FROM pago
+     WHERE id_pedido = ? ORDER BY id_pago DESC LIMIT 1 FOR UPDATE`,
+    [id]
+  );
+  const pago = pagos[0] || null;
+  const pagado = pedido.estado === 'pagado' || Boolean(pago && ['aprobado', 'reembolsado_parcial'].includes(pago.estado));
+  let solicitudReembolso = false;
+  let montoReembolso = 0;
+  if (pagado) {
+    if (!pago) throw new Error(`El pedido pagado #${id} no tiene un pago asociado.`);
+    const [[devoluciones]] = await conn.query(
+      'SELECT COALESCE(SUM(monto), 0) AS monto FROM reembolso WHERE id_pago = ?',
+      [pago.id_pago]
+    );
+    montoReembolso = Math.max(0, Number(pago.monto) - Number(devoluciones.monto));
+    if (montoReembolso > 0) {
+      const [existente] = await conn.query('SELECT id_solicitud FROM solicitud_reembolso WHERE id_pago = ? FOR UPDATE', [pago.id_pago]);
+      if (!existente[0]) {
+        await conn.query(
+          `INSERT INTO solicitud_reembolso (id_pago, id_usuario_solicita, monto, motivo)
+           VALUES (?, ?, ?, ?)`,
+          [pago.id_pago, idUsuario, montoReembolso, `Cancelación del pedido #${id}`]
+        );
+        solicitudReembolso = true;
+      }
+    }
+  }
+
+  const [lineas] = await conn.query(
+    `SELECT cb.id_producto, SUM(dp.cantidad) AS cantidad
+     FROM detalle_pedido dp
+     JOIN configuracion_bebida cb ON cb.id_configuracion = dp.id_configuracion
+     WHERE dp.id_pedido = ?
+     GROUP BY cb.id_producto`,
+    [id]
+  );
+  for (const linea of lineas) {
+    const cantidad = Number(linea.cantidad);
+    await conn.query(
+      `INSERT INTO inventario (id_sucursal, id_producto, cantidad)
+       VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE cantidad = cantidad + VALUES(cantidad)`,
+      [pedido.id_sucursal, linea.id_producto, cantidad]
+    );
+    await conn.query(
+      `INSERT INTO movimiento_inventario
+         (id_sucursal, id_producto, tipo, cantidad, tipo_origen, id_origen_referencia, id_usuario, observacion)
+       VALUES (?, ?, 'entrada_devolucion', ?, 'pedido', ?, ?, ?)`,
+      [pedido.id_sucursal, linea.id_producto, cantidad, id, idUsuario, `Reingreso por cancelación del pedido #${id}`]
+    );
+  }
+
+  await conn.query("UPDATE pedido SET estado = 'cancelado' WHERE id_pedido = ?", [id]);
+  await conn.query("UPDATE envio SET estado = 'cancelado' WHERE id_pedido = ?", [id]);
+  return { id, solicitudReembolso, montoReembolso };
+}
+
+exports.cancelarDeCliente = async (id, idCliente, idUsuario) => {
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+    const resultado = await cancelarEnTransaccion(conn, id, idUsuario, idCliente);
+    await conn.commit();
+    return resultado;
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+};
+
 // Cambia el estado de un pedido (HU-040). Todo en una transacción, con el pedido bloqueado
 // (FOR UPDATE) para que dos administradores no lo cambien a la vez.
 //   - Solo se permite pasar a un estado de SIGUIENTES[estado actual] (criterio 2).
@@ -153,7 +242,7 @@ exports.CambioInvalidoError = CambioInvalidoError;
 //     en la tabla envio. Si el pedido aún no tiene envío (lo crea la HU-029 al comprar), se arma con
 //     la dirección principal del cliente.
 //   - El envío sigue al pedido: en preparación, en camino, entregado o cancelado.
-exports.cambiarEstado = async (id, nuevo, { transportista = null, tracking = null } = {}) => {
+exports.cambiarEstado = async (id, nuevo, { transportista = null, tracking = null, idUsuario = null } = {}) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
@@ -162,6 +251,13 @@ exports.cambiarEstado = async (id, nuevo, { transportista = null, tracking = nul
     if (!pedido || pedido.estado === 'carrito') throw new CambioInvalidoError('Ese pedido no existe.');
     if (!(SIGUIENTES[pedido.estado] || []).includes(nuevo)) {
       throw new CambioInvalidoError(`Un pedido "${NOMBRES[pedido.estado]}" no puede pasar a "${NOMBRES[nuevo] || nuevo}".`);
+    }
+
+    if (nuevo === 'cancelado') {
+      if (!idUsuario) throw new Error('Se requiere el usuario que autoriza la cancelación.');
+      const resultado = await cancelarEnTransaccion(conn, id, idUsuario);
+      await conn.commit();
+      return resultado;
     }
 
     await conn.query('UPDATE pedido SET estado = ? WHERE id_pedido = ?', [nuevo, id]);

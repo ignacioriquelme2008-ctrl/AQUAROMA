@@ -235,6 +235,18 @@ CREATE TABLE usuario (
     FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE SET NULL
 );
 
+-- HU-005: tokens de recuperación guardados como hash, de un solo uso y con vencimiento.
+CREATE TABLE token_recuperacion (
+    id_token INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    token_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL UNIQUE,
+    creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expira_en DATETIME NOT NULL,
+    usado_en DATETIME NULL,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
+    INDEX idx_token_recuperacion_usuario (id_usuario, expira_en)
+);
+
 CREATE TABLE rol (
     id_rol INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL UNIQUE,
@@ -489,6 +501,21 @@ CREATE TABLE reembolso (
     fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_pago) REFERENCES pago(id_pago),
     FOREIGN KEY (id_usuario_autoriza) REFERENCES usuario(id_usuario)
+);
+
+-- HU-034: registra una solicitud de devolución sin marcarla como reembolso ejecutado.
+-- El procesamiento real queda pendiente de la integración de pagos (priorizada al final).
+CREATE TABLE solicitud_reembolso (
+    id_solicitud INT AUTO_INCREMENT PRIMARY KEY,
+    id_pago INT NOT NULL UNIQUE,
+    id_usuario_solicita INT NOT NULL,
+    monto DECIMAL(12,2) NOT NULL CHECK (monto > 0),
+    motivo TEXT NOT NULL,
+    estado ENUM('pendiente','procesada','rechazada') NOT NULL DEFAULT 'pendiente',
+    creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_pago) REFERENCES pago(id_pago),
+    FOREIGN KEY (id_usuario_solicita) REFERENCES usuario(id_usuario)
 );
 
 CREATE TABLE envio (

@@ -11,6 +11,7 @@
 const db = require('../config/db');
 const Direccion = require('./Direccion');
 const MetodoPago = require('./MetodoPago');
+const ventas = require('../config/ventas');
 const { MAX_CANTIDAD } = require('../utils/carrito');
 
 // Busca el carrito activo del cliente y, si no tiene, lo crea. Se usa DENTRO de una transacción.
@@ -54,17 +55,20 @@ async function configuracionBase(conn, idProducto) {
   return nueva.insertId;
 }
 
-// Recupera o crea la preparación personalizada del cliente para un aroma seleccionado.
-// El recargo de precio se deja fuera de esta HU; lo resolverá HU-020.
-async function configuracionPersonalizada(conn, idCliente, idProducto, idComponente, intensidad, precio, nombreProducto) {
+// Recupera o crea la preparación personalizada del cliente para un aroma seleccionado (HU-020).
+// El precio siempre se calcula aquí desde el precio base; no se confía en valores del navegador.
+async function configuracionPersonalizada(conn, idCliente, idProducto, idComponente, intensidad, precioBase, nombreProducto) {
   const [[componente]] = await conn.query(
-    `SELECT c.id_componente, c.nombre
+    `SELECT c.id_componente, c.nombre, c.recargo_precio
      FROM componente c JOIN producto p ON p.id_producto = ?
      WHERE c.id_componente = ? AND c.activo = TRUE AND c.tipo IN ('aroma', 'mixto')
        AND p.activo = TRUE AND p.es_personalizable = TRUE`,
     [idProducto, idComponente]
   );
   if (!componente) return null;
+  const recargoPorDosis = Number(componente.recargo_precio);
+  const precio = ventas.precioPersonalizado(precioBase, intensidad, recargoPorDosis);
+  const nombreDisplay = `${nombreProducto} · ${componente.nombre}`;
 
   const [existentes] = await conn.query(
     `SELECT cb.id_configuracion
@@ -76,7 +80,13 @@ async function configuracionPersonalizada(conn, idCliente, idProducto, idCompone
      ORDER BY cb.id_configuracion LIMIT 1`,
     [idCliente, idProducto, idComponente, intensidad]
   );
-  if (existentes[0]) return existentes[0].id_configuracion;
+  if (existentes[0]) {
+    await conn.query(
+      'UPDATE configuracion_bebida SET nombre_display = ?, precio_final = ? WHERE id_configuracion = ?',
+      [nombreDisplay, precio, existentes[0].id_configuracion]
+    );
+    return { id: existentes[0].id_configuracion, precio };
+  }
 
   const [nueva] = await conn.query(
     `INSERT INTO configuracion_bebida
@@ -86,9 +96,9 @@ async function configuracionPersonalizada(conn, idCliente, idProducto, idCompone
   );
   await conn.query(
     'INSERT INTO configuracion_componente (id_configuracion, id_componente, cantidad) VALUES (?, ?, ?)',
-    [nueva.insertId, idComponente, intensidad]
+     [nueva.insertId, idComponente, intensidad]
   );
-  return nueva.insertId;
+  return { id: nueva.insertId, precio };
 }
 
 // Líneas guardadas del carrito, incluyendo el aroma asociado a la preparación si existe.
@@ -127,10 +137,19 @@ async function escribirLineas(conn, idPedido, idCliente, items) {
     for (const item of items) {
       if (!porId.has(item.id)) continue; // producto inexistente o desactivado: no se guarda
       const producto = porId.get(item.id);
-      const precio = Number(producto.precio_base);
-      const idConfiguracion = item.idComponente
-        ? await configuracionPersonalizada(conn, idCliente, item.id, item.idComponente, item.intensidad || 1, precio, producto.nombre)
-        : await configuracionBase(conn, item.id);
+      const precioBase = Number(producto.precio_base);
+      const intensidad = item.intensidad || 1;
+      let precio = precioBase;
+      let idConfiguracion;
+      if (item.idComponente) {
+        const personalizada = await configuracionPersonalizada(
+          conn, idCliente, item.id, item.idComponente, intensidad, precioBase, producto.nombre
+        );
+        if (!personalizada) continue;
+        ({ id: idConfiguracion, precio } = personalizada);
+      } else {
+        idConfiguracion = await configuracionBase(conn, item.id);
+      }
       if (!idConfiguracion) continue;
       // El subtotal (cantidad x precio) lo calcula MySQL solo: es una columna generada.
       await conn.query(
@@ -201,9 +220,9 @@ exports.contar = async (idCliente) => {
 // guardarla como favorita. Usa la misma función que el carrito, así la favorita apunta a la MISMA
 // fila de "configuracion_bebida" (sin preparaciones ni precios duplicados).
 // Devuelve el id de la configuración, o null si el producto o el aroma no son válidos.
-exports.guardarConfiguracionPersonalizada = async (idCliente, { idProducto, idComponente, intensidad, precio, nombreProducto }) => {
+exports.guardarConfiguracionPersonalizada = async (idCliente, { idProducto, idComponente, intensidad, precioBase, nombreProducto }) => {
   return enTransaccion((conn) =>
-    configuracionPersonalizada(conn, idCliente, idProducto, idComponente, intensidad, precio, nombreProducto));
+    configuracionPersonalizada(conn, idCliente, idProducto, idComponente, intensidad, precioBase, nombreProducto));
 };
 
 // Guarda el carrito completo que ya validó el controlador (cada vez que el cliente cambia algo).
@@ -301,11 +320,26 @@ exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => 
     const metodo = await MetodoPago.obtenerActivo(entrega.idMetodoPago, conn);
     if (!metodo) throw new ConfirmacionError('Elige un medio de pago para continuar.', 400);
 
-    // Líneas del carrito con el precio que muestra la página (producto.precio_base). Se bloquean
-    // (FOR UPDATE) para que el stock no cambie entre la revisión del carrito y el descuento.
+    // Líneas del carrito con el precio actual (incluido el recargo por dosis adicional, HU-020).
+    // Se bloquean (FOR UPDATE) para que el stock no cambie entre la revisión y el descuento.
     // Si un producto fue desactivado (HU-037), no se incluye: la página del carrito tampoco lo muestra.
     const [lineas] = await conn.query(
-      `SELECT dp.id_detalle, dp.precio_unitario, cb.id_producto, p.nombre, p.precio_base, dp.cantidad
+      `SELECT dp.id_detalle, dp.precio_unitario, cb.id_producto, p.nombre, p.precio_base, dp.cantidad,
+             (SELECT MAX(cc.cantidad)
+               FROM configuracion_componente cc
+               JOIN componente co ON co.id_componente = cc.id_componente
+               WHERE cc.id_configuracion = cb.id_configuracion
+                  AND co.tipo IN ('aroma', 'mixto')) AS intensidad,
+              (SELECT MAX(cc.id_componente)
+               FROM configuracion_componente cc
+               JOIN componente co ON co.id_componente = cc.id_componente
+               WHERE cc.id_configuracion = cb.id_configuracion
+                 AND co.tipo IN ('aroma', 'mixto')) AS idComponente,
+              (SELECT MAX(co.recargo_precio)
+               FROM configuracion_componente cc
+               JOIN componente co ON co.id_componente = cc.id_componente
+               WHERE cc.id_configuracion = cb.id_configuracion
+                 AND co.tipo IN ('aroma', 'mixto')) AS recargoPorDosis
        FROM detalle_pedido dp
        JOIN configuracion_bebida cb ON cb.id_configuracion = dp.id_configuracion
        JOIN producto p ON p.id_producto = cb.id_producto
@@ -318,7 +352,10 @@ exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => 
 
     let total = 0;
     for (const linea of lineas) {
-      const precio = Number(linea.precio_base);
+      const precioBase = Number(linea.precio_base);
+      const precio = linea.intensidad
+        ? ventas.precioPersonalizado(precioBase, Number(linea.intensidad), Number(linea.recargoPorDosis))
+        : precioBase;
       const cantidad = Number(linea.cantidad);
       total += precio * cantidad;
 

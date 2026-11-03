@@ -10,7 +10,9 @@ const Carrito = require('../models/Carrito');
 const Producto = require('../models/Producto');
 const Direccion = require('../models/Direccion');
 const MetodoPago = require('../models/MetodoPago');
+const Pedido = require('../models/Pedido');
 const ventas = require('../config/ventas');
+const correoServicio = require('../config/correo');
 const { texto, leerDireccionNueva } = require('../utils/validaciones');
 const { MAX_CANTIDAD, normalizarItems } = require('../utils/carrito');
 
@@ -318,6 +320,17 @@ exports.confirmar = async (req, res, next) => {
 
     const pedido = await Carrito.confirmar(idCliente, req.session.usuario.id, null, entrega);
     req.session.carrito = [];
+    // HU-033: el pedido ya quedó guardado y confirmado; cualquier falla del correo es no bloqueante.
+    if (correoServicio.configurado()) {
+      try {
+        const detallePedido = await Pedido.obtener(pedido.id, { idCliente });
+        if (detallePedido) await correoServicio.enviarConfirmacionPedido(detallePedido);
+      } catch (err) {
+        console.warn(`HU-033: no se pudo enviar la confirmación del pedido #${pedido.id}.`);
+      }
+    } else {
+      console.warn(`HU-033: SMTP sin configurar; pedido #${pedido.id} se confirmó sin correo.`);
+    }
     return res.redirect(`/pedidos/${pedido.id}/comprobante`);
   } catch (err) {
     // Los errores de negocio (carrito vacío, stock insuficiente) se muestran en el carrito.

@@ -9,6 +9,7 @@ router.use(requiereSesion, requierePermiso('ver_mis_pedidos'));
 
 router.get('/', pedidosController.listar);                       // Mis pedidos
 router.get('/:id(\\d+)/comprobante', pedidosController.comprobante); // HU-028: comprobante de compra
+router.post('/:id(\\d+)/cancelar', pedidosController.cancelar); // HU-034: cancelación antes del despacho
 router.get('/:id(\\d+)', pedidosController.ver);                 // HU-032: estado y seguimiento (solo números)
 
 module.exports = router;

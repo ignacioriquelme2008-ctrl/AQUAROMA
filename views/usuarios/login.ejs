@@ -21,6 +21,7 @@
       %>
       <%# Mensaje verde después de registrarse (?registrado=1) y aviso cuando viene de una página privada (HU-004). %>
       <% if (locals.exito) { %><p class="auth-exito" role="status"><%= exito %></p><% } %>
+      <% if (locals.passwordRestablecida) { %><p class="auth-exito" role="status">Tu contraseña fue actualizada. Ya puedes iniciar sesión.</p><% } %>
       <% if (locals.aviso && !lista.length) { %><p class="auth-info" role="status"><%= aviso %></p><% } %>
       <% if (lista.length) { %>
         <ul class="auth-errores" role="alert">
@@ -39,6 +40,7 @@
       </div>
 
       <button type="submit" class="btn btn-primary auth-boton">Ingresar</button>
+      <p class="auth-pie"><a href="/recuperar">¿Olvidaste tu contraseña?</a></p>
       <p class="auth-pie">¿No tienes cuenta? <a href="/registro">Regístrate</a></p>
     </form>
   </main>

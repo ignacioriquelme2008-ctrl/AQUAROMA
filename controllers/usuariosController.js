@@ -1,8 +1,10 @@
 ﻿// Controlador de la sección USUARIOS (registro, login y logout).
 // Valida los datos EN EL SERVIDOR y decide qué vista mostrar.
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const Usuario = require('../models/Usuario');
 const Carrito = require('../models/Carrito');
+const correoServicio = require('../config/correo');
 const { EMAIL_REGEX, PASS_REGEX, TEL_REGEX, LARGO_MAX, texto } = require('../utils/validaciones');
 const { normalizarItems } = require('../utils/carrito');
 
@@ -71,13 +73,98 @@ exports.registrar = async (req, res) => {
 
 exports.mostrarLogin = (req, res) => {
   const exito = req.query.registrado ? 'Cuenta creada exitosamente. Ya puedes iniciar sesión.' : null;
+  const passwordRestablecida = req.query.passwordRestablecida === '1';
   // "volver" guarda la página privada que la persona quiso abrir antes de iniciar sesión (HU-004 / HU-006).
   const volver = rutaSegura(req.query.volver);
   // Si viene de una página privada, se le explica por qué está en el login.
   const aviso = !volver ? null
     : volver === '/carrito' ? 'Inicia sesión para confirmar tu pedido. Los productos de tu carrito se mantienen.'
     : 'Inicia sesión para entrar a esa página.';
-  res.render('usuarios/login', { error: null, exito, aviso, correo: '', volver });
+  res.render('usuarios/login', { error: null, exito, passwordRestablecida, aviso, correo: '', volver });
+};
+
+// HU-005: respuesta única para no revelar si un correo está registrado ni si se pudo enviar.
+const MENSAJE_RECUPERACION = 'Si el correo existe en la plataforma, recibirás las instrucciones para recuperar tu acceso.';
+
+exports.mostrarRecuperacion = (req, res) => {
+  res.render('usuarios/recuperar', { mensaje: null, error: null, correo: '' });
+};
+
+exports.solicitarRecuperacion = async (req, res) => {
+  const correo = texto(req.body.correo).trim().toLowerCase();
+  if (!correo || correo.length > LARGO_MAX.correo || !EMAIL_REGEX.test(correo)) {
+    return res.status(400).render('usuarios/recuperar', {
+      mensaje: null,
+      error: 'Ingresa un correo electrónico válido.',
+      correo,
+    });
+  }
+
+  try {
+    const usuario = await Usuario.buscarParaRecuperacion(correo);
+    if (usuario && usuario.usuario_activo && (usuario.cliente_activo === null || usuario.cliente_activo)) {
+      const token = crypto.randomBytes(32).toString('base64url');
+      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+      await Usuario.crearTokenRecuperacion(usuario.id_usuario, tokenHash);
+      if (correoServicio.configurado()) {
+        // No esperamos al SMTP: el texto y el tiempo de respuesta no revelan si la cuenta existe.
+        void correoServicio.enviarRecuperacion(usuario.correo, token).catch(() => {
+          // No se registra el correo ni el token; el texto visible sigue siendo neutro (HU-005).
+          console.warn('HU-005: no se pudo enviar el correo de recuperación.');
+        });
+      } else {
+        console.warn('HU-005: configure SMTP para habilitar el envío de recuperación.');
+      }
+    }
+    return res.render('usuarios/recuperar', { mensaje: MENSAJE_RECUPERACION, error: null, correo: '' });
+  } catch (err) {
+    console.error('HU-005: no se pudo procesar la solicitud de recuperación.');
+    // Mantiene la respuesta neutra incluso ante una falla para proteger la existencia de la cuenta.
+    return res.render('usuarios/recuperar', { mensaje: MENSAJE_RECUPERACION, error: null, correo: '' });
+  }
+};
+
+exports.mostrarNuevaPassword = async (req, res, next) => {
+  try {
+    const token = texto(req.params.token);
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const valido = await Usuario.validarTokenRecuperacion(tokenHash);
+    if (!valido) {
+      return res.status(400).render('usuarios/nueva-password', {
+        token: '',
+        errores: [],
+        errorEnlace: 'El enlace expiró o ya fue utilizado. Solicita uno nuevo para continuar.',
+      });
+    }
+    return res.render('usuarios/nueva-password', { token, errores: [], errorEnlace: null });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+exports.restablecerPassword = async (req, res, next) => {
+  const token = texto(req.params.token);
+  const nueva = texto(req.body.password);
+  const confirmar = texto(req.body.confirmar);
+  const errores = [];
+  if (!PASS_REGEX.test(nueva)) errores.push('La contraseña debe tener 8 a 20 caracteres, mayúscula, minúscula, número y carácter especial, sin espacios.');
+  if (nueva !== confirmar) errores.push('Las contraseñas no coinciden.');
+  if (errores.length) return res.status(400).render('usuarios/nueva-password', { token, errores, errorEnlace: null });
+
+  try {
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const actualizada = await Usuario.restablecerPassword(tokenHash, nueva);
+    if (!actualizada) {
+      return res.status(400).render('usuarios/nueva-password', {
+        token: '',
+        errores: [],
+        errorEnlace: 'El enlace expiró o ya fue utilizado. Solicita uno nuevo para continuar.',
+      });
+    }
+    return res.redirect('/login?passwordRestablecida=1');
+  } catch (err) {
+    return next(err);
+  }
 };
 
 // Busca la cuenta, compara la contraseña con bcrypt y guarda en la sesión al usuario con su rol y permisos (HU-006).

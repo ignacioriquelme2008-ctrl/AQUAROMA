@@ -60,7 +60,10 @@ exports.cambiarEstado = async (req, res, next) => {
   try {
     if (Object.keys(errores).length > 0) return await mostrarDetalle(req, res, 400, { datos, errores });
 
-    await Pedido.cambiarEstado(Number(req.params.id), datos.estado, datos.estado === 'enviado' ? datos : {});
+    await Pedido.cambiarEstado(Number(req.params.id), datos.estado, {
+      ...(datos.estado === 'enviado' ? datos : {}),
+      idUsuario: req.session.usuario.id,
+    });
     res.redirect(`/admin/pedidos/${Number(req.params.id)}?actualizado=1`);
   } catch (err) {
     // Criterio 2: un salto que no está en la secuencia se rechaza con un aviso.

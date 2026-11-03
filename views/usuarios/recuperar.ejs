@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <%- include('../partials/head', { titulo: 'Recuperar contraseña | AQUAROMA', estilos: ['usuarios'] }) %>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+  <main class="auth">
+    <form class="auth-card" method="post" action="/recuperar" novalidate>
+      <h1>Recuperar contraseña</h1>
+      <p class="auth-sub">Ingresa el correo asociado a tu cuenta y te enviaremos un enlace temporal.</p>
+      <% if (mensaje) { %><p class="auth-info" role="status"><%= mensaje %></p><% } %>
+      <% if (error) { %><p class="auth-errores" role="alert"><%= error %></p><% } %>
+      <div class="auth-campo">
+        <label for="correo">Correo electrónico</label>
+        <input id="correo" name="correo" type="email" maxlength="120" autocomplete="email" value="<%= correo %>" required>
+      </div>
+      <button type="submit" class="btn btn-primary auth-boton">Enviar instrucciones</button>
+      <p class="auth-pie"><a href="/login">Volver a iniciar sesión</a></p>
+    </form>
+  </main>
+</body>
+</html>

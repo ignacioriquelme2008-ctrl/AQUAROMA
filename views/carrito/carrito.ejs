@@ -42,6 +42,7 @@
               <small>Aroma: <%= i.aroma %></small>
               <% if (i.descripcionAroma) { %><small><%= i.descripcionAroma %></small><% } %>
               <% if (i.intensidad) { %><small>Intensidad: <%= i.intensidad %> <%= i.intensidad === 1 ? 'dosis' : 'dosis' %></small><% } %>
+              <% if (i.recargo > 0) { %><small>Recargo por dosis adicionales: <%= clp(i.recargo) %></small><% } %>
               <%# HU-027: compara todas las variantes del producto contra el stock disponible. %>
               <% if (i.stockInsuficiente) { %>
                 <small class="stock-aviso">Tienes <%= i.unidadesEnCarrito %> en el carrito y solo quedan <%= i.stock %> <%= i.stock === 1 ? 'unidad' : 'unidades' %> disponibles en total. Reduce la cantidad para confirmar.</small>

@@ -264,13 +264,14 @@ exports.crearFavorito = async (req, res, next) => {
     }
 
     // La preparación se crea (o se reutiliza) con la misma función que usa el carrito.
-    const idConfiguracion = await Carrito.guardarConfiguracionPersonalizada(idClienteDe(req), {
+    const configuracion = await Carrito.guardarConfiguracionPersonalizada(idClienteDe(req), {
       idProducto: id,
       idComponente,
       intensidad,
-      precio: producto.precio,
+      precioBase: producto.precio,
       nombreProducto: producto.nombre,
     });
+    const idConfiguracion = configuracion && configuracion.id;
     if (!idConfiguracion) return volverAlCarrito(req, res, 'No pudimos guardar esa combinación. Inténtalo de nuevo.');
 
     await Favorito.crear(idClienteDe(req), idConfiguracion, alias);

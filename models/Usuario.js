@@ -114,3 +114,75 @@ exports.cambiarPassword = async (idUsuario, password) => {
   const hash = await bcrypt.hash(password, 10);
   await db.query('UPDATE usuario SET password_hash = ? WHERE id_usuario = ?', [hash, idUsuario]);
 };
+
+// HU-005: invalida solicitudes previas y persiste solo el hash del token, nunca el token usable.
+exports.crearTokenRecuperacion = async (idUsuario, tokenHash) => {
+  await db.query(
+    `UPDATE token_recuperacion SET usado_en = NOW()
+     WHERE id_usuario = ? AND usado_en IS NULL`,
+    [idUsuario]
+  );
+  await db.query(
+    `INSERT INTO token_recuperacion (id_usuario, token_hash, expira_en)
+     VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))`,
+    [idUsuario, tokenHash]
+  );
+};
+
+// HU-005: la consulta no distingue entre expirado, utilizado o inexistente.
+exports.validarTokenRecuperacion = async (tokenHash) => {
+  const [filas] = await db.query(
+    `SELECT tr.id_token, tr.id_usuario
+     FROM token_recuperacion tr
+     JOIN usuario u ON u.id_usuario = tr.id_usuario
+     WHERE tr.token_hash = ? AND tr.usado_en IS NULL AND tr.expira_en > NOW()
+       AND u.activo = TRUE
+     LIMIT 1`,
+    [tokenHash]
+  );
+  return filas[0] || null;
+};
+
+// HU-005: consume el token y cambia la clave en una sola transacción (uso único incluso con peticiones simultáneas).
+exports.restablecerPassword = async (tokenHash, password) => {
+  const hashPassword = await bcrypt.hash(password, 10);
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [filas] = await conn.query(
+      `SELECT id_token, id_usuario FROM token_recuperacion
+       WHERE token_hash = ? AND usado_en IS NULL AND expira_en > NOW()
+       FOR UPDATE`,
+      [tokenHash]
+    );
+    if (!filas[0]) {
+      await conn.rollback();
+      return false;
+    }
+    await conn.query('UPDATE usuario SET password_hash = ? WHERE id_usuario = ?', [hashPassword, filas[0].id_usuario]);
+    await conn.query('UPDATE token_recuperacion SET usado_en = NOW() WHERE id_token = ?', [filas[0].id_token]);
+    await conn.query(
+      `UPDATE token_recuperacion SET usado_en = NOW()
+       WHERE id_usuario = ? AND usado_en IS NULL`,
+      [filas[0].id_usuario]
+    );
+    await conn.commit();
+    return true;
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+};
+
+// Devuelve solo datos mínimos para el correo de recuperación; no comparte el hash de contraseña.
+exports.buscarParaRecuperacion = async (correo) => {
+  const [filas] = await db.query(
+    `SELECT u.id_usuario, u.correo, u.activo AS usuario_activo, c.activo AS cliente_activo
+     FROM usuario u LEFT JOIN cliente c ON c.id_cliente = u.id_cliente
+     WHERE u.correo = ? LIMIT 1`,
+    [correo]
+  );
+  return filas[0] || null;
+};

@@ -1,5 +1,6 @@
 // Modelo: consultas SQL de productos (MySQL)
 const db = require('../config/db');
+const ventas = require('../config/ventas');
 
 // Convierte "Sin gas" en "sin-gas" y "Arándano" en "arandano" (para los filtros)
 const slug = (texto) =>
@@ -75,26 +76,26 @@ exports.obtenerPorId = async (id) => {
 // El nombre y la descripción sensorial salen del componente activo en la base de datos.
 exports.aromasDisponibles = async () => {
   const [filas] = await db.query(
-    `SELECT id_componente AS id, nombre, descripcion
+     `SELECT id_componente AS id, nombre, descripcion, recargo_precio AS recargoPorDosis
      FROM componente
      WHERE activo = TRUE AND tipo IN ('aroma', 'mixto')
      ORDER BY nombre, id_componente`
   );
-  return filas;
+  return filas.map((f) => ({ ...f, recargoPorDosis: Number(f.recargoPorDosis) }));
 };
 
 // Comprueba una selección recibida por formulario: el producto debe permitir personalización
 // y el componente debe ser un aroma activo. Nunca se confía en el nombre que mande el navegador.
 exports.obtenerAromaParaProducto = async (idProducto, idComponente) => {
   const [filas] = await db.query(
-    `SELECT c.id_componente AS id, c.nombre, c.descripcion
+    `SELECT c.id_componente AS id, c.nombre, c.descripcion, c.recargo_precio AS recargoPorDosis
      FROM producto p
      JOIN componente c ON c.id_componente = ?
      WHERE p.id_producto = ? AND p.activo = TRUE AND p.es_personalizable = TRUE
        AND c.activo = TRUE AND c.tipo IN ('aroma', 'mixto')`,
     [idComponente, idProducto]
   );
-  return filas[0] || null;
+  return filas[0] ? { ...filas[0], recargoPorDosis: Number(filas[0].recargoPorDosis) } : null;
 };
 
 // Productos de un carrito [{ id, qty }] con los datos que muestra la página del carrito
@@ -118,19 +119,22 @@ exports.detallarCarrito = async (items) => {
   let aromas = new Map();
   if (idsComponentes.length > 0) {
     const [componentes] = await db.query(
-      `SELECT id_componente AS id, nombre, descripcion
+      `SELECT id_componente AS id, nombre, descripcion, recargo_precio AS recargoPorDosis
        FROM componente WHERE tipo IN ('aroma', 'mixto') AND id_componente IN (?)`,
       [idsComponentes]
     );
-    aromas = new Map(componentes.map((c) => [c.id, c]));
+    aromas = new Map(componentes.map((c) => [c.id, { ...c, recargoPorDosis: Number(c.recargoPorDosis) }]));
   }
 
   return items
     .filter((i) => porId.has(i.id))
     .map((i) => {
       const p = porId.get(i.id);
-      const precio = Number(p.precio);
       const aromaElegido = i.idComponente ? aromas.get(i.idComponente) : null;
+      const intensidad = aromaElegido ? Number(i.intensidad) || 1 : null;
+      const precioBase = Number(p.precio);
+      const recargoPorDosis = aromaElegido ? aromaElegido.recargoPorDosis : 0;
+      const precio = aromaElegido ? ventas.precioPersonalizado(precioBase, intensidad, recargoPorDosis) : precioBase;
       return {
         id: p.id,
         nombre: p.nombre,
@@ -138,8 +142,11 @@ exports.detallarCarrito = async (items) => {
         aromaElegido: aromaElegido ? aromaElegido.nombre : null,
         descripcionAroma: aromaElegido ? aromaElegido.descripcion : null,
         idComponente: aromaElegido ? aromaElegido.id : null,
-        intensidad: aromaElegido ? Number(i.intensidad) || 1 : null,
+        intensidad,
+        recargoPorDosis,
         imagen: p.imagen,
+        precioBase,
+        recargo: precio - precioBase,
         precio,
         stock: Number(p.stock),
         qty: i.qty,

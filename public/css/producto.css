@@ -33,6 +33,7 @@
 .intensidad-campo { display: block; margin: 12px 0 6px; color: var(--navy); font-size: 13px; font-weight: 700; }
 #intensidad-aroma { width: 100%; padding: 10px 12px; border: 1px solid #d3dbe6; border-radius: 8px; background: #fff; color: var(--navy); font: inherit; }
 #intensidad-aroma:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+.precio-personalizacion-ayuda { display: block; margin-top: 7px; color: var(--text-muted); font-size: 12px; line-height: 1.5; }
 
 /* Disponibilidad (HU-017): pastilla verde "N unidades disponibles" o roja "Agotado". */
 .estado { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }

@@ -1,0 +1,13 @@
+HU;Componente;Intensidad (dosis);Dosis adicionales;Precio base referencial (CLP);Recargo por dosis adicional (CLP);Recargo total (CLP);Precio final referencial (CLP);Regla
+HU-020;Limon;1;0;1490;300;0;1490;Primera dosis incluida
+HU-020;Limon;2;1;1490;300;300;1790;Una dosis adicional
+HU-020;Limon;3;2;1490;300;600;2090;Dos dosis adicionales
+HU-020;Limon;4;3;1490;300;900;2390;Tres dosis adicionales
+HU-020;Limon;5;4;1490;300;1200;2690;Cuatro dosis adicionales
+HU-020;Frutos rojos;1;0;1490;400;0;1490;Primera dosis incluida
+HU-020;Frutos rojos;2;1;1490;400;400;1890;Una dosis adicional
+HU-020;Frutos rojos;3;2;1490;400;800;2290;Dos dosis adicionales
+HU-020;Frutos rojos;4;3;1490;400;1200;2690;Tres dosis adicionales
+HU-020;Frutos rojos;5;4;1490;400;1600;3090;Cuatro dosis adicionales
+
+Nota;La primera dosis está incluida. Cada recargo se obtiene de componente.recargo_precio en la base. Los precios usan como referencia el precio base actual del catálogo ($1.490 CLP).

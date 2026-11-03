@@ -1,5 +1,6 @@
 // Controlador de la sección CATÁLOGO: recibe la petición, pide datos al modelo y elige la vista correcta.
 const Producto = require('../models/Producto');
+const ventas = require('../config/ventas');
 
 // Lee un filtro de la URL (?aroma=limon&tipo=sin-gas). "todos" y los valores vacíos no filtran.
 // Si viene "todos" junto con un valor real, manda el valor real.
@@ -53,7 +54,7 @@ exports.detalle = async (req, res, next) => {
       return res.status(404).render('errores/no-encontrado', { mensaje: 'Este producto no existe o ya no está disponible.' });
     }
     const aromas = producto.personalizable ? await Producto.aromasDisponibles() : [];
-    res.render('catalogo/producto', { producto, aromas, volver: req.originalUrl });
+    res.render('catalogo/producto', { producto, aromas, ventas, volver: req.originalUrl });
   } catch (err) {
     next(err);   // lo atiende el manejador de errores de app.js
   }

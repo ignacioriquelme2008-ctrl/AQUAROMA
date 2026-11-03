@@ -12,6 +12,7 @@
     <p class="eyebrow">Seguimiento</p>
     <h1>Pedido #<%= pedido.id %></h1>
     <p class="pedidos-sub">Hecho el <%= fechaHora(pedido.fecha) %> · Estado actual: <strong><%= nombres[pedido.estado] %></strong></p>
+    <% if (avisoCancelacion) { %><p class="pedidos-aviso-cancelacion" role="status"><%= avisoCancelacion %></p><% } %>
 
     <% if (pedido.estado === 'cancelado') { %>
       <%# Criterio 3: una orden cancelada se indica de forma clara y visible. %>
@@ -28,6 +29,14 @@
           </li>
         <% }) %>
       </ol>
+    <% } %>
+
+    <% if (puedeCancelar) { %>
+      <!-- HU-034: cancelación disponible hasta antes del despacho; el servidor vuelve a validar el estado. -->
+      <form class="pedidos-cancelar-form" method="post" action="/pedidos/<%= pedido.id %>/cancelar" data-confirmar-cancelacion>
+        <button type="submit" class="pedidos-cancelar">Cancelar pedido</button>
+        <p>Disponible antes de que el pedido salga a despacho.</p>
+      </form>
     <% } %>
 
     <%# Criterio 2: con el pedido enviado (o ya entregado) se muestran transporte y código de seguimiento. %>
@@ -58,5 +67,6 @@
       <a href="/pedidos/<%= pedido.id %>/comprobante" class="pedidos-comprobante">🧾 Ver comprobante de compra</a>
     </section>
   </main>
+  <script src="/js/pedidos.js" defer></script>
 </body>
 </html>
