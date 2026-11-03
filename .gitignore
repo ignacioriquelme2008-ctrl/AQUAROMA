@@ -1,4 +1,10 @@
 # Ignora dependencias instaladas localmente para no subirlas al repositorio.
 node_modules
-# Oculta las variables de entorno para no guardar datos sensibles.
+# Nunca subir variables de entorno; se conserva solo la plantilla sin secretos.
 .env
+.env.*
+!.env.example
+# Respaldos SQL y archivos temporales/logs pueden contener datos reales o secretos.
+/database/respaldos/
+/_qa/
+*.log
