@@ -230,6 +230,12 @@ exports.login = async (req, res) => {
       }
     }
 
+    // Termina de guardar antes de redirigir: la siguiente página puede pedir la sesión
+    // inmediatamente y ahora se recupera de la base de datos.
+    await new Promise((resolve, reject) => {
+      req.session.save((err) => (err ? reject(err) : resolve()));
+    });
+
     // El administrador entra a su panel; el cliente vuelve a la página que pidió o al inicio.
     res.redirect(volver || (esAdmin ? '/admin' : '/'));
   } catch (err) {

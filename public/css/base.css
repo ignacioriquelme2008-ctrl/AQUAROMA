@@ -18,6 +18,13 @@
   --green: #2f8f3a;
   --ink: #3a4660;
   --line: #e6ebf2;
+  --page-bg: #f5f8fc;
+  --surface: #ffffff;
+  --surface-soft: #f0f5fa;
+  --card-radius: 18px;
+  --card-shadow: 0 4px 16px #0b2d6b06;
+  --card-shadow-hover: 0 10px 28px #0b2d6b12;
+  --font-heading: "Segoe UI", Arial, sans-serif;
 }
 
 /* ===== Base ===== */
@@ -29,7 +36,7 @@
 body {
   font-family: "Segoe UI", Arial, sans-serif;
   color: var(--ink);
-  background: #f5f8fc;
+  background: var(--page-bg);
   line-height: 1.5;
 }
 
@@ -41,17 +48,19 @@ a { text-decoration: none; color: inherit; }
 /* ===== Títulos ===== */
 /* Título principal de cada página, con una línea azul corta debajo. */
 h1 {
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 800;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -.035em;
+  line-height: 1.2;
   font-size: clamp(28px, 4vw, 36px);
   color: var(--navy);
   padding-bottom: 12px;
   position: relative;
   margin-bottom: 12px;
 }
-h1::after { content: ""; position: absolute; left: 0; bottom: 0; width: 48px; height: 3px; background: var(--blue); }
-h2 { font-size: 17px; color: var(--navy); margin-bottom: 14px; }
-h3 { font-size: 15px; color: var(--navy); }
+h1::after { content: ""; position: absolute; left: 0; bottom: 0; width: 42px; height: 3px; background: var(--blue); }
+h2 { font-family: var(--font-heading); font-size: 17px; font-weight: 650; letter-spacing: -.02em; color: var(--navy); margin-bottom: 14px; }
+h3 { font-family: var(--font-heading); font-size: 15px; font-weight: 650; color: var(--navy); }
 
 /* Texto pequeño en mayúsculas que va sobre un título (inicio, nosotros, ficha, panel). */
 .eyebrow { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--navy); font-weight: 600; margin-bottom: 18px; }
@@ -62,7 +71,7 @@ h3 { font-size: 15px; color: var(--navy); }
   display: inline-flex;
   gap: 10px;
   align-items: center;
-  padding: 12px 22px;
+  padding: 10px 18px;
   border-radius: 8px;
   font-weight: 600;
   font-size: 15px;
@@ -88,32 +97,39 @@ h3 { font-size: 15px; color: var(--navy); }
 /* La barra queda fija al scroll para que el usuario siempre tenga acceso a la navegación. */
 .navbar {
   position: sticky;
-  top: 0;
+  top: 18px;
   z-index: 100;
   background: var(--white);
-  border-bottom: 1px solid #e2e8f0;
-  padding: 0 24px;
+  border: 1px solid #e6eef7;
+  border-radius: 999px;
+  width: calc(100% - 64px);
+  max-width: 1240px;
+  margin: 18px auto;
+  padding: 10px 26px;
+  box-shadow: 0 12px 36px #0b2d6b14, 0 2px 8px #0b2d6b05;
 }
 
 .nav-inner {
   max-width: none;
   margin: 0;
-  height: 72px;
+  min-height: 42px;
+  gap: 18px 28px;
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.logo { display: flex; align-items: center; gap: 10px; color: var(--text); padding: 4px; }
+.logo { display: flex; flex-shrink: 0; align-items: center; gap: 14px; color: var(--text); padding: 4px; }
 .logo-img {
-  height: 40px;        /* alto fijo: sube o baja este número */
+  height: 34px;        /* alto fijo: sube o baja este número */
   width: auto;         /* el ancho se ajusta solo, sin deformar */
   max-width: 160px;    /* límite de ancho por si la imagen es muy ancha */
   object-fit: contain; /* la imagen entra completa, sin recortarse */
   display: block;
 }
 .logo-text { display: flex; flex-direction: column; line-height: 1.2; }
-.logo-text strong { font-size: 18px; }
+.logo-text strong { font-size: 19px; color: var(--navy); letter-spacing: .02em; }
 .logo-text span {
   font-size: 11px;
   color: var(--text-muted);
@@ -121,11 +137,14 @@ h3 { font-size: 15px; color: var(--navy); }
   letter-spacing: 0.5px;
 }
 
-.nav-links { display: flex; gap: 8px; list-style: none; }
+.nav-links { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; list-style: none; }
 .nav-links a {
-  color: var(--text-muted);
-  font-weight: 500;
-  padding: 8px 16px;
+  display: block;
+  color: var(--navy);
+  font-weight: 600;
+  padding: 10px 14px;
+  font-size: 14px;
+  white-space: nowrap;
   border-radius: 999px;
   transition: all 0.2s;
 }
@@ -137,16 +156,16 @@ h3 { font-size: 15px; color: var(--navy); }
   position: relative;
   display: grid;
   place-items: center;
-  flex: 0 0 48px;
+  flex: 0 0 42px;
   width: 48px;
   height: 48px;
   padding: 0;
   border-radius: 50%;
-  background: #0878e8;
-  color: #fff;
+  background: #eaf4ff;
+  color: var(--navy);
   text-decoration: none;
 }
-.navbar .nav-cart:hover { background: #0667c9; }
+.navbar .nav-cart:hover { background: #d8ebff; }
 .nav-cart-icon { display: block; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 /* HU-022: cuenta real de unidades del middleware, superpuesta sin ocupar espacio en el menú. */
 .nav-contador {
@@ -162,8 +181,8 @@ h3 { font-size: 15px; color: var(--navy); }
   padding: 0 3px;
   border: 1px solid #0878e8;
   border-radius: 50%;
-  background: #fff;
-  color: #102f70;
+  background: #075ed7;
+  color: #fff;
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
@@ -171,16 +190,32 @@ h3 { font-size: 15px; color: var(--navy); }
 }
 
 /* Aviso de la última acción del carrito ("se agregó", "solo quedan X unidades"). */
-.aviso-carrito { margin: 0 -24px; padding: 10px 24px; background: #e8f7ee; border-top: 1px solid #b7e4c7; color: #14532d; font-size: 14px; text-align: center; }
+.aviso-carrito { border-radius: 18px; margin: 14px 0 0; padding: 10px 24px; background: #e8f7ee; border-top: 1px solid #b7e4c7; color: #14532d; font-size: 14px; text-align: center; }
 
 /* Parte derecha del menú: nombre del usuario, "Panel", "Cerrar sesión" o "Iniciar sesión / Registrarse". */
-.nav-acciones { display: flex; align-items: center; gap: 6px; }
+.nav-acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; }
+.nav-acciones .nav-cuenta { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 22px; border-radius: 999px; background: #075ed7; color: white; font-weight: 600; white-space: nowrap; }
+.nav-acciones .nav-cuenta:hover { background: #084cb0; color: white; }
+.nav-cuenta-icon { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.nav-identidad { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+.nav-avatar { display: inline-grid; place-items: center; flex: 0 0 30px; width: 30px; height: 30px; border-radius: 50%; background: #e0efff; color: var(--blue); font-size: 14px; font-weight: 700; }
+.nav-nombre { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--navy); font-size: 14px; font-weight: 600; }
 .nav-acciones form { margin: 0; }
-.nav-usuario { font-size: 14px; font-weight: 600; color: var(--navy); margin-right: 6px; }
 .nav-enlace { font: inherit; font-size: 14px; font-weight: 500; color: var(--text-muted); background: none; border: 0; padding: 8px 12px; border-radius: 999px; cursor: pointer; }
 .nav-enlace:hover { color: var(--primary); background: var(--primary-light); }
 /* Enlace "Panel": solo lo ve el administrador (HU-006). */
 .nav-panel { color: var(--navy); font-weight: 600; }
+
+/* Menú de perfil: flota bajo el botón sin desplazar la barra. */
+.nav-perfil { position: relative; }
+.nav-perfil summary { display: flex; align-items: center; gap: 10px; list-style: none; }
+.nav-perfil summary::-webkit-details-marker { display: none; }
+.nav-perfil-flecha { width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(-2px) rotate(45deg); }
+.nav-perfil[open] > summary { color: var(--blue); background: var(--primary-light); }
+.nav-perfil[open] .nav-perfil-flecha { transform: translateY(2px) rotate(225deg); }
+.nav-perfil-opciones { position: absolute; top: calc(100% + 12px); right: 0; z-index: 110; width: 200px; max-width: calc(100vw - 32px); padding: 8px; background: var(--white); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 12px 32px #0b2d6b1c; }
+.nav-perfil-opciones a { display: block; padding: 12px 14px; color: var(--navy); font-size: 14px; font-weight: 500; border-radius: 10px; }
+.nav-perfil-opciones a:hover { color: var(--blue); background: var(--primary-light); }
 
 /* ===== Tarjeta centrada ===== */
 /* Caja blanca al centro de la página. La usan el login y el registro (usuarios.css agrega sus campos)
@@ -192,11 +227,18 @@ h3 { font-size: 15px; color: var(--navy); }
 .auth-boton { width: 100%; justify-content: center; border: 0; cursor: pointer; font-family: inherit; margin-top: 6px; }
 
 /* El menú conserva todos sus accesos en tablet y móvil; cambia de fila antes de apretarse. */
-@media (max-width: 980px) {
-  .navbar { padding: 0 16px; }
-  .nav-inner { height: auto; min-height: 72px; flex-wrap: wrap; justify-content: center; gap: 4px 12px; padding: 8px 0; }
-  .nav-links { flex: 1 1 100%; justify-content: center; flex-wrap: wrap; gap: 2px; padding: 0; }
-  .nav-links a { padding: 7px 10px; font-size: 13px; }
-  .nav-acciones { justify-content: center; flex-wrap: wrap; gap: 3px; }
-  .nav-enlace { padding: 7px 8px; font-size: 13px; }
+@media (max-width: 1040px) {
+  .navbar { border-radius: 28px; padding: 14px 22px; }
+  .nav-inner { justify-content: center; gap: 20px 32px; }
+  .nav-links { order: 3; flex-basis: 100%; gap: 16px; }
+  .nav-acciones { gap: 14px; }
+}
+@media (max-width: 600px) {
+  .navbar { top: 10px; width: calc(100% - 24px); margin: 12px auto 24px; border-radius: 24px; padding: 14px 16px; }
+  .nav-inner { gap: 14px; }
+  .logo-text strong { font-size: 18px; }
+  .nav-links { gap: 6px 10px; }
+  .nav-links a { padding: 10px 12px; font-size: 14px; }
+  .nav-acciones { gap: 12px; }
+  .nav-enlace { font-size: 14px; }
 }

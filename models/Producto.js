@@ -1,22 +1,23 @@
 // Modelo: consultas SQL de productos (MySQL)
 const db = require('../config/db');
 const ventas = require('../config/ventas');
+const { STOCK_POR_PRODUCTO } = require('../utils/stockVenta');
 
 // Convierte "Sin gas" en "sin-gas" y "Arándano" en "arandano" (para los filtros)
 const slug = (texto) =>
   texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '-');
 
 exports.obtenerTodos = async () => {
-  // Une cada producto con su categoría y tipo, suma su stock y trae su imagen para el catálogo.
+  // Une cada producto con su categoría y tipo, consulta su stock despachable y trae su imagen para el catálogo.
   const [filas] = await db.query(
     `SELECT p.id_producto AS id, p.nombre, p.precio_base AS precio,
             p.descripcion AS etiqueta, p.imagen,
             c.nombre AS aroma, t.nombre AS tipo,
-            COALESCE(SUM(i.cantidad), 0) AS stock
+            COALESCE(MAX(i.stock), 0) AS stock
      FROM producto p
      JOIN categoria c ON p.id_categoria = c.id_categoria
      JOIN tipo_agua t ON p.id_tipo_agua = t.id_tipo_agua
-     LEFT JOIN inventario i ON i.id_producto = p.id_producto
+     LEFT JOIN (${STOCK_POR_PRODUCTO}) i ON i.id_producto = p.id_producto
      WHERE p.activo = TRUE
      GROUP BY p.id_producto, p.nombre, p.precio_base, p.descripcion, p.imagen, c.nombre, t.nombre
      ORDER BY p.id_producto`
@@ -46,7 +47,7 @@ exports.tiposConProductos = async () => {
   return filas.map((f) => ({ id: f.id, nombre: f.nombre, slug: slug(f.nombre) }));
 };
 
-// Un producto activo con todos los datos de su ficha (HU-016): aroma, tipo de agua, presentación en ml y stock total.
+// Un producto activo con todos los datos de su ficha (HU-016): aroma, tipo de agua, presentación en ml y stock despachable.
 // Devuelve null si no existe o está desactivado.
 exports.obtenerPorId = async (id) => {
   const [filas] = await db.query(
@@ -55,12 +56,12 @@ exports.obtenerPorId = async (id) => {
             c.nombre AS aroma, t.nombre AS tipo,
             pr.volumen_ml, pr.tipo_envase,
             p.es_personalizable AS personalizable,
-            COALESCE(SUM(i.cantidad), 0) AS stock
+            COALESCE(MAX(i.stock), 0) AS stock
      FROM producto p
      JOIN categoria c ON p.id_categoria = c.id_categoria
      JOIN tipo_agua t ON p.id_tipo_agua = t.id_tipo_agua
      JOIN presentacion pr ON p.id_presentacion = pr.id_presentacion
-     LEFT JOIN inventario i ON i.id_producto = p.id_producto
+     LEFT JOIN (${STOCK_POR_PRODUCTO}) i ON i.id_producto = p.id_producto
      WHERE p.id_producto = ? AND p.activo = TRUE
      GROUP BY p.id_producto, p.nombre, p.precio_base, p.descripcion, p.descripcion_larga, p.imagen,
                c.nombre, t.nombre, pr.volumen_ml, pr.tipo_envase, p.es_personalizable`,
@@ -99,17 +100,17 @@ exports.obtenerAromaParaProducto = async (idProducto, idComponente) => {
 };
 
 // Productos de un carrito [{ id, qty }] con los datos que muestra la página del carrito
-// (HU-022 a HU-025): nombre, aroma, imagen, precio ACTUAL y stock total. Conserva el orden
+// (HU-022 a HU-025): nombre, aroma, imagen, precio ACTUAL y stock despachable. Conserva el orden
 // recibido y descarta los productos que ya no existen o fueron desactivados (HU-037).
 exports.detallarCarrito = async (items) => {
   if (!items || items.length === 0) return [];
 
   const [filas] = await db.query(
     `SELECT p.id_producto AS id, p.nombre, p.precio_base AS precio, p.imagen,
-            c.nombre AS aroma, COALESCE(SUM(i.cantidad), 0) AS stock
+            c.nombre AS aroma, COALESCE(MAX(i.stock), 0) AS stock
      FROM producto p
      JOIN categoria c ON c.id_categoria = p.id_categoria
-     LEFT JOIN inventario i ON i.id_producto = p.id_producto
+     LEFT JOIN (${STOCK_POR_PRODUCTO}) i ON i.id_producto = p.id_producto
      WHERE p.activo = TRUE AND p.id_producto IN (?)
      GROUP BY p.id_producto, p.nombre, p.precio_base, p.imagen, c.nombre`,
     [items.map((i) => i.id)]
@@ -166,9 +167,7 @@ exports.obtenerDestacados = async (limite = 3) => {
      FROM producto p
      JOIN categoria c ON c.id_categoria = p.id_categoria
      JOIN tipo_agua t ON t.id_tipo_agua = p.id_tipo_agua
-     LEFT JOIN (SELECT id_producto, SUM(cantidad) AS stock
-                FROM inventario WHERE id_producto IS NOT NULL
-                GROUP BY id_producto) s ON s.id_producto = p.id_producto
+     LEFT JOIN (${STOCK_POR_PRODUCTO}) s ON s.id_producto = p.id_producto
      LEFT JOIN (SELECT cb.id_producto, SUM(dp.cantidad) AS unidades
                 FROM detalle_pedido dp
                 JOIN configuracion_bebida cb ON cb.id_configuracion = dp.id_configuracion

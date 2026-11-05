@@ -5,6 +5,7 @@
 // configuracion_bebida que ya crea el carrito (models/Carrito.js) y aquí solo se guarda el alias.
 // Todo se filtra SIEMPRE por id_cliente: una favorita nunca se lee ni se borra por su id solo.
 const db = require('../config/db');
+const { STOCK_POR_PRODUCTO } = require('../utils/stockVenta');
 
 // Consulta base: la favorita, su preparación, su producto y el stock total del producto.
 // El aroma y la intensidad viven en configuracion_componente (cantidad = dosis de aroma).
@@ -22,8 +23,7 @@ const BASE = `
   JOIN producto p ON p.id_producto = cb.id_producto
   LEFT JOIN configuracion_componente cc ON cc.id_configuracion = cb.id_configuracion
   LEFT JOIN componente c ON c.id_componente = cc.id_componente
-  LEFT JOIN (SELECT id_producto, SUM(cantidad) AS stock FROM inventario
-             WHERE id_producto IS NOT NULL GROUP BY id_producto) s ON s.id_producto = p.id_producto`;
+  LEFT JOIN (${STOCK_POR_PRODUCTO}) s ON s.id_producto = p.id_producto`;
 
 const AGRUPAR = `
   GROUP BY f.id_favorita, f.alias, f.creado_en, f.id_configuracion, p.id_producto,

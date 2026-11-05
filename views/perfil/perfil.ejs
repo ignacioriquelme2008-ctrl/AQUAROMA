@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <%- include('../partials/head', { titulo: 'Mi perfil | AQUAROMA', estilos: ['usuarios', 'perfil'] }) %>
+  <%- include('../partials/head', { titulo: 'Mi perfil | AQUAROMA', estilos: ['usuarios', 'pedidos', 'perfil'] }) %>
 </head>
 <body>
   <%- include('../partials/navbar') %>
@@ -29,8 +29,22 @@
   <main class="perfil">
     <div class="perfil-card">
       <h1>Mi perfil</h1>
-      <p class="auth-sub">Revisa tus datos y administra tu contraseña y tus direcciones de entrega.</p>
+      <p class="auth-sub">Administra tus pedidos y la configuración de tu cuenta.</p>
 
+      <nav class="perfil-opciones" aria-label="Secciones de mi perfil">
+        <% if (locals.puedeVerPedidos) { %>
+          <a href="/perfil?seccion=pedidos" <%- locals.seccion === 'pedidos' ? 'aria-current="page"' : '' %>>Mis pedidos</a>
+        <% } %>
+        <a href="/perfil" <%- locals.seccion !== 'pedidos' ? 'aria-current="page"' : '' %>>Configuración</a>
+      </nav>
+
+      <% if (locals.seccion === 'pedidos') { %>
+        <section class="perfil-pedidos" aria-labelledby="mis-pedidos-titulo">
+          <h2 id="mis-pedidos-titulo">Mis pedidos</h2>
+          <p class="perfil-nota">Revisa tus compras y consulta el estado de cada pedido.</p>
+          <%- include('../pedidos/_lista', { pedidos, nombres }) %>
+        </section>
+      <% } else { %>
       <%# HU-007 criterio 4: mensaje verde después de cualquier cambio (?ok=datos|password|...). %>
       <% if (locals.exito) { %><p class="auth-exito" role="status"><%= exito %></p><% } %>
 
@@ -195,7 +209,7 @@
           <div class="perfil-favoritas">
             <% favoritos.forEach((f) => { %>
               <article class="perfil-favorita">
-                <img src="/img/productos/<%= f.imagen %>" alt="<%= f.producto %>">
+                <img src="<%= imagenProducto(f.imagen) %>" alt="<%= f.producto %>">
                 <div class="perfil-favorita-info">
                   <strong><%= f.alias %></strong>
                   <p><%= f.producto %></p>
@@ -219,6 +233,7 @@
           </div>
         <% } %>
       </section>
+      <% } %>
     </div>
   </main>
 </body>

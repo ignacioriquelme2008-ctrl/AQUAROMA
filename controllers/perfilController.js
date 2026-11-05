@@ -8,6 +8,7 @@ const Direccion = require('../models/Direccion');
 const Producto = require('../models/Producto');
 const Carrito = require('../models/Carrito');
 const Favorito = require('../models/Favorito');
+const Pedido = require('../models/Pedido');
 const { PASS_REGEX, TEL_REGEX, LARGO_MAX, texto, leerDireccionNueva } = require('../utils/validaciones');
 const { MAX_CANTIDAD } = require('../utils/carrito');
 
@@ -33,6 +34,9 @@ const idClienteDe = (req) => req.session.usuario.idCliente;
 // llega con errores: en ese caso con código 400 y los valores que la persona había escrito.
 async function renderPerfil(req, res, estado, extra = {}) {
   const idCliente = idClienteDe(req);
+  const puedeVerPedidos = (req.session.usuario.permisos || []).includes('ver_mis_pedidos');
+  const seccion = req.method === 'GET' && req.query.seccion === 'pedidos' && puedeVerPedidos ? 'pedidos' : 'configuracion';
+  const pedidos = seccion === 'pedidos' ? await Pedido.listarDeCliente(idCliente) : [];
   const [perfil, direcciones, favoritos] = await Promise.all([
     Usuario.obtenerPerfil(req.session.usuario.id),
     Direccion.listarDeCliente(idCliente),
@@ -42,6 +46,10 @@ async function renderPerfil(req, res, estado, extra = {}) {
 
   return res.status(estado).render('perfil/perfil', {
     perfil,
+    seccion,
+    puedeVerPedidos,
+    pedidos,
+    nombres: Pedido.NOMBRES,
     direcciones,
     favoritos,
     exito: null,

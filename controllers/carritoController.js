@@ -15,6 +15,10 @@ const ventas = require('../config/ventas');
 const correoServicio = require('../config/correo');
 const { texto, leerDireccionNueva } = require('../utils/validaciones');
 const { MAX_CANTIDAD, normalizarItems } = require('../utils/carrito');
+const tipoCambio = require('../config/tipoCambio');
+const paypalSandbox = require('./paypalSandboxController');
+const PaypalCheckout = require('../models/PaypalCheckout');
+const db = require('../config/db');
 
 // Largo de cada campo de la dirección, igual que las columnas de la base.
 
@@ -97,6 +101,26 @@ async function renderCarrito(req, res, { error = null, datos = {}, estado = 200 
     MetodoPago.listarActivos(),
   ]);
   const items = adornar(await Producto.detallarCarrito(lineas));
+  let pagoPaypal = null;
+  if (idCliente && /^\d+$/.test(String(req.query.pagar || ''))) {
+    pagoPaypal = await PaypalCheckout.obtener(Number(req.query.pagar), idCliente);
+    if (pagoPaypal) {
+      // Son las líneas ya confirmadas y sus precios guardados, no el carrito
+      // nuevo ni el stock que quedó después de reservar este pedido.
+      const pedidoParaPagar = await Pedido.obtener(Number(req.query.pagar), { idCliente });
+      if (pedidoParaPagar) pagoPaypal.items = pedidoParaPagar.items;
+      else pagoPaypal = null;
+    }
+    if (!pagoPaypal) { error = 'No encontramos ese pago en tu cuenta.'; estado = 404; }
+  }
+  let cambio = null;
+  if (items.length) {
+    try {
+      cambio = await tipoCambio.obtener();
+    } catch (err) {
+      console.warn('No se pudo obtener el tipo de cambio para PayPal:', err.message);
+    }
+  }
   // HU-027: el límite corresponde al producto completo, aunque haya varias preparaciones
   // personalizadas del mismo producto (por ejemplo, aromas o intensidades distintos).
   const unidadesPorProducto = new Map();
@@ -114,6 +138,9 @@ async function renderCarrito(req, res, { error = null, datos = {}, estado = 200 
     direcciones,
     metodos,
     ventas,
+    paypal: { ...paypalSandbox.configuracionPublica(), cambio,
+      usd: cambio && items.length ? tipoCambio.convertir(calcularTotales(items).total, cambio.tasa) : null },
+    pagoPaypal,
     error,
     datos,
   });
@@ -312,7 +339,21 @@ exports.confirmar = async (req, res, next) => {
     }
 
     // Medio de pago: el modelo comprueba además que exista y esté activo.
-    const idMetodoPago = Number(datos.pago);
+    let idMetodoPago;
+    if (datos.pago === 'paypal') {
+      if (!paypalSandbox.configuracionPublica().enabled) {
+        return await renderCarrito(req, res, { error: 'PayPal Sandbox no está disponible.', datos, estado: 503 });
+      }
+      try { entrega.paypalCotizacion = await tipoCambio.obtener(); }
+      catch (err) {
+        return await renderCarrito(req, res, { error: 'No se pudo actualizar la cotización USD/CLP. Intenta nuevamente.', datos, estado: 503 });
+      }
+      await db.query("INSERT INTO metodo_pago (nombre, activo) VALUES ('PayPal Sandbox', TRUE) ON DUPLICATE KEY UPDATE activo = TRUE");
+      const [[metodoPaypal]] = await db.query("SELECT id_metodo FROM metodo_pago WHERE nombre = 'PayPal Sandbox'");
+      idMetodoPago = metodoPaypal.id_metodo;
+    } else {
+      return await renderCarrito(req, res, { error: 'El único medio de pago disponible es PayPal Sandbox.', datos, estado: 400 });
+    }
     if (!Number.isInteger(idMetodoPago) || idMetodoPago <= 0) {
       return await renderCarrito(req, res, { error: 'Elige un medio de pago para continuar.', datos, estado: 400 });
     }
@@ -331,6 +372,7 @@ exports.confirmar = async (req, res, next) => {
     } else {
       console.warn(`HU-033: SMTP sin configurar; pedido #${pedido.id} se confirmó sin correo.`);
     }
+    if (entrega.paypalCotizacion) return res.redirect('/carrito?pagar=' + pedido.id + '#pago-paypal');
     return res.redirect(`/pedidos/${pedido.id}/comprobante`);
   } catch (err) {
     // Los errores de negocio (carrito vacío, stock insuficiente) se muestran en el carrito.

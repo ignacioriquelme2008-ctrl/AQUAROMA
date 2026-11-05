@@ -18,6 +18,9 @@
       </div>
     </div>
 
+    <% if (pedido.pago && pedido.pago.metodo === 'PayPal Sandbox') { %>
+      <p class="pedidos-aviso">Demostración PayPal: este pedido usa dinero ficticio, sin cobros reales.</p>
+    <% } %>
     <%# Criterio 3: número único de orden y datos de la compra. %>
     <section class="pedidos-caja">
       <h2>🧾 Comprobante de compra</h2>
@@ -61,7 +64,7 @@
         <% } else { %>
           <div><dt>Dirección</dt><dd>Se coordina con la tienda</dd></div>
         <% } %>
-        <div><dt>Medio de pago</dt><dd><%= pedido.pago ? pedido.pago.metodo : 'Por definir' %></dd></div>
+        <div><dt>Medio de pago</dt><dd><%= pedido.pago ? (pedido.pago.metodo === 'PayPal Sandbox' ? 'PayPal' : pedido.pago.metodo) : 'Por definir' %></dd></div>
       </dl>
     </section>
 
@@ -69,6 +72,7 @@
       <a href="/pedidos/<%= pedido.id %>" class="btn btn-primary">Ver seguimiento</a>
       <a href="/catalogo" class="btn btn-secundario">Seguir comprando</a>
     </div>
+<% if (pedido.estado === 'confirmado' && pedido.pago && pedido.pago.metodo === 'PayPal Sandbox' && pedido.pago.estado === 'pendiente') { %><p><a href="/carrito?pagar=<%= pedido.id %>#pago-paypal">Continuar pago con PayPal</a></p><% } %>
   </main>
 </body>
 </html>

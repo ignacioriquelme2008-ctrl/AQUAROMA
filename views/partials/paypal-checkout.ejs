@@ -1,0 +1,48 @@
+<% if (pagoPaypal) { %>
+<section id="pago-paypal" class="panel paypal-checkout" aria-labelledby="paypal-titulo">
+  <div class="paypal-cabecera">
+    <div>
+      <p class="paypal-orden">Pedido #<%= pagoPaypal.id_pedido %></p>
+      <h2 id="paypal-titulo">Completa tu pago</h2>
+    </div>
+    <img class="paypal-marca" src="/img/marca/paypal.svg" alt="PayPal" width="36" height="42">
+  </div>
+  <% if ((pagoPaypal.items || []).length) { %>
+    <div class="paypal-productos">
+      <h3>Tu pedido</h3>
+      <ul>
+        <% pagoPaypal.items.forEach(item => { %>
+          <li>
+            <% if (item.imagen) { %><img src="<%= imagenProducto(item.imagen) %>" alt="" width="48" height="64"><% } %>
+            <div class="paypal-producto-info">
+              <strong><%= item.nombre %></strong>
+              <span><%= item.cantidad %> <%= Number(item.cantidad) === 1 ? 'unidad' : 'unidades' %> · <%= clp(Number(item.precio_unitario)) %> c/u</span>
+            </div>
+            <strong class="paypal-producto-subtotal"><%= clp(Number(item.subtotal)) %></strong>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+  <% } %>
+  <div class="paypal-importe">
+    <span>Total del pedido</span>
+    <strong><%= clp(Number(pagoPaypal.monto)) %></strong>
+    <p>Pagarás <b>US$<%= Number(pagoPaypal.monto_usd).toFixed(2) %></b> con PayPal.</p>
+  </div>
+  <% if (pagoPaypal.pago_estado === 'aprobado') { %>
+    <p class="paypal-resultado exito">Pago aprobado.</p>
+  <% } else if (pagoPaypal.pedido_estado === 'confirmado' && paypal.enabled) { %>
+    <div id="paypal-button-container" data-pedido="<%= pagoPaypal.id_pedido %>"></div>
+    <p id="paypal-resultado" class="paypal-resultado" role="status" aria-live="polite"></p>
+    <button type="button" id="paypal-reintentar" class="paypal-reintentar" hidden>Comprobar pago nuevamente</button>
+    <script src="https://www.paypal.com/sdk/js?client-id=<%= encodeURIComponent(paypal.clientId) %>&currency=USD&intent=capture&components=buttons&disable-funding=card,credit"></script>
+    <script src="/js/paypal-sandbox.js" defer></script>
+  <% } else { %>
+    <p class="paypal-resultado aviso">Este pago no está disponible. Revisa el estado de tu pedido.</p>
+  <% } %>
+  <div class="paypal-enlaces">
+  <a href="/pedidos/<%= pagoPaypal.id_pedido %>">Ver mi pedido</a>
+  <a href="/pedidos/<%= pagoPaypal.id_pedido %>/comprobante">Ver comprobante</a>
+  </div>
+</section>
+<% } %>

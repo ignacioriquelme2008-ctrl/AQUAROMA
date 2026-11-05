@@ -1,0 +1,79 @@
+[
+  {
+    "id": "agua_limon",
+    "original": "agua_limon.png",
+    "sabor": "LIMÓN",
+    "source": "C:\\Users\\ignac\\.codex\\generated_images\\01a1a889-dad0-78e3-954b-f5f506e02f79\\exec-5b507637-5ac7-461d-8304-fd1fc3e10bc7.png",
+    "final": "public/img/productos/uniformes/agua_limon.jpg"
+  },
+  {
+    "id": "agua_frutilla",
+    "original": "agua_frutilla.png",
+    "sabor": "FRUTILLA",
+    "source": "C:\\Users\\ignac\\.codex\\generated_images\\01a1a889-dad0-78e3-954b-f5f506e02f79\\exec-abb1b21f-d1c1-4ce2-9a66-42adc422871a.png",
+    "final": "public/img/productos/uniformes/agua_frutilla.jpg"
+  },
+  {
+    "id": "agua_durazno",
+    "original": "agua_durazno.png",
+    "sabor": "DURAZNO",
+    "source": "C:\\Users\\ignac\\.codex\\generated_images\\01a1a889-dad0-78e3-954b-f5f506e02f79\\exec-005b8b8a-f39f-49b2-8e4f-7ded05515a55.png",
+    "final": "public/img/productos/uniformes/agua_durazno.jpg"
+  },
+  {
+    "id": "agua_mango",
+    "original": "agua_mango.png",
+    "sabor": "MANGO",
+    "source": "C:\\Users\\ignac\\.codex\\generated_images\\01a1a889-dad0-78e3-954b-f5f506e02f79\\exec-b25357c9-40a8-43bd-a200-900a1bc84fbd.png",
+    "final": "public/img/productos/uniformes/agua_mango.jpg"
+  },
+  {
+    "id": "agua_arandano",
+    "original": "agua_arandano.jpg",
+    "sabor": "ARÁNDANO",
+    "source": "C:\\Users\\ignac\\.codex\\generated_images\\01a1a889-dad0-78e3-954b-f5f506e02f79\\exec-9689a76b-01fc-4deb-8199-6e76ca773199.png",
+    "final": "public/img/productos/uniformes/agua_arandano.jpg"
+  },
+  {
+    "id": "agua_frutos_rojos",
+    "original": "agua_frutos_rojos.png",
+    "sabor": "FRUTOS ROJOS",
+    "source": "C:\\Users\\ignac\\.codex\\generated_images\\01a1a889-dad0-78e3-954b-f5f506e02f79\\exec-668b926a-5d95-469d-8ee1-3dab52504f11.png",
+    "final": "public/img/productos/uniformes/agua_frutos_rojos.jpg"
+  },
+  {
+    "id": "agua_menta",
+    "original": "agua_menta.jpg",
+    "sabor": "MENTA",
+    "source": "C:\\Users\\ignac\\.codex\\generated_images\\01a1a889-dad0-78e3-954b-f5f506e02f79\\exec-1f6499b5-8c52-4a53-8043-7d6e99784cf2.png",
+    "final": "public/img/productos/uniformes/agua_menta.jpg"
+  },
+  {
+    "id": "agua_pepino",
+    "original": "agua_pepino.png",
+    "sabor": "PEPINO",
+    "source": "C:\\Users\\ignac\\.codex\\generated_images\\01a1a889-dad0-78e3-954b-f5f506e02f79\\exec-ce0b5a33-ce3a-483e-b709-2965d5a5c375.png",
+    "final": "public/img/productos/uniformes/agua_pepino.jpg"
+  },
+  {
+    "id": "hibisco_y_rosa",
+    "original": "hibisco_y_rosa.jpg",
+    "sabor": "HIBISCO Y ROSA",
+    "source": "C:\\Users\\ignac\\.codex\\generated_images\\01a1a889-dad0-78e3-954b-f5f506e02f79\\exec-8e941c69-b909-4957-9c21-b7f468a172e7.png",
+    "final": "public/img/productos/uniformes/hibisco_y_rosa.jpg"
+  },
+  {
+    "id": "limon_y_menta",
+    "original": "limon_y_menta.jpg",
+    "sabor": "LIMÓN Y MENTA",
+    "source": "C:\\Users\\ignac\\.codex\\generated_images\\01a1a889-dad0-78e3-954b-f5f506e02f79\\exec-7d95f263-6d32-413c-ba30-c387890b5c49.png",
+    "final": "public/img/productos/uniformes/limon_y_menta.jpg"
+  },
+  {
+    "id": "pepino_y_limon",
+    "original": "pepino_y_limon.jpg",
+    "sabor": "PEPINO Y LIMÓN",
+    "source": "C:\\Users\\ignac\\.codex\\generated_images\\01a1a889-dad0-78e3-954b-f5f506e02f79\\exec-16600978-70a8-4450-8526-2c599d97af98.png",
+    "final": "public/img/productos/uniformes/pepino_y_limon.jpg"
+  }
+]

@@ -9,6 +9,7 @@
 // La HU-028 confirma la compra cambiando el estado de ese pedido a 'confirmado' (ver confirmar()):
 // el cliente queda sin pedido en estado 'carrito', es decir, con el carrito vacío (HU-026, criterio 3).
 const db = require('../config/db');
+const { buscarSucursalConStock } = require('../utils/stockVenta');
 const Direccion = require('./Direccion');
 const MetodoPago = require('./MetodoPago');
 const ventas = require('../config/ventas');
@@ -292,17 +293,9 @@ exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => 
       idPedido = filas[0].id_pedido;
     }
 
-    // Sucursal de despacho: la que ya tenga el pedido o, si no, la primera activa (Aquaroma Santiago).
-    // El administrador puede cambiarla después; el stock se descuenta de la que atiende el pedido.
+    // Se conserva la sucursal asignada si puede atender todo el pedido.
     const [[pedido]] = await conn.query('SELECT id_sucursal FROM pedido WHERE id_pedido = ?', [idPedido]);
     let idSucursal = pedido && pedido.id_sucursal;
-    if (!idSucursal) {
-      const [[sucursal]] = await conn.query(
-        'SELECT id_sucursal FROM sucursal WHERE activo = TRUE ORDER BY id_sucursal LIMIT 1'
-      );
-      if (!sucursal) throw new ConfirmacionError('No hay una sucursal activa para despachar el pedido.', 409);
-      idSucursal = sucursal.id_sucursal;
-    }
 
     // HU-029: dirección de entrega. Puede ser una de las guardadas del cliente o una nueva que
     // se escribe en el carrito. La nueva se guarda en su cuenta y se usa en este mismo pedido.
@@ -349,6 +342,11 @@ exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => 
       [idPedido]
     );
     if (lineas.length === 0) throw new ConfirmacionError('Tu carrito está vacío.', 400);
+    idSucursal = await buscarSucursalConStock(conn, lineas, idSucursal);
+    if (!idSucursal) {
+      throw new ConfirmacionError('No hay una sucursal con stock suficiente para todos los productos de tu pedido. Ajusta las cantidades o los productos para continuar.', 409);
+    }
+
 
     let total = 0;
     for (const linea of lineas) {
@@ -408,10 +406,18 @@ exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => 
 
     // HU-030: el pago queda pendiente por los productos; la entrega aún no tiene precio definido.
     // Se aprueba cuando el administrador confirma el pago en el panel (HU-040).
-    await conn.query(
+    const [pagoCreado] = await conn.query(
       `INSERT INTO pago (id_pedido, id_metodo, monto, estado) VALUES (?, ?, ?, 'pendiente')`,
       [idPedido, metodo.id, total]
     );
+    if (entrega.paypalCotizacion) {
+      const cambio = entrega.paypalCotizacion;
+      const montoUsd = require('../config/tipoCambio').convertir(total, cambio.tasa);
+      await conn.query(
+        `INSERT INTO paypal_checkout (id_pago, monto_usd, tasa_clp, fecha_tasa) VALUES (?, ?, ?, ?)`,
+        [pagoCreado.insertId, montoUsd, cambio.tasa, new Date(cambio.actualizadoEn)]
+      );
+    }
 
     // El pedido deja de ser carrito: el cliente queda sin carrito guardado (HU-026, criterio 3).
     // La fecha pasa a ser la de la compra, no la de la creación del carrito.

@@ -7,35 +7,46 @@
   <%- include('../partials/navbar') %>
 
   <div class="wrap">
-    <h1>Nuestro Catálogo</h1>
-    <div class="layout">
-      <aside>
+    <div class="catalogo-cabecera">
+      <div class="catalogo-titulo">
+        <h1>Nuestro Catálogo</h1>
         <p class="intro">Descubre nuestras aguas funcionales con ingredientes naturales.</p>
-        <%# HU-014 y HU-015: los filtros se envían al servidor con GET y el controlador decide qué productos mostrar. %>
+        <p class="count" role="status">Mostrando <%= productos.length %> <%= productos.length === 1 ? 'producto' : 'productos' %></p>
+      </div>
+      <details class="catalogo-filtros">
+        <summary>Filtros <% const filtrosActivos = filtros.aromas.length + filtros.tipos.length; %><% if (filtrosActivos) { %><span class="filtros-cantidad" aria-label="<%= filtrosActivos %> filtros activos"><%= filtrosActivos %></span><% } %><span class="filtros-flecha" aria-hidden="true"></span></summary>
+        <%# Los filtros se consultan al cambiar cada opción y conservan las selecciones en la URL. %>
         <form class="filters" method="get" action="/catalogo">
-          <fieldset>
+          <div class="filtros-pestanas" role="tablist" aria-label="Categorías de filtros" hidden>
+            <button type="button" id="filtro-tab-aroma" role="tab" aria-selected="true" aria-controls="filtro-panel-aroma">Aromas</button>
+            <button type="button" id="filtro-tab-tipo" role="tab" aria-selected="false" aria-controls="filtro-panel-tipo" tabindex="-1">Tipo de agua</button>
+          </div>
+          <fieldset id="filtro-panel-aroma">
             <legend>Aroma</legend>
+            <div class="filtros-opciones">
             <label><input type="checkbox" name="aroma" value="todos" <%= filtros.aromas.length === 0 ? 'checked' : '' %>> Todos</label>
             <%# Un filtro por cada aroma que tenga productos activos: un sabor nuevo en la base aparece solo. %>
             <% aromas.forEach((a) => { %>
               <label><input type="checkbox" name="aroma" value="<%= a.slug %>" <%= filtros.aromas.includes(a.slug) ? 'checked' : '' %>> <%= a.nombre %></label>
             <% }) %>
+            </div>
           </fieldset>
-          <fieldset>
+          <fieldset id="filtro-panel-tipo">
             <legend>Tipo</legend>
+            <div class="filtros-opciones">
             <label><input type="radio" name="tipo" value="todos" <%= filtros.tipos.length === 0 ? 'checked' : '' %>> Todos</label>
             <%# HU-015: un filtro por cada tipo de agua activo de la base (tabla tipo_agua). %>
             <% tipos.forEach((t) => { %>
               <label><input type="radio" name="tipo" value="<%= t.slug %>" <%= filtros.tipos.includes(t.slug) ? 'checked' : '' %>> <%= t.nombre %></label>
             <% }) %>
+            </div>
           </fieldset>
-          <button type="submit" class="aplicar">Filtrar</button>
           <a class="clear" href="/catalogo">Limpiar filtros ↻</a>
         </form>
-      </aside>
-
+      </details>
+    </div>
+    <div class="layout">
       <section>
-        <p class="count">Mostrando <%= productos.length %> productos</p>
         <div class="grid">
           <% const colores = { limon: 't-yellow', menta: 't-green', frutilla: 't-red', pepino: 't-green', durazno: 't-orange', arandano: 't-purple',
                                mango: 't-orange', 'frutos-rojos': 't-red', 'hibisco-y-rosa': 't-purple', 'limon-y-menta': 't-yellow', 'pepino-y-limon': 't-green' }; %>
@@ -45,7 +56,7 @@
               <%# HU-016: la imagen y el nombre llevan a la ficha de detalle del producto. %>
               <a href="/catalogo/<%= p.id %>" class="item-enlace">
                 <div class="img">
-                  <img src="/img/productos/<%= p.imagen %>" alt="<%= p.nombre %>">
+                  <img src="<%= imagenProducto(p.imagen) %>" alt="<%= p.nombre %>">
                   <%# HU-017: cada tarjeta indica si el producto está "Disponible" o "Agotado". %>
                   <% if (p.stock === 0) { %><span class="badge out">Agotado</span><% } else { %><span class="badge disponible">Disponible</span><% } %>
                 </div>
@@ -72,5 +83,6 @@
       </section>
     </div>
   </div>
+  <script src="/js/catalogo-filtros.js" defer></script>
 </body>
 </html>

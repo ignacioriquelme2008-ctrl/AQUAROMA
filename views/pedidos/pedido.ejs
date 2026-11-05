@@ -8,7 +8,7 @@
 
   <!-- HU-032: estado y seguimiento de un pedido del cliente. Datos: pedidosController.ver. -->
   <main class="pedidos">
-    <a href="/pedidos" class="pedidos-volver">← Mis pedidos</a>
+    <a href="/perfil?seccion=pedidos" class="pedidos-volver">← Mis pedidos</a>
     <p class="eyebrow">Seguimiento</p>
     <h1>Pedido #<%= pedido.id %></h1>
     <p class="pedidos-sub">Hecho el <%= fechaHora(pedido.fecha) %> · Estado actual: <strong><%= nombres[pedido.estado] %></strong></p>
@@ -66,6 +66,7 @@
       <%# HU-028: el comprobante de la compra se puede volver a ver desde el seguimiento. %>
       <a href="/pedidos/<%= pedido.id %>/comprobante" class="pedidos-comprobante">🧾 Ver comprobante de compra</a>
     </section>
+<% if (pedido.estado === 'confirmado' && pedido.pago && pedido.pago.metodo === 'PayPal Sandbox' && pedido.pago.estado === 'pendiente') { %><p><a href="/carrito?pagar=<%= pedido.id %>#pago-paypal">Continuar pago con PayPal</a></p><% } %>
   </main>
   <script src="/js/pedidos.js" defer></script>
 </body>

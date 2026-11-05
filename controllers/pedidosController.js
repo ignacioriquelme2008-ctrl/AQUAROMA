@@ -9,13 +9,8 @@ const Pedido = require('../models/Pedido');
 const ventas = require('../config/ventas');
 
 // GET /pedidos
-exports.listar = async (req, res, next) => {
-  try {
-    const pedidos = await Pedido.listarDeCliente(req.session.usuario.idCliente);
-    res.render('pedidos/pedidos', { pedidos, nombres: Pedido.NOMBRES });
-  } catch (err) {
-    next(err);
-  }
+exports.listar = (req, res) => {
+  res.redirect('/perfil?seccion=pedidos');
 };
 
 // GET /pedidos/:id

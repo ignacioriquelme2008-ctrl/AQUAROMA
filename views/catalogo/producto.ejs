@@ -13,7 +13,7 @@
     <% const agotado = producto.stock <= 0; %>
     <article class="ficha">
       <div class="ficha-img">
-        <img src="/img/productos/<%= producto.imagen %>" alt="<%= producto.nombre %>">
+        <img src="<%= imagenProducto(producto.imagen) %>" alt="<%= producto.nombre %>">
         <% if (agotado) { %><span class="badge out">Agotado</span><% } %>
       </div>
 

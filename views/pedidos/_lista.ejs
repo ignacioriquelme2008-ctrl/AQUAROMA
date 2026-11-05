@@ -1,0 +1,21 @@
+    <% if (pedidos.length === 0) { %>
+      <div class="pedidos-vacio">
+        <p>Todavía no tienes pedidos.</p>
+        <a href="/catalogo" class="btn btn-primary">Ir al catálogo</a>
+      </div>
+    <% } else { %>
+      <ul class="pedidos-lista">
+        <% pedidos.forEach(p => { %>
+          <li>
+            <a href="/pedidos/<%= p.id %>" class="pedidos-item">
+              <span class="pedidos-numero">Pedido #<%= p.id %></span>
+              <span class="pedidos-fecha"><%= fechaHora(p.fecha) %></span>
+              <span><%= p.unidades %> <%= p.unidades === 1 ? 'unidad' : 'unidades' %></span>
+              <strong><%= clp(p.total + p.costo_envio) %></strong>
+              <span class="pedidos-estado <%= p.estado %>"><%= nombres[p.estado] %></span>
+              <span class="pedidos-ver">Ver seguimiento →</span>
+            </a>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>

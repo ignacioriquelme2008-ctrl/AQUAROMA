@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <%- include('../partials/head', { titulo: 'Carrito | AQUAROMA', estilos: ['carrito'] }) %>
+  <%- include('../partials/head', { titulo: pagoPaypal ? 'Pago de tu pedido | AQUAROMA' : 'Carrito | AQUAROMA', estilos: ['carrito', 'paypal-sandbox'] }) %>
 </head>
 <body>
   <%- include('../partials/navbar') %>
@@ -9,14 +9,16 @@
 <!-- La página del carrito ordena la compra para que el cliente revise productos, cantidades y total antes de confirmar. -->
 <div class="wrap">
   <!-- El encabezado explica el propósito de la vista y ayuda a que el usuario sepa que está en la etapa de revisión del pedido. -->
-  <h1>Carrito de Compras</h1>
-  <p class="sub">Revisa tus productos y confirma tu pedido</p>
+  <h1><%= pagoPaypal ? 'Pago de tu pedido' : 'Carrito de Compras' %></h1>
+  <p class="sub"><%= pagoPaypal ? 'Tu pedido está registrado. Revisa el total y continúa con el pago.' : 'Revisa tus productos y confirma tu pedido' %></p>
 
   <%# HU-028: si la confirmación falla (stock, dirección o pago), el controlador vuelve a mostrar la página con el motivo. %>
   <% if (locals.error) { %>
     <p class="confirm-error" role="alert"><%= error %></p>
   <% } %>
 
+  <%- include('../partials/paypal-checkout') %>
+  <% if (!pagoPaypal) { %>
   <% const datosForm = locals.datos || {}; %>
   <% const elegida = datosForm.direccion || ''; %>
   <% const hayPrincipal = direcciones.some((d) => d.principal); %>
@@ -35,7 +37,7 @@
       <% items.forEach((i) => { %>
         <div class="row item">
           <div class="prod">
-            <img src="/img/productos/<%= i.imagen %>" alt="<%= i.nombre %>">
+            <img src="<%= imagenProducto(i.imagen) %>" alt="<%= i.nombre %>">
             <div>
               <strong><%= i.nombre %></strong>
               <small>Botella con aroma</small>
@@ -126,14 +128,14 @@
 
         <% if (direcciones.length > 0) { %>
           <label class="opcion">
-            <input type="radio" name="direccion" value="nueva" <%= elegida === 'nueva' ? 'checked' : '' %>>
+            <input type="radio" name="direccion" value="nueva" aria-controls="direccion-nueva" <%= elegida === 'nueva' ? 'checked' : '' %>>
             <span><strong>Usar otra dirección</strong></span>
           </label>
         <% } %>
 
         <!-- Dirección nueva. El servidor la guarda en la cuenta recién al confirmar el pedido. -->
-        <div class="nueva">
-          <p class="nueva-titulo"><%= direcciones.length > 0 ? 'Datos de la nueva dirección (solo si elegiste "Usar otra dirección")' : 'Dirección de entrega' %></p>
+        <div class="nueva" id="direccion-nueva" <%= direcciones.length > 0 && elegida !== 'nueva' ? 'hidden' : '' %>>
+          <p class="nueva-titulo"><%= direcciones.length > 0 ? 'Datos de la nueva dirección' : 'Dirección de entrega' %></p>
           <div class="campo ancho">
             <label for="calle">Calle</label>
             <input id="calle" name="calle" type="text" maxlength="150" autocomplete="address-line1" placeholder="Av. Providencia" value="<%= datosForm.calle || '' %>">
@@ -173,21 +175,7 @@
         </div>
       </fieldset>
 
-      <fieldset class="bloque">
-        <legend>Medio de pago</legend>
-        <% if (metodos.length === 0) { %>
-          <p class="nota">No hay medios de pago disponibles por ahora.</p>
-        <% } %>
-        <% const pagoElegido = datosForm.pago || ''; %>
-        <% metodos.forEach((m, i) => { %>
-          <% const marcado = pagoElegido ? String(m.id) === pagoElegido : i === 0; %>
-          <label class="opcion">
-            <input type="radio" name="pago" value="<%= m.id %>" <%= marcado ? 'checked' : '' %>>
-            <span><strong><%= m.nombre %></strong></span>
-          </label>
-        <% }) %>
-        <p class="nota">El pago queda pendiente hasta que la tienda lo confirme.</p>
-      </fieldset>
+      <input type="hidden" name="pago" value="paypal">
     </section>
     </form>
     <% } %>
@@ -208,7 +196,7 @@
 
       <%# HU-004 y HU-028: confirmar un pedido es una acción privada. Sin sesión, se va al login. %>
       <% if (locals.usuario && locals.usuario.idCliente) { %>
-        <button type="submit" form="confirmar-pedido" class="confirm" <%= items.length && !items.some((i) => i.stockInsuficiente) ? '' : 'disabled' %>>🔒 Confirmar Pedido</button>
+        <button type="submit" form="confirmar-pedido" class="confirm paypal-icon-button" aria-label="Continuar con PayPal" title="PayPal" <%= items.length && !items.some((i) => i.stockInsuficiente) && paypal.enabled && paypal.cambio ? '' : 'disabled' %>><img src="/img/marca/paypal.svg" alt="PayPal" width="30" height="36"></button>
       <% } else { %>
         <a class="confirm confirm-enlace" href="/login?volver=%2Fcarrito">🔒 Inicia sesión para confirmar</a>
       <% } %>
@@ -220,6 +208,10 @@
       </ul>
     </aside>
   </div>
+  <script src="/js/carrito-direccion.js" defer></script>
+  <% } else { %>
+    <div class="paypal-seguir"><a href="/catalogo">← Seguir comprando</a></div>
+  <% } %>
 </div>
 </body>
 </html>

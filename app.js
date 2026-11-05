@@ -9,6 +9,8 @@ require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
+const { MysqlSessionStore, DURACION_SESION } = require('./config/sessionStore');
+const { imagenProducto } = require('./utils/imagenesProductos');
 
 // Rutas de cada sección del sitio.
 const inicioRoutes = require('./routes/inicioRoutes');     // inicio y "Nosotros"
@@ -20,6 +22,7 @@ const contactoRoutes = require('./routes/contactoRoutes'); // formulario de cont
 const adminRoutes = require('./routes/adminRoutes');
 const pedidosRoutes = require('./routes/pedidosRoutes'); // "Mis pedidos" y seguimiento del cliente (HU-032)
 const perfilRoutes = require('./routes/perfilRoutes');   // perfil del cliente: datos, contraseña y direcciones (HU-007)
+const paypalSandboxRoutes = require('./routes/paypalSandboxRoutes'); // PayPal Sandbox integrado al carrito y al pedido
 
 // Middleware que calcula el contador del carrito para el menú (HU-022).
 const { cargarCarrito } = require('./middlewares/carrito');
@@ -29,6 +32,7 @@ const app = express();
 // Configura EJS para renderizar las vistas desde la carpeta views.
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.locals.imagenProducto = imagenProducto;
 
 // Muestra precios en pesos chilenos. Queda disponible en TODAS las vistas.
 app.locals.clp = (valor) => '$' + valor.toLocaleString('es-CL') + ' CLP';
@@ -39,14 +43,22 @@ app.locals.fechaHora = (fecha) => new Date(fecha).toLocaleString('es-CL', {
 
 // Permite leer formularios y servir archivos estáticos como CSS, JavaScript e imágenes.
 app.use(express.urlencoded({ extended: true })); // leer formularios
+app.use(express.json({ limit: '10kb' })); // API de prueba de PayPal Sandbox
 app.use(express.static(path.join(__dirname, 'public'))); // css, js, img
 
 // Sesión: recuerda quién inició sesión mientras navega
 app.use(session({
+  store: new MysqlSessionStore(require('./config/db')),
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { httpOnly: true, sameSite: 'lax' },
+  rolling: true,
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: DURACION_SESION,
+  },
 }));
 
 // Deja el usuario disponible en TODAS las vistas
@@ -69,6 +81,7 @@ app.use('/contacto', contactoRoutes);
 app.use('/admin', adminRoutes);
 app.use('/pedidos', pedidosRoutes);
 app.use('/perfil', perfilRoutes);
+app.use('/', paypalSandboxRoutes);
 
 // Si ninguna ruta respondió, la página no existe: se muestra "no encontrado" (404). Va siempre después de las rutas.
 app.use((req, res) => res.status(404).render('errores/no-encontrado'));

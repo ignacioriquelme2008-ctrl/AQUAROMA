@@ -10,7 +10,7 @@
 .ficha { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 36px; align-items: start;
   background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 24px; }
 .ficha-img { position: relative; border-radius: 10px; overflow: hidden; background: #f1f5f9; }
-.ficha-img img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+.ficha-img img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: contain; }
 
 .ficha-info .eyebrow { margin-bottom: 8px; }
 .ficha-precio { font-size: 26px; font-weight: 700; color: var(--blue); margin: 4px 0 14px; }

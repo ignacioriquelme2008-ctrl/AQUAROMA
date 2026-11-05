@@ -3,7 +3,7 @@
 <head>
   <%- include('../partials/head', { titulo: 'Aquaroma | Agua funcional', estilos: ['inicio'] }) %>
 </head>
-<body>
+<body class="home-page">
   <!-- Incluye la barra de navegación reutilizable en todas las páginas para mantener la experiencia consistente. -->
   <%- include('../partials/navbar') %>
 
@@ -28,7 +28,7 @@
         <% destacados.forEach(p => { %>
           <article class="card">
             <% if (p.masVendido) { %><span class="card-vendido">Más vendido</span><% } %>
-            <img src="/img/productos/<%= p.imagen %>" alt="Agua Aquaroma sabor <%= p.aroma %>">
+            <img src="<%= imagenProducto(p.imagen) %>" alt="Agua Aquaroma sabor <%= p.aroma %>">
             <h3><%= p.aroma %></h3>
             <p><%= p.etiqueta %> · <%= clp(p.precio) %></p>
             <a href="/catalogo/<%= p.id %>">Ver producto →</a>

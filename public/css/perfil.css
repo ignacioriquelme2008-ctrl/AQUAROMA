@@ -80,3 +80,14 @@
   .perfil-favorita img { width: 70px; height: 92px; }
   .perfil-favorita-acciones { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; }
 }
+
+/* Dos opciones dentro de Mi perfil. */
+.perfil-opciones { display: flex; gap: 6px; padding: 5px; background: #f1f5f9; border-radius: 14px; margin-bottom: 24px; }
+.perfil-opciones a { flex: 1; text-align: center; padding: 12px 10px; border-radius: 10px; color: var(--navy); font-size: 15px; font-weight: 600; }
+.perfil-opciones a[aria-current] { background: #075ed7; color: white; box-shadow: 0 2px 6px #0b2d6b15; }
+.perfil-opciones a:not([aria-current]):hover { background: #e0ecfa; }
+.perfil-pedidos .pedidos-item { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.perfil-pedidos .pedidos-item > * { overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+  .perfil-pedidos .pedidos-item { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px; }
+}
