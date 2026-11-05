@@ -214,7 +214,7 @@
                   <strong><%= f.alias %></strong>
                   <p><%= f.producto %></p>
                   <p class="perfil-favorita-aroma">
-                    Aroma: <%= f.aroma || 'sin aroma' %> · Intensidad: <%= f.intensidad ? f.intensidad + '/5' : '—' %>
+                    Sabor y aroma: <%= f.aroma || 'Natural' %> · Intensidad: <%= f.intensidad ? f.intensidad + '/5' : '—' %>
                   </p>
                   <p class="perfil-favorita-precio"><%= clp(f.precio) %></p>
                   <% if (!f.disponible) { %><span class="perfil-badge perfil-badge-off">No disponible</span><% } %>

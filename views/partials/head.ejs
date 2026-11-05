@@ -5,8 +5,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><%= titulo %></title>
+<script src="/js/tema.js"></script>
 <link rel="stylesheet" href="/css/base.css">
 <script src="/js/navbar.js" defer></script>
 <% (locals.estilos || []).forEach((hoja) => { %>
 <link rel="stylesheet" href="/css/<%= hoja %>.css">
 <% }) %>
+<link rel="stylesheet" href="/css/tema.css">

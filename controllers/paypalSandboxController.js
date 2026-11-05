@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const paypal = require('../config/paypal');
 const Checkout = require('../models/PaypalCheckout');
+const notificarPedido = require('../utils/notificarPedido');
 
 exports.configuracionPublica = paypal.configuracionPublica;
 
@@ -16,7 +17,7 @@ const requestId = (operacion, id) => crypto.createHash('sha256')
 
 async function procesar(req, res, capturar) {
   try {
-    const resultado = await Checkout.transaccion(async (conn) => {
+    const { idNotificar, ...resultado } = await Checkout.transaccion(async (conn) => {
       const pago = await Checkout.obtener(req.params.idPedido, req.session.usuario.idCliente, conn, true);
       if (!pago) throw error('No encontramos ese pago en tu cuenta.', 404);
       if (pago.pago_estado === 'aprobado') return { completed: true, redirect: `/pedidos/${pago.id_pedido}/comprobante` };
@@ -59,8 +60,9 @@ async function procesar(req, res, capturar) {
         [`SBX-${capture.id}`, pago.id_pago]);
       await conn.query("UPDATE pedido SET estado = 'pagado', observacion = CONCAT(COALESCE(observacion, ''), ' | Pagado en PayPal Sandbox: dinero ficticio') WHERE id_pedido = ?",
         [pago.id_pedido]);
-      return { completed: true, redirect: `/pedidos/${pago.id_pedido}/comprobante` };
+      return { completed: true, redirect: `/pedidos/${pago.id_pedido}/comprobante`, idNotificar: pago.id_pedido };
     });
+    if (idNotificar) void notificarPedido(idNotificar, 'pagado');
     res.json(resultado);
   } catch (err) {
     console.warn('PayPal checkout:', err.message);

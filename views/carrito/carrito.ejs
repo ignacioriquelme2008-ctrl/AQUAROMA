@@ -32,7 +32,7 @@
       <!-- Si no hay elementos, se informa al usuario que debe agregar productos antes de continuar. -->
       <p class="empty">Tu carrito está vacío. Agrega productos desde el catálogo.</p>
     <% } else { %>
-      <div class="row head"><span>Producto</span><span>Aroma</span><span>Cantidad</span><span>Precio</span><span>Acciones</span></div>
+      <div class="row head"><span>Producto</span><span>Sabor y aroma</span><span>Cantidad</span><span>Precio</span><span>Acciones</span></div>
 
       <% items.forEach((i) => { %>
         <div class="row item">
@@ -40,8 +40,8 @@
             <img src="<%= imagenProducto(i.imagen) %>" alt="<%= i.nombre %>">
             <div>
               <strong><%= i.nombre %></strong>
-              <small>Botella con aroma</small>
-              <small>Aroma: <%= i.aroma %></small>
+              <small>Agua con sabor y aroma</small>
+              <small>Sabor y aroma: <%= i.aroma %></small>
               <% if (i.descripcionAroma) { %><small><%= i.descripcionAroma %></small><% } %>
               <% if (i.intensidad) { %><small>Intensidad: <%= i.intensidad %> <%= i.intensidad === 1 ? 'dosis' : 'dosis' %></small><% } %>
               <% if (i.recargo > 0) { %><small>Recargo por dosis adicionales: <%= clp(i.recargo) %></small><% } %>

@@ -1,0 +1,171 @@
+.nav-tema:not([hidden]) {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--navy);
+  cursor: pointer;
+}
+
+.nav-tema:hover { background: var(--primary-light); }
+.nav-tema-sol,
+[data-tema="oscuro"] .nav-tema-luna { display: none; }
+[data-tema="oscuro"] .nav-tema-sol { display: block; }
+
+html[data-tema="oscuro"] {
+  color-scheme: dark;
+  --page-bg: #0d1724;
+  --surface: #152335;
+  --surface-soft: #1e3046;
+  --white: var(--surface);
+  --line: #384e67;
+  --navy: #e5efff;
+  --text: #e5edf8;
+  --ink: #c4d3e6;
+  --text-muted: #a9bdd4;
+  --primary: #8ddcff;
+  --primary-light: #203955;
+  --blue: #93c7ff;
+  --green: #85d8ab;
+  --success: #85d8ab;
+  --danger: #ffa4ad;
+  --tema-boton: #2261ad;
+  --tema-boton-hover: #1b4f90;
+  --card-shadow: 0 4px 16px #0003;
+  --card-shadow-hover: 0 10px 28px #0005;
+  --admin-success-bg: #183a32;
+  --admin-success-text: #a1ebbd;
+  --admin-success-border: #3a6957;
+  --admin-warning-bg: #3c2e1f;
+  --admin-warning-row: #30271f;
+  --admin-warning-text: #ffd399;
+  --admin-warning-border: #71573a;
+  --admin-danger-bg: #422630;
+  --admin-danger-text: #ffb7c2;
+  --admin-danger-border: #794554;
+  --admin-neutral-bg: var(--surface-soft);
+  --admin-neutral-text: var(--text-muted);
+  --admin-info-border: var(--line);
+}
+
+[data-tema="oscuro"] :is(.home-page, .account-page) { background: var(--page-bg); }
+[data-tema="oscuro"] .hero {
+  background-color: #041321;
+  background-image: url(/img/marca/aquaroma-noche.png);
+}
+
+[data-tema="oscuro"] .hero-text {
+  --green: #267534;
+  max-width: min(520px, 52%);
+  text-shadow: 0 2px 8px #041321;
+}
+
+@media (max-width: 480px) {
+  [data-tema="oscuro"] .hero-text {
+    max-width: 290px;
+    padding: 16px;
+    border-radius: 14px;
+    background: #041321d9;
+  }
+}
+
+[data-tema="oscuro"] :is(
+  .about-hero, .about-historia, .about-valores .about-card, .account-shell,
+  .auth-card, .contacto-card, .perfil-card, .filters, .clear, .catalogo-filtros > summary,
+  .ficha, .panel, .item, .pedidos-vacio, .pedidos-item, .pedidos-caja,
+  .pedidos-acciones .btn-secundario, .btn-ghost, .progreso-punto
+) {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+[data-tema="oscuro"] :is(
+  .account-tabs, .perfil-opciones, .filtros-pestanas, .ficha-img,
+  .auth-campo input[readonly], .pedidos-estado,
+  .admin-tabla tbody tr:not(.admin-fila-alerta):not(.admin-fila-nueva):hover td
+) { background: var(--surface-soft); }
+
+[data-tema="oscuro"] #intensidad-aroma,
+[data-tema="oscuro"] :is(
+  .auth-campo input, .account-form .auth-campo input, .contacto-campo :is(input, textarea),
+  .perfil-campo :is(input, select), .campo :is(input, select), .fav-form input[type="text"],
+  .qty .qty-input
+) {
+  background: var(--page-bg);
+  border-color: var(--line);
+}
+
+[data-tema="oscuro"] .auth-campo input[readonly] { background: var(--surface-soft); }
+[data-tema="oscuro"] :is(.auth-reglas li.regla-cumplida, .free) { color: var(--green); }
+[data-tema="oscuro"] .stock-aviso { color: var(--admin-warning-text); }
+[data-tema="oscuro"] :is(.nota, .campo label small, .linea) { color: var(--text-muted); }
+
+[data-tema="oscuro"] :is(
+  .navbar .nav-cart, .nav-avatar, .clear:hover, .filtros-opciones label:hover,
+  .catalogo-filtros[open] > summary, .aroma-opcion:has(input:checked),
+  .opcion:has(input:checked), .qty button:hover:not(:disabled),
+  .perfil-opciones a:not([aria-current]):hover, .pedidos-estado:is(.pagado, .preparando)
+) { background: var(--primary-light); }
+[data-tema="oscuro"] .navbar .nav-cart:hover { background: var(--surface-soft); }
+
+[data-tema="oscuro"] :is(
+  .btn-primary, .buy, .confirm, .fav-boton, .filtros-cantidad,
+  .filtros-pestanas button[aria-selected="true"], .admin-menu a[aria-current],
+  .admin .btn-primary, .comprobante-acciones .btn-primary
+) {
+  background: var(--tema-boton);
+  color: #fff;
+}
+
+[data-tema="oscuro"] :is(
+  .btn-primary, .buy:not(:disabled), .confirm:not(:disabled), .fav-boton,
+  .admin .btn-primary, .comprobante-acciones .btn-primary
+):hover { background: var(--tema-boton-hover); }
+
+[data-tema="oscuro"] :is(.buy, .confirm):disabled {
+  background: var(--surface-soft);
+  color: var(--text-muted);
+}
+
+[data-tema="oscuro"] :is(
+  .aviso-carrito, .auth-exito, .contacto-exito, .perfil-badge:not(.perfil-badge-off),
+  .pedidos-ok, .pedidos-aviso-cancelacion, .pedidos-estado.entregado,
+  .disponible:not(.badge), .comprobante-icono:not(.pendiente, .cancelado)
+) {
+  background: var(--admin-success-bg);
+  color: var(--admin-success-text);
+  border-color: var(--admin-success-border);
+}
+
+[data-tema="oscuro"] :is(.badge.disponible, .card-vendido, .progreso li.hecho .progreso-punto) {
+  background: #236649;
+  color: #fff;
+}
+
+[data-tema="oscuro"] :is(
+  .auth-errores, .contacto-errores, .confirm-error, .perfil-badge-off,
+  .pedidos-cancelado, .pedidos-cancelar, .pedidos-estado.cancelado,
+  .comprobante-icono.cancelado, .btn-danger, .agotado:not(.admin-chip)
+) {
+  background: var(--admin-danger-bg);
+  color: var(--admin-danger-text);
+  border-color: var(--admin-danger-border);
+}
+
+[data-tema="oscuro"] :is(
+  .auth-campo input.campo-error, .auth-campo input:user-invalid,
+  .contacto-campo :is(input, textarea)[aria-invalid="true"]
+) {
+  background: var(--admin-danger-bg);
+  border-color: var(--danger);
+}
+
+[data-tema="oscuro"] :is(.pedidos-envio, .pedidos-estado.enviado) {
+  background: var(--admin-warning-bg);
+  color: var(--admin-warning-text);
+  border-color: var(--admin-warning-border);
+}

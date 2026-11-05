@@ -242,16 +242,37 @@ exports.skuExiste = async (sku) => {
 //   4. Si se indicó stock inicial: inventario de la sucursal + un movimiento de "ajuste" que deja
 //      registrado quién lo cargó (así el stock nunca aparece sin explicación).
 // Devuelve el id del producto creado.
+async function resolverCategoria(conn, datos) {
+  if (!datos.categoriaNueva) return datos.idCategoria;
+  // Reutiliza el nombre si ya existe; un SKU duplicado revierte también
+  // este paso porque comparte la transacción del producto.
+  const [categoria] = await conn.query(
+    `INSERT INTO categoria (nombre, activo) VALUES (?, TRUE)
+     ON DUPLICATE KEY UPDATE id_categoria = LAST_INSERT_ID(id_categoria), activo = TRUE`,
+    [datos.nombreCategoriaNueva]
+  );
+  // La variedad conjunta también queda disponible en la personalización.
+  await conn.query(
+    `INSERT INTO componente (nombre, tipo, unidad_dosificacion, recargo_precio, activo)
+     VALUES (?, 'mixto', 'dosis', 0, TRUE)
+     ON DUPLICATE KEY UPDATE activo = TRUE`,
+    [datos.nombreCategoriaNueva]
+  );
+  return categoria.insertId;
+}
+
 exports.crear = async (d, idUsuario) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
 
+    const idCategoria = await resolverCategoria(conn, d);
+
     const [nuevo] = await conn.query(
       `INSERT INTO producto (sku, nombre, id_tipo_agua, id_presentacion, id_categoria, precio_base,
                              es_personalizable, descripcion, descripcion_larga, imagen, activo)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [d.sku, d.nombre, d.idTipoAgua, d.idPresentacion, d.idCategoria, d.precio,
+      [d.sku, d.nombre, d.idTipoAgua, d.idPresentacion, idCategoria, d.precio,
        d.esPersonalizable, d.etiqueta, d.descripcionLarga || null, d.imagen, d.activo]
     );
     const idProducto = nuevo.insertId;
@@ -327,11 +348,12 @@ exports.actualizar = async (id, d) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
+    const idCategoria = await resolverCategoria(conn, d);
     await conn.query(
       `UPDATE producto SET nombre = ?, id_tipo_agua = ?, id_presentacion = ?, id_categoria = ?, precio_base = ?,
               es_personalizable = ?, descripcion = ?, descripcion_larga = ?, imagen = ?, activo = ?
        WHERE id_producto = ?`,
-      [d.nombre, d.idTipoAgua, d.idPresentacion, d.idCategoria, d.precio, d.esPersonalizable,
+      [d.nombre, d.idTipoAgua, d.idPresentacion, idCategoria, d.precio, d.esPersonalizable,
        d.etiqueta, d.descripcionLarga || null, d.imagen, d.activo, id]
     );
     await conn.query(

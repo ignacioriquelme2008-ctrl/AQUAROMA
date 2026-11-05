@@ -1,3 +1,35 @@
+/* Paleta compartida de todas las pantallas del administrador. */
+:root {
+  --navy: #1b3552;
+  --blue: #2864ad;
+  --primary: var(--blue);
+  --primary-light: #eaf1fb;
+  --ink: #35465b;
+  --text: #24364b;
+  --text-muted: #5f7085;
+  --line: #dfe7f0;
+  --page-bg: #f1f5f9;
+  --surface: #ffffff;
+  --surface-soft: #f6f8fc;
+  --green: #26704f;
+  --success: var(--green);
+  --danger: #a03d4b;
+  --admin-success-bg: #edf7f1;
+  --admin-success-text: #256b4b;
+  --admin-success-border: #cfe7d8;
+  --admin-warning-bg: #fff5e3;
+  --admin-warning-row: #fffcf6;
+  --admin-warning-text: #855716;
+  --admin-warning-border: #efddba;
+  --admin-danger-bg: #fbeef0;
+  --admin-danger-text: #a03d4b;
+  --admin-danger-border: #edcfd5;
+  --admin-neutral-bg: #edf1f6;
+  --admin-neutral-text: #5b6a7c;
+  --admin-info-border: #ccdcef;
+}
+body { background: var(--page-bg); }
+
 /* =====================================================================
    admin.css: sección ADMINISTRACIÓN (HU-006 y HU-035 a HU-040).
    Páginas: views/admin/*.ejs. El enlace "Panel" del menú está en base.css.
@@ -7,7 +39,7 @@
 .admin-sub { margin-bottom: 24px; }
 /* Una tarjeta por cada sección del panel. Las que el usuario no tiene permiso de ver quedan más claras. */
 .admin-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.admin-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+.admin-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
 .admin-card h2 { font-size: 18px; color: var(--navy); margin-bottom: 6px; }
 .admin-card p { font-size: 14px; color: var(--text-muted); }
 .admin-card-bloqueada { opacity: .55; }
@@ -16,20 +48,20 @@
 /* Tarjeta de una sección ya disponible: es un enlace (HU-036 en adelante). */
 .admin-card-lista { display: block; color: inherit; text-decoration: none; transition: border-color .15s, box-shadow .15s; }
 .admin-card-lista:hover { border-color: var(--primary); box-shadow: 0 4px 14px rgba(14, 165, 233, .15); }
-.admin-estado-lista { color: var(--green); background: #e7f6ea; }
+.admin-estado-lista { color: var(--green); background: var(--admin-success-bg); }
 
 /* ===== Productos (HU-036): views/admin/productos.ejs y views/admin/producto-nuevo.ejs ===== */
 .admin-volver { display: inline-block; font-size: 14px; color: var(--blue); margin-bottom: 16px; }
 .admin-cabecera { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; }
 .admin-cabecera .btn { padding: 10px 18px; border-radius: 8px; }
-.admin-exito { background: #e7f6ea; border: 1px solid #bfe5c6; color: #1f5e2a; border-radius: 8px; padding: 12px 14px; margin-bottom: 18px; font-size: 14px; }
+.admin-exito { background: var(--admin-success-bg); border: 1px solid var(--admin-success-border); color: var(--admin-success-text); border-radius: 8px; padding: 12px 14px; margin-bottom: 18px; font-size: 14px; }
 .admin-exito a { color: var(--blue); font-weight: 600; margin-left: 6px; }
-.admin-errores { background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; border-radius: 8px; padding: 12px 14px; margin-bottom: 18px; font-size: 14px; }
+.admin-errores { background: var(--admin-danger-bg); border: 1px solid var(--admin-danger-border); color: var(--admin-danger-text); border-radius: 8px; padding: 12px 14px; margin-bottom: 18px; font-size: 14px; }
 .admin-nota { font-size: 13px; color: var(--text-muted); margin-top: 12px; }
 
 /* Tabla de productos. */
-.admin-tabla { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 14px; }
-.admin-tabla th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); background: #f8fafc; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.admin-tabla { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 14px; }
+.admin-tabla th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); background: var(--surface-soft); padding: 10px 14px; border-bottom: 1px solid var(--line); }
 .admin-tabla td { padding: 10px 14px; border-bottom: 1px solid var(--line); }
 .admin-tabla tr:last-child td { border-bottom: 0; }
 .admin-tabla .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -38,24 +70,24 @@
 .admin-ancho { max-width: 1320px; }
 .admin-tabla .sku { font-family: Consolas, monospace; font-size: 13px; }
 .admin-tabla a { color: var(--navy); font-weight: 600; }
-.admin-fila-nueva td { background: #f0f9ff; }
+.admin-fila-nueva td { background: var(--primary-light); }
 .admin-chip { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; }
-.admin-chip.activo { color: var(--green); background: #e7f6ea; }
-.admin-chip.inactivo { color: var(--text-muted); background: #eef2f6; }
+.admin-chip.activo { color: var(--green); background: var(--admin-success-bg); }
+.admin-chip.inactivo { color: var(--text-muted); background: var(--admin-neutral-bg); }
 
 /* Formulario de producto nuevo. */
 .admin-angosto { max-width: 820px; }
-.admin-form fieldset { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px 6px; margin: 0 0 16px; }
+.admin-form fieldset { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px 6px; margin: 0 0 16px; }
 .admin-form legend { font-weight: 700; color: var(--navy); padding: 0 6px; }
 .admin-fila { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .admin-fila-3 { grid-template-columns: repeat(3, 1fr); }
 .admin-campo { margin-bottom: 14px; }
 .admin-campo label { display: block; font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
-.admin-campo input, .admin-campo select, .admin-campo textarea { display: block; width: 100%; padding: 0 12px; font: inherit; font-size: 15px; color: var(--text); background: #fff; border: 1px solid #cfd8e3; border-radius: 8px; }
+.admin-campo input, .admin-campo select, .admin-campo textarea { display: block; width: 100%; padding: 0 12px; font: inherit; font-size: 15px; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
 .admin-campo input, .admin-campo select { height: 44px; }
 .admin-campo textarea { padding: 10px 12px; resize: vertical; }
 .admin-campo :is(input, select, textarea):focus { outline: 3px solid var(--primary-light); border-color: var(--primary); }
-.admin-campo .campo-error { border-color: var(--danger); background: #fff5f5; }
+.admin-campo .campo-error { border-color: var(--danger); background: var(--admin-danger-bg); }
 .admin-aviso { font-size: 13px; color: var(--danger); margin-top: 6px; }
 .admin-ayuda { font-size: 12px; color: var(--text-muted); margin: 6px 0 12px; }
 .admin-campo .admin-ayuda { margin-bottom: 0; }
@@ -69,7 +101,7 @@
 
 /* ===== Piezas comunes de las páginas del panel (HU-035 a HU-040) ===== */
 .admin-subtitulo { font-size: 20px; margin: 28px 0 12px; }
-.admin-caja { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
+.admin-caja { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
 .admin-caja h2 { margin-bottom: 10px; }
 .admin-dos-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; margin-top: 20px; }
 .admin-dos-columnas .admin-form fieldset { margin: 0; }
@@ -85,10 +117,10 @@
 /* Botones chicos dentro de una tabla (Desactivar, Eliminar) y formularios en línea. */
 .admin-acciones-fila { white-space: nowrap; }
 .admin-form-linea { display: inline; margin-left: 8px; }
-.admin-boton-chico { font: inherit; font-size: 13px; font-weight: 600; color: var(--navy); background: #fff; border: 1px solid #cfd8e3; border-radius: 6px; padding: 3px 10px; cursor: pointer; }
-.admin-boton-chico:hover { background: #f1f5fa; }
-.admin-boton-peligro { color: #b42318; border-color: #f4c7c3; }
-.admin-boton-peligro:hover { background: #fff1f0; }
+.admin-boton-chico { font: inherit; font-size: 13px; font-weight: 600; color: var(--navy); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+.admin-boton-chico:hover { background: var(--surface-soft); }
+.admin-boton-peligro { color: var(--admin-danger-text); border-color: var(--admin-danger-border); }
+.admin-boton-peligro:hover { background: var(--admin-danger-bg); }
 .admin-errores .admin-form-linea { margin-left: 6px; }
 
 /* Opciones de "Próximo paso" del pedido (HU-040): un radio por estado permitido. */
@@ -97,43 +129,43 @@
 
 /* Filtros de pastilla: estados de pedido (HU-040) y "Ver solo stock bajo" (HU-039). */
 .admin-filtros { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 16px; }
-.admin-filtro { font-size: 14px; font-weight: 600; color: var(--navy); background: #fff; border: 1px solid #cfd8e3; border-radius: 999px; padding: 6px 14px; }
+.admin-filtro { font-size: 14px; font-weight: 600; color: var(--navy); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; }
 .admin-filtro:hover { border-color: var(--primary); }
-.admin-filtro.activo { background: var(--navy); border-color: var(--navy); color: #fff; }
+.admin-filtro.activo { background: var(--primary-light); border-color: var(--admin-info-border); color: var(--blue); }
 
 /* ===== Stock por sucursal (HU-038, HU-039): views/admin/stock.ejs ===== */
 .admin-th-sub { display: block; font-size: 10px; font-weight: 400; text-transform: none; letter-spacing: 0; }
 .admin-tabla span.sku { color: var(--text-muted); margin-left: 4px; }
-.admin-fila-alerta td { background: #fff8e6; }
-.admin-celda-alerta { color: #b45309; font-weight: 700; }
+.admin-fila-alerta td { background: var(--admin-warning-row); }
+.admin-celda-alerta { color: var(--admin-warning-text); font-weight: 700; }
 .admin-fila-inactiva td { color: var(--text-muted); }
-.admin-chip.alerta { color: #92400e; background: #fde68a; }
+.admin-chip.alerta { color: var(--admin-warning-text); background: var(--admin-warning-bg); }
 .admin-suma { color: var(--green); font-weight: 600; }
-.admin-resta { color: #b42318; font-weight: 600; }
+.admin-resta { color: var(--admin-danger-text); font-weight: 600; }
 
 /* ===== Pedidos (HU-040): etiqueta de estado, con los mismos colores que el seguimiento del cliente ===== */
-.admin-estado-pedido { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #eef2f6; color: var(--ink); }
+.admin-estado-pedido { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: var(--admin-neutral-bg); color: var(--ink); }
 .admin-estado-pedido.pagado, .admin-estado-pedido.preparando { background: var(--primary-light); color: var(--blue); }
-.admin-estado-pedido.enviado { background: #fdeedb; color: #a15a10; }
-.admin-estado-pedido.entregado { background: #e7f6ea; color: var(--green); }
-.admin-estado-pedido.cancelado { background: #fee2e2; color: #991b1b; }
+.admin-estado-pedido.enviado { background: var(--admin-warning-bg); color: var(--admin-warning-text); }
+.admin-estado-pedido.entregado { background: var(--admin-success-bg); color: var(--green); }
+.admin-estado-pedido.cancelado { background: var(--admin-danger-bg); color: var(--admin-danger-text); }
 
 /* ===== Resumen del panel (HU-035) ===== */
 .admin-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.admin-kpi { display: flex; flex-direction: column; gap: 4px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; color: inherit; }
+.admin-kpi { display: flex; flex-direction: column; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; color: inherit; }
 .admin-kpi strong { font-size: 26px; color: var(--navy); line-height: 1.2; }
 .admin-kpi-titulo { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
 .admin-kpi-nota { font-size: 13px; color: var(--text-muted); }
-.admin-kpi-alerta { border-color: #f5c56b; background: #fff8e6; }
-.admin-kpi-alerta strong { color: #b45309; }
-.admin-kpi-aviso { border-color: #a5d8f3; background: #f0f9ff; }
+.admin-kpi-alerta { border-color: var(--admin-warning-border); background: var(--admin-warning-bg); }
+.admin-kpi-alerta strong { color: var(--admin-warning-text); }
+.admin-kpi-aviso { border-color: var(--admin-info-border); background: var(--primary-light); }
 .admin-kpi-enlace { text-decoration: none; transition: border-color .15s, box-shadow .15s; }
 .admin-kpi-enlace:hover { border-color: var(--primary); box-shadow: 0 4px 14px rgba(14, 165, 233, .15); }
 /* Gráfico de barras horizontales: pedidos por estado. */
 .admin-barras { list-style: none; display: grid; gap: 10px; }
 .admin-barras li { display: grid; grid-template-columns: 120px 1fr 32px; align-items: center; gap: 10px; font-size: 14px; }
-.admin-barra { height: 14px; background: #eef2f6; border-radius: 999px; overflow: hidden; }
-.admin-barra-relleno { display: block; height: 100%; min-width: 2px; border-radius: 999px; background: #94a3b8; }
+.admin-barra { height: 14px; background: var(--admin-neutral-bg); border-radius: 999px; overflow: hidden; }
+.admin-barra-relleno { display: block; height: 100%; min-width: 2px; border-radius: 999px; background: var(--admin-neutral-text); }
 .admin-barra-relleno.pagado, .admin-barra-relleno.preparando { background: var(--primary); }
 .admin-barra-relleno.enviado { background: #f59e0b; }
 .admin-barra-relleno.entregado { background: var(--green); }
@@ -149,5 +181,136 @@
 .mensaje-contacto-cabecera a { color: var(--blue); }
 .mensaje-contacto-texto { margin: 14px 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
 .mensaje-nuevo { border-left: 4px solid var(--primary); }
-.mensaje-leido { border-left: 4px solid #cbd5e1; }
+.mensaje-leido { border-left: 4px solid var(--line); }
 @media (max-width: 600px) { .mensaje-contacto-cabecera { flex-direction: column; gap: 6px; } }
+
+/* Navegación común del administrador. */
+.admin-menu { box-shadow: 0 3px 14px #1b355205; display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 28px; padding: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+.admin-menu a { flex: 1; text-align: center; padding: 11px 14px; color: var(--text-muted); font-size: 14px; font-weight: 600; border-radius: 11px; white-space: nowrap; }
+.admin-menu a:hover { color: var(--blue); background: var(--surface-soft); }
+.admin-menu a[aria-current] { color: white; background: var(--navy); }
+.admin-sub { color: var(--text-muted); font-size: 14px; }
+.admin-tabla-scroll { overflow-x: auto; margin-bottom: 16px; border-radius: 12px; }
+.admin-tabla-scroll .admin-tabla { min-width: 640px; }
+
+/* Resumen: primero las tareas, después el detalle opcional. */
+.admin-inicio { max-width: 1150px; padding-top: 28px; }
+.admin-inicio-cabecera .eyebrow { margin-bottom: 8px; }
+.admin-inicio-cabecera h1 { font-size: clamp(28px, 4vw, 36px); }
+.admin-resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); background: var(--surface); border: 1px solid var(--line); border-radius: var(--card-radius); margin-bottom: 24px; overflow: hidden; }
+.admin-resumen-dato { display: flex; flex-direction: column; gap: 6px; padding: 22px 24px; color: var(--navy); min-width: 0; }
+.admin-resumen-dato + .admin-resumen-dato { border-left: 1px solid var(--line); }
+.admin-resumen-dato > span { color: var(--text-muted); font-size: 13px; font-weight: 500; }
+.admin-resumen-dato > strong { font-size: clamp(23px, 3vw, 30px); line-height: 1.2; letter-spacing: -.03em; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.admin-resumen-dato > small { font-size: 12px; color: var(--text-muted); }
+a.admin-resumen-dato:hover { background: var(--surface-soft); }
+.admin-inicio-columnas { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: start; gap: 22px; }
+.admin-inicio .admin-caja { padding: 22px; border-radius: var(--card-radius); margin: 0; background: var(--surface); }
+.admin-inicio .admin-caja h2 { font-size: 17px; margin-bottom: 10px; }
+.admin-tareas, .admin-pedidos-recientes { list-style: none; padding: 0; }
+.admin-tareas li + li { border-top: 1px solid var(--line); }
+.admin-tareas a { display: flex; align-items: center; gap: 14px; padding: 17px 0; color: var(--navy); }
+.admin-tareas a > span:first-child { flex: 1; min-width: 0; }
+.admin-tareas strong { display: block; font-size: 14px; }
+.admin-tareas small { display: block; color: var(--text-muted); font-size: 12px; margin-top: 4px; }
+.admin-tareas a:hover strong { color: var(--blue); }
+.admin-tarea-cantidad { display: inline-grid; place-items: center; min-width: 30px; height: 30px; padding: 0 7px; background: var(--primary-light); color: var(--blue); border-radius: 9px; font-size: 14px; font-weight: 600; }
+.admin-tarea-cantidad.alerta { background: var(--admin-warning-bg); color: var(--admin-warning-text); }
+.admin-sin-pendientes { color: var(--text-muted); font-size: 14px; padding: 18px 0; }
+.admin-pedidos-recientes li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 0; }
+.admin-pedidos-recientes li + li { border-top: 1px solid var(--line); }
+.admin-reciente-info { min-width: 0; }
+.admin-reciente-info a, .admin-reciente-info strong { color: var(--navy); font-size: 14px; font-weight: 600; }
+.admin-reciente-info a:hover { color: var(--blue); }
+.admin-reciente-info > span { display: block; color: var(--text-muted); font-size: 12px; margin-top: 4px; overflow-wrap: anywhere; }
+.admin-reciente-estado { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+.admin-reciente-estado strong { color: var(--navy); font-size: 14px; font-variant-numeric: tabular-nums; }
+.admin-mas-resumen { margin-top: 24px; }
+.admin-mas-resumen summary { padding: 10px 0; color: var(--blue); font-size: 14px; font-weight: 600; cursor: pointer; }
+.admin-mas-resumen .admin-barras { max-width: 640px; margin-top: 16px; }
+.admin-mas-resumen .admin-barra-relleno { min-width: 0; }
+.admin-nuevo-sabor { margin-top: 14px; }
+.admin-campo input[type="file"] { height: auto; min-height: 44px; padding: 10px; font-size: 13px; border-style: dashed; }
+.admin-imagen-preview { display: block; max-width: 100%; width: 120px; height: 160px; object-fit: contain; margin: 12px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-soft); }
+@media (max-width: 760px) {
+  .admin-inicio-columnas { grid-template-columns: 1fr; }
+  .admin-menu a { flex-basis: calc(33.333% - 6px); padding: 10px 8px; }
+}
+@media (max-width: 480px) {
+  .admin-resumen { grid-template-columns: 1fr; }
+  .admin-resumen-dato { padding: 16px 20px; }
+  .admin-resumen-dato + .admin-resumen-dato { border-left: 0; border-top: 1px solid var(--line); }
+  .admin-inicio .admin-caja { padding: 18px; }
+  .admin-cabecera { flex-wrap: wrap; }
+}
+
+/* Existencias separadas por sucursal, sin mezclar sus estados. */
+.stock-sucursales { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: start; }
+.stock-sucursal { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--card-radius); overflow: hidden; }
+.stock-sucursal-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 22px 20px 18px; }
+.stock-sucursal-cabecera h2 { font-size: 18px; margin-bottom: 5px; }
+.stock-sucursal-cabecera p { color: var(--text-muted); font-size: 12px; }
+.stock-ajustar { color: var(--blue); font-size: 13px; font-weight: 600; }
+.stock-sucursal .admin-tabla-scroll { margin-bottom: 0; border-radius: 0; }
+.stock-sucursal .stock-tabla { min-width: 0; border: 0; }
+.stock-tabla th { font-size: 10px; padding: 10px; }
+.stock-tabla td { padding: 12px 10px; font-size: 13px; }
+.stock-tabla td:first-child { overflow-wrap: anywhere; }
+.stock-tabla .admin-chip { font-size: 11px; padding: 3px 7px; white-space: nowrap; }
+.stock-sku { display: block; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.admin-chip.agotado { background: var(--admin-danger-bg); color: var(--admin-danger-text); }
+.stock-herramientas, .stock-historial { margin-top: 26px; scroll-margin-top: 130px; }
+.stock-herramientas > summary, .stock-historial > summary { padding: 12px 0; color: var(--blue); font-size: 14px; font-weight: 600; cursor: pointer; }
+.stock-historial .admin-tabla-scroll { margin-top: 14px; }
+@media (max-width: 950px) { .stock-sucursales { grid-template-columns: 1fr; } }
+@media (max-width: 480px) {
+  .stock-sucursal-cabecera { padding: 18px 14px; }
+  .stock-tabla th, .stock-tabla td { padding-left: 7px; padding-right: 7px; }
+  .stock-tabla td { font-size: 12px; }
+}
+
+/* Color reservado para acciones y estados, sin teñir bloques completos. */
+.admin .btn-primary { background: var(--blue); color: white; }
+.admin .btn-primary:hover { background: #20538f; }
+.admin .btn-ghost { background: var(--surface); color: var(--navy); border: 1px solid var(--line); }
+.admin-chip.activo, .admin-estado-lista, .admin-estado-pedido.pagado, .admin-estado-pedido.entregado { background: var(--admin-success-bg); color: var(--admin-success-text); }
+.admin-chip.inactivo, .admin-estado-pedido.confirmado { background: var(--admin-neutral-bg); color: var(--admin-neutral-text); }
+.admin-estado-pedido.preparando, .admin-estado-pedido.enviado { background: var(--primary-light); color: var(--blue); }
+.admin-estado-pedido.cancelado, .admin-chip.agotado { background: var(--admin-danger-bg); color: var(--admin-danger-text); }
+.stock-sucursal-cabecera { background: var(--surface-soft); border-bottom: 1px solid var(--line); }
+.admin-tabla tbody tr:not(.admin-fila-alerta):not(.admin-fila-nueva):hover td { background: #f8faff; }
+.admin-campo input:read-only { background: var(--surface-soft); color: var(--text-muted); }
+.admin-campo input::placeholder, .admin-campo textarea::placeholder { color: #718197; }
+.admin-campo input[type="file"]::file-selector-button { border: 0; border-radius: 6px; padding: 7px 10px; margin-right: 10px; background: var(--primary-light); color: var(--blue); font: inherit; font-weight: 600; cursor: pointer; }
+.admin-campo input[type="file"]::file-selector-button:hover { background: #dbe8f8; }
+.admin-boton-peligro { background: transparent; }
+.admin-barra-relleno.pagado, .admin-barra-relleno.entregado { background: var(--green); }
+.admin-barra-relleno.preparando, .admin-barra-relleno.enviado { background: var(--blue); }
+
+/* Bandeja de atención del panel */
+.admin-inicio > h1 { margin-bottom: 24px; }
+.admin-bandeja { background: var(--surface); border: 1px solid var(--line); border-radius: var(--card-radius); }
+.admin-bandeja-grupo + .admin-bandeja-grupo { border-top: 1px solid var(--line); }
+.admin-bandeja-grupo h3 { margin: 0; padding: 12px 18px; color: var(--navy); font-size: 14px; background: var(--surface-soft); }
+.admin-bandeja-grupo:first-child h3 { border-radius: var(--card-radius) var(--card-radius) 0 0; }
+.admin-bandeja ul, .admin-actividad ul { list-style: none; margin: 0; padding: 0; }
+.admin-aviso { display: grid; grid-template-columns: 110px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 14px 18px; }
+.admin-aviso + .admin-aviso, .admin-actividad li + li { border-top: 1px solid var(--line); }
+.admin-aviso strong, .admin-aviso small { display: block; overflow-wrap: anywhere; }
+.admin-aviso small, .admin-actividad time { color: var(--text-muted); font-size: 13px; }
+.admin-aviso .admin-boton-chico { padding: 7px 11px; color: var(--blue); }
+.admin-aviso-estado { justify-self: start; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.admin-aviso-estado.exito { background: var(--admin-success-bg); color: var(--admin-success-text); }
+.admin-aviso-estado.info { background: var(--primary-light); color: var(--blue); }
+.admin-aviso-estado.alerta { background: var(--admin-warning-bg); color: var(--admin-warning-text); }
+.admin-aviso-estado.peligro { background: var(--admin-danger-bg); color: var(--admin-danger-text); }
+.admin-bandeja-mas, .admin-bandeja-vacia { display: block; padding: 14px 18px; }
+.admin-inicio .admin-actividad { margin-top: 22px; }
+.admin-actividad li { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 14px; padding: 9px 0; }
+.mensaje-contacto[id] { scroll-margin-top: 180px; }
+.mensaje-contacto:target { border-color: var(--blue); }
+
+@media (max-width: 600px) {
+  .admin-aviso { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .admin-aviso .admin-boton-chico { justify-self: start; }
+}

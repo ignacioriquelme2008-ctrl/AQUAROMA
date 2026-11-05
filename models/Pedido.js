@@ -46,10 +46,11 @@ const aNumero = (f) => ({ ...f, total: Number(f.total), costo_envio: Number(f.co
 exports.listarAdmin = async (estado = null, limite = 200) => {
   const [filas] = await db.query(
     `SELECT pe.id_pedido AS id, pe.fecha, pe.estado, pe.total, pe.costo_envio,
-            CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) AS cliente, c.correo,
+            CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) AS cliente, c.correo, s.nombre AS sucursal,
             (SELECT COALESCE(SUM(dp.cantidad), 0) FROM detalle_pedido dp WHERE dp.id_pedido = pe.id_pedido) AS unidades
      FROM pedido pe
      JOIN cliente c ON c.id_cliente = pe.id_cliente
+     LEFT JOIN sucursal s ON s.id_sucursal = pe.id_sucursal
      WHERE pe.estado <> 'carrito' AND (? IS NULL OR pe.estado = ?)
      ORDER BY pe.fecha DESC, pe.id_pedido DESC
      LIMIT ?`,
@@ -83,10 +84,12 @@ exports.resumenVentas = async () => {
 exports.obtener = async (id, { idCliente = null } = {}) => {
   const [filas] = await db.query(
     `SELECT pe.id_pedido AS id, pe.id_cliente, pe.fecha, pe.estado, pe.total, pe.costo_envio, pe.observacion,
-            c.nombre, c.apellido, c.correo, c.telefono, s.nombre AS sucursal
+            c.nombre, c.apellido, c.correo, c.telefono, s.nombre AS sucursal,
+            COALESCE(u.correo, c.correo) AS correo_cuenta
      FROM pedido pe
      JOIN cliente c ON c.id_cliente = pe.id_cliente
      LEFT JOIN sucursal s ON s.id_sucursal = pe.id_sucursal
+     LEFT JOIN usuario u ON u.id_cliente = c.id_cliente
      WHERE pe.id_pedido = ? AND pe.estado <> 'carrito' AND (? IS NULL OR pe.id_cliente = ?)`,
     [id, idCliente, idCliente]
   );
@@ -114,7 +117,8 @@ exports.obtener = async (id, { idCliente = null } = {}) => {
 
   // HU-030: medio de pago con que se compró (el último registrado para el pedido).
   const [pagos] = await db.query(
-    `SELECT mp.nombre AS metodo, pa.monto, pa.estado
+    `SELECT mp.nombre AS metodo, pa.monto, pa.estado,
+            EXISTS (SELECT 1 FROM paypal_checkout pc WHERE pc.id_pago = pa.id_pago) AS verificado_por_paypal
      FROM pago pa
      JOIN metodo_pago mp ON mp.id_metodo = pa.id_metodo
      WHERE pa.id_pedido = ?
@@ -242,7 +246,16 @@ exports.cancelarDeCliente = async (id, idCliente, idUsuario) => {
 //     en la tabla envio. Si el pedido aún no tiene envío (lo crea la HU-029 al comprar), se arma con
 //     la dirección principal del cliente.
 //   - El envío sigue al pedido: en preparación, en camino, entregado o cancelado.
-exports.cambiarEstado = async (id, nuevo, { transportista = null, tracking = null, idUsuario = null } = {}) => {
+exports.historialAdmin = async (id) => {
+  const [filas] = await db.query(
+    `SELECT estado, nombre_admin AS nombre, fecha FROM pedido_historial_admin
+     WHERE id_pedido = ? ORDER BY id_historial DESC`,
+    [id]
+  );
+  return filas;
+};
+
+exports.cambiarEstado = async (id, nuevo, { transportista = null, tracking = null, idUsuario = null, nombreAdmin = 'Administrador' } = {}) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
@@ -251,6 +264,21 @@ exports.cambiarEstado = async (id, nuevo, { transportista = null, tracking = nul
     if (!pedido || pedido.estado === 'carrito') throw new CambioInvalidoError('Ese pedido no existe.');
     if (!(SIGUIENTES[pedido.estado] || []).includes(nuevo)) {
       throw new CambioInvalidoError(`Un pedido "${NOMBRES[pedido.estado]}" no puede pasar a "${NOMBRES[nuevo] || nuevo}".`);
+    }
+
+    if (nuevo === 'pagado') {
+      const [pagos] = await conn.query(
+        'SELECT 1 FROM paypal_checkout pc JOIN pago p ON p.id_pago = pc.id_pago WHERE p.id_pedido = ? LIMIT 1',
+        [id]
+      );
+      if (pagos.length) throw new CambioInvalidoError('PayPal confirma el pago automáticamente.');
+    }
+
+    if (idUsuario) {
+      await conn.query(
+        'INSERT INTO pedido_historial_admin (id_pedido, id_usuario, nombre_admin, estado) VALUES (?, ?, ?, ?)',
+        [id, idUsuario, nombreAdmin, nuevo]
+      );
     }
 
     if (nuevo === 'cancelado') {

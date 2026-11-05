@@ -55,28 +55,66 @@ exports.enviarRecuperacion = async (destinatario, token) => {
   });
 };
 
-// Correo transaccional: nunca incluye marketing ni promociones sin consentimiento explícito.
-exports.enviarConfirmacionPedido = async (pedido) => {
-  const nombre = escaparHtml(`${pedido.nombre || ''} ${pedido.apellido || ''}`.trim() || 'cliente AQUAROMA');
+function enviarCorreoPedido(pedido, { subject, parrafos, enlace }) {
+  const appUrl = baseUrl();
+  const imagen = process.env.MAIL_PEDIDO_IMAGEN_URL?.trim()
+    || (appUrl.startsWith('https://') ? `${appUrl}/img/marca/aquaroma-correo.jpg` : '');
+  const encabezado = imagen.startsWith('https://')
+    ? `<img src="${escaparHtml(imagen)}" alt="AQUAROMA · Agua funcional" width="600" style="display:block;width:100%;max-width:600px;height:auto">`
+    : '<p style="font-size:20px;color:#0b2d6b"><strong>AQUAROMA</strong></p>';
   const filas = pedido.items.map((item) =>
-    `<tr><td>${escaparHtml(item.nombre)} × ${Number(item.cantidad)}</td><td>${clp(item.subtotal)}</td></tr>`
+    `<tr><td style="padding:8px 12px;border-bottom:1px solid #e3edf5">${escaparHtml(item.nombre)} × ${Number(item.cantidad)}</td><td align="right" style="padding:8px 12px;border-bottom:1px solid #e3edf5;white-space:nowrap">${clp(item.subtotal)}</td></tr>`
   ).join('');
+  const productos = pedido.items.map(item => `- ${item.nombre} × ${item.cantidad}: ${clp(item.subtotal)}`).join('\n');
+  const saludo = `Hola ${pedido.nombre || 'cliente AQUAROMA'},`;
+  const total = clp(pedido.total + pedido.costo_envio);
+  const resumen = `Productos del pedido #${pedido.id}`;
+  const textoEnlace = enlace ? `Ver pedido: ${enlace}` : '';
+  const textoTotal = `Total: ${total}`;
+
+  return enviar({
+    to: pedido.correo_cuenta || pedido.correo,
+    subject,
+    text: [saludo, ...parrafos, `${resumen}\n${productos}\n${textoTotal}`, textoEnlace].filter(Boolean).join('\n\n'),
+    html: `<div style="max-width:600px;margin:auto;color:#142944;font:16px Arial,sans-serif">
+      ${encabezado}
+      <p>${escaparHtml(saludo)}</p>
+      ${parrafos.map(parrafo => `<p>${escaparHtml(parrafo)}</p>`).join('')}
+      <h2 style="font-size:18px">${resumen}</h2>
+      <table style="width:100%;border-collapse:collapse"><tbody>${filas}</tbody></table>
+      <p><strong>${textoTotal}</strong></p>
+      ${enlace ? `<p><a href="${escaparHtml(enlace)}">Ver mi pedido</a></p>` : ''}
+    </div>`,
+  });
+}
+
+exports.enviarConfirmacionPedido = async (pedido) => {
   const direccion = pedido.envio
     ? `${pedido.envio.calle} ${pedido.envio.numero || ''}, ${pedido.envio.comuna}, ${pedido.envio.region}`
     : 'Dirección registrada en tu pedido';
-  const direccionHtml = escaparHtml(direccion);
-  const textoItems = pedido.items.map((item) => `- ${item.nombre} × ${item.cantidad}: ${clp(item.subtotal)}`).join('\n');
-  const texto = [
-    `Hola ${pedido.nombre || 'cliente AQUAROMA'}, recibimos tu pedido #${pedido.id}.`,
-    '', textoItems,
-    '', `Total: ${clp(pedido.total + pedido.costo_envio)}`,
-    `Dirección de despacho: ${direccion}`,
-    '', 'Gracias por elegir AQUAROMA.',
-  ].join('\n');
-  return enviar({
-    to: pedido.correo,
+  return enviarCorreoPedido(pedido, {
     subject: `Confirmación de pedido #${pedido.id} | AQUAROMA`,
-    text: texto,
-    html: `<p>Hola ${nombre}, recibimos tu pedido <strong>#${pedido.id}</strong>.</p><table><tbody>${filas}</tbody></table><p>Total: <strong>${clp(pedido.total + pedido.costo_envio)}</strong></p><p>Dirección de despacho: ${direccionHtml}</p><p>Gracias por elegir AQUAROMA.</p>`,
+    parrafos: [`Recibimos tu pedido #${pedido.id}.`, `Dirección de despacho: ${direccion}`],
+    enlace: `${baseUrl()}/pedidos/${pedido.id}`,
+  });
+};
+
+exports.enviarEstadoPedido = async (pedido, estado, despacho) => {
+  const mensajes = {
+    pagado: 'El pago de tu pedido fue confirmado.',
+    preparando: 'Estamos preparando tu pedido.',
+    enviado: 'Tu pedido ya va en camino.',
+    entregado: 'Tu pedido figura como entregado.',
+    cancelado: 'Tu pedido fue cancelado.',
+  };
+  const parrafos = [
+    mensajes[estado],
+    estado === 'enviado' && despacho?.transportista && `Transporte: ${despacho.transportista}`,
+    estado === 'enviado' && despacho?.tracking && `Seguimiento: ${despacho.tracking}`,
+  ].filter(Boolean);
+  return enviarCorreoPedido(pedido, {
+    subject: `Pedido #${pedido.id} · ${mensajes[estado]} | AQUAROMA`,
+    parrafos,
+    enlace: `${baseUrl()}/pedidos/${pedido.id}`,
   });
 };

@@ -18,11 +18,11 @@
         <%# Los filtros se consultan al cambiar cada opción y conservan las selecciones en la URL. %>
         <form class="filters" method="get" action="/catalogo">
           <div class="filtros-pestanas" role="tablist" aria-label="Categorías de filtros" hidden>
-            <button type="button" id="filtro-tab-aroma" role="tab" aria-selected="true" aria-controls="filtro-panel-aroma">Aromas</button>
+            <button type="button" id="filtro-tab-aroma" role="tab" aria-selected="true" aria-controls="filtro-panel-aroma">Sabores y aromas</button>
             <button type="button" id="filtro-tab-tipo" role="tab" aria-selected="false" aria-controls="filtro-panel-tipo" tabindex="-1">Tipo de agua</button>
           </div>
           <fieldset id="filtro-panel-aroma">
-            <legend>Aroma</legend>
+            <legend>Sabor y aroma</legend>
             <div class="filtros-opciones">
             <label><input type="checkbox" name="aroma" value="todos" <%= filtros.aromas.length === 0 ? 'checked' : '' %>> Todos</label>
             <%# Un filtro por cada aroma que tenga productos activos: un sabor nuevo en la base aparece solo. %>

@@ -7,6 +7,7 @@
 %>
 <head>
   <%- include('../partials/head', { titulo: (p ? 'Editar producto' : 'Nuevo producto') + ' | Administración | AQUAROMA', estilos: ['admin'] }) %>
+  <script src="/js/admin-producto.js" defer></script>
 </head>
 <body>
   <%- include('../partials/navbar') %>
@@ -23,6 +24,7 @@
   <!-- HU-036: crear un producto (POST /admin/productos, adminProductosController.crear).
        HU-037: editarlo (POST /admin/productos/:id, adminProductosController.guardarEdicion). -->
   <main class="admin admin-angosto">
+    <%- include('../partials/admin-menu', { activo: 'productos' }) %>
     <a href="/admin/productos" class="admin-volver">← Volver a productos</a>
     <p class="eyebrow">Administración</p>
     <h1><%= p ? 'Editar producto' : 'Nuevo producto' %></h1>
@@ -38,7 +40,7 @@
       <p class="admin-errores" role="alert">Revisa los campos marcados en rojo.</p>
     <% } %>
 
-    <form class="admin-form" method="post" action="<%= p ? '/admin/productos/' + p.id : '/admin/productos' %>" novalidate>
+    <form class="admin-form" method="post" action="<%= p ? '/admin/productos/' + p.id : '/admin/productos' %>" enctype="multipart/form-data" novalidate>
       <fieldset>
         <legend>Datos del producto</legend>
         <div class="admin-fila">
@@ -80,12 +82,17 @@
             <%- aviso('idPresentacion') %>
           </div>
           <div class="admin-campo">
-            <label for="idCategoria">Categoría (aroma)</label>
-            <select <%- marca('idCategoria') %> id="idCategoria" name="idCategoria" required>
-              <option value="">Elegir…</option>
+            <label for="idCategoria">Sabor y aroma</label>
+            <select <%- marca('idCategoria') %> id="idCategoria" name="idCategoria" aria-controls="nuevo-sabor-campo" required>
+              <option value="nueva" <%= d.categoriaNueva || !d.idCategoria ? 'selected' : '' %>>+ Crear nuevo sabor y aroma</option>
               <% opciones.categorias.forEach(o => { %><option value="<%= o.id %>" <%= sel(d.idCategoria, o.id) %>><%= o.nombre %></option><% }) %>
             </select>
             <%- aviso('idCategoria') %>
+            <div id="nuevo-sabor-campo" class="admin-nuevo-sabor">
+              <label for="nombreCategoriaNueva">Nombre del nuevo sabor y aroma</label>
+              <input <%- marca('nombreCategoriaNueva') %> type="text" id="nombreCategoriaNueva" name="nombreCategoriaNueva" maxlength="100" value="<%= d.nombreCategoriaNueva || '' %>" placeholder="Ej.: Maracuyá">
+              <%- aviso('nombreCategoriaNueva') %>
+            </div>
           </div>
         </div>
 
@@ -96,13 +103,16 @@
             <%- aviso('precio') %>
           </div>
           <div class="admin-campo">
-            <label for="imagen">Imagen</label>
-            <select <%- marca('imagen') %> id="imagen" name="imagen" required>
+            <label for="imagenArchivo">Foto del producto</label>
+            <input <%- marca('imagen') %> type="file" id="imagenArchivo" name="imagenArchivo" accept="image/jpeg,image/png,image/webp" aria-describedby="imagen-ayuda">
+            <p class="admin-ayuda" id="imagen-ayuda">JPG, PNG o WebP, hasta 5 MB. Se asigna al producto al guardar.</p>
+            <img id="imagen-producto-preview" class="admin-imagen-preview" <%- d.imagen ? 'src="' + imagenProducto(d.imagen).replace(/"/g, '&quot;') + '"' : '' %> alt="Vista previa de la foto del producto" <%= d.imagen ? '' : 'hidden' %>>
+            <label for="imagen">O usar una imagen existente</label>
+            <select id="imagen" name="imagen">
               <option value="">Elegir…</option>
-              <% imagenes.forEach(img => { %><option value="<%= img %>" <%= d.imagen === img ? 'selected' : '' %>><%= img %></option><% }) %>
+              <% imagenes.forEach(img => { %><option value="<%= img %>" data-src="<%= imagenProducto(img) %>" <%= d.imagen === img ? 'selected' : '' %>><%= img %></option><% }) %>
             </select>
             <%- aviso('imagen') %>
-            <p class="admin-ayuda">Para usar una imagen nueva, cópiala a public/img/productos y recarga esta página.</p>
           </div>
         </div>
       </fieldset>
@@ -149,7 +159,7 @@
       <fieldset>
         <legend>Opciones</legend>
         <%# Una casilla sin marcar no se envía: el controlador lo entiende como "no". %>
-        <label class="admin-check"><input type="checkbox" name="esPersonalizable" value="1" <%= d.esPersonalizable ? 'checked' : '' %>> Personalizable (el cliente puede ajustar el aroma)</label>
+        <label class="admin-check"><input type="checkbox" name="esPersonalizable" value="1" <%= d.esPersonalizable ? 'checked' : '' %>> Personalizable (el cliente puede ajustar el sabor y aroma)</label>
         <label class="admin-check"><input type="checkbox" name="activo" value="1" <%= d.activo ? 'checked' : '' %>> Activo (se muestra en la tienda apenas se guarda)</label>
       </fieldset>
 

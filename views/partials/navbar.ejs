@@ -4,7 +4,7 @@
   <div class="nav-inner">
 
     <a href="/" class="logo">
-      <img src="/img/marca/logo.jpg" alt="Logo Aquaroma" class="logo-img">
+      <img src="/img/marca/gota.svg" alt="" class="logo-img" width="24" height="24">
       <div class="logo-text">
         <strong>AQUAROMA</strong>
         <span>Agua funcional</span>
@@ -19,6 +19,15 @@
 
         <!-- La sesión decide si se muestra el nombre y el cierre, o los enlaces para entrar y registrarse. -->
         <div class="nav-acciones">
+      <button type="button" class="nav-tema" aria-label="Modo oscuro" aria-pressed="false" title="Modo oscuro" hidden>
+        <svg class="nav-tema-luna" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M21 13a9 9 0 0 1-10-10 9 9 0 1 0 10 10Z"/>
+        </svg>
+        <svg class="nav-tema-sol" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>
+        </svg>
+      </button>
       <% if (locals.usuario) { %>
         <%
           const primerNombre = String(locals.usuario.nombre || '').trim().split(/\s+/)[0] || 'Mi cuenta';

@@ -1,78 +1,85 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <%- include('../partials/head', { titulo: 'Pedido #' + pedido.id + ' confirmado | AQUAROMA', estilos: ['pedidos'] }) %>
+  <%- include('../partials/head', { titulo: 'Comprobante del pedido #' + pedido.id + ' | AQUAROMA', estilos: ['pedidos'] }) %>
 </head>
 <body>
   <%- include('../partials/navbar') %>
-
-  <!-- HU-028: comprobante de compra. Es la pantalla que se muestra al confirmar el pedido.
-       Datos: pedidosController.comprobante. -->
-  <main class="pedidos">
-    <div class="pedidos-ok" role="status">
-      <span class="pedidos-ok-icono" aria-hidden="true">✅</span>
-      <div>
-        <p class="eyebrow">Compra confirmada</p>
-        <h1>¡Gracias por tu pedido!</h1>
-        <p>Tu número de orden es <strong class="pedidos-orden">#<%= pedido.id %></strong>. Guarda este comprobante.</p>
+  <%
+    const cancelado = pedido.estado === 'cancelado';
+    const pendiente = pedido.estado === 'confirmado' && (!pedido.pago || pedido.pago.estado !== 'aprobado');
+    const puedePagar = pendiente && pedido.pago && pedido.pago.metodo === 'PayPal Sandbox';
+  %>
+  <main class="pedidos comprobante">
+    <a href="/perfil?seccion=pedidos" class="pedidos-volver">← Mis pedidos</a>
+    <header class="comprobante-cabecera">
+      <span class="comprobante-icono <%= cancelado ? 'cancelado' : pendiente ? 'pendiente' : '' %>" aria-hidden="true"><%= cancelado ? '×' : pendiente ? '…' : '✓' %></span>
+      <h1><%= cancelado ? 'Pedido cancelado' : pendiente ? 'Tu pedido está registrado' : '¡Gracias por tu compra!' %></h1>
+      <div class="comprobante-meta">
+        <strong>Pedido #<%= pedido.id %></strong>
+        <span><%= fechaHora(pedido.fecha) %></span>
+        <span class="pedidos-estado <%= pedido.estado %>"><%= nombres[pedido.estado] %></span>
       </div>
-    </div>
+    </header>
 
-    <% if (pedido.pago && pedido.pago.metodo === 'PayPal Sandbox') { %>
-      <p class="pedidos-aviso">Demostración PayPal: este pedido usa dinero ficticio, sin cobros reales.</p>
-    <% } %>
-    <%# Criterio 3: número único de orden y datos de la compra. %>
-    <section class="pedidos-caja">
-      <h2>🧾 Comprobante de compra</h2>
-      <dl class="pedidos-datos">
-        <div><dt>Número de orden</dt><dd>#<%= pedido.id %></dd></div>
-        <div><dt>Fecha</dt><dd><%= fechaHora(pedido.fecha) %></dd></div>
-        <div><dt>Estado</dt><dd><span class="pedidos-estado <%= pedido.estado %>"><%= nombres[pedido.estado] %></span></dd></div>
-        <div><dt>Cliente</dt><dd><%= pedido.nombre %> <%= pedido.apellido || '' %></dd></div>
-        <div><dt>Correo</dt><dd><%= pedido.correo %></dd></div>
-        <% if (pedido.sucursal) { %><div><dt>Despacha</dt><dd><%= pedido.sucursal %></dd></div><% } %>
-      </dl>
-    </section>
+    <section class="comprobante-card" aria-labelledby="comprobante-productos">
+      <h2 id="comprobante-productos">Tu compra</h2>
+      <ul class="comprobante-productos">
+        <% pedido.items.forEach(item => { %>
+          <li>
+            <% if (item.imagen) { %><img src="<%= imagenProducto(item.imagen) %>" alt="" width="48" height="64"><% } %>
+            <div class="comprobante-producto">
+              <strong><%= item.nombre %></strong>
+              <span><%= item.cantidad %> <%= Number(item.cantidad) === 1 ? 'unidad' : 'unidades' %> · <%= clp(item.precio_unitario) %> c/u</span>
+            </div>
+            <strong class="comprobante-precio"><%= clp(item.subtotal) %></strong>
+          </li>
+        <% }) %>
+      </ul>
+      <div class="comprobante-total">
+        <div>
+          <span><%= pedido.costo_envio > 0 ? 'Total del pedido' : 'Total de productos' %></span>
+          <small>IVA incluido</small>
+        </div>
+        <strong><%= clp(pedido.total + pedido.costo_envio) %></strong>
+      </div>
 
-    <%# Criterio 2: todos los ítems confirmados con su cantidad y monto. %>
-    <section class="pedidos-caja">
-      <h2>Productos</h2>
-      <table class="pedidos-tabla">
-        <thead><tr><th>Producto</th><th class="num">Cantidad</th><th class="num">Precio</th><th class="num">Subtotal</th></tr></thead>
-        <tbody>
-          <% pedido.items.forEach(i => { %>
-            <tr><td><%= i.nombre %></td><td class="num"><%= i.cantidad %></td><td class="num"><%= clp(i.precio_unitario) %></td><td class="num"><%= clp(i.subtotal) %></td></tr>
-          <% }) %>
-          <tr><td colspan="3" class="num">Subtotal (IVA incluido)</td><td class="num"><%= clp(pedido.total) %></td></tr>
-          <%# HU-025: desglose del IVA y el costo pendiente de entrega. %>
-          <tr><td colspan="3" class="num">Neto (sin IVA)</td><td class="num"><%= clp(ventas.neto(pedido.total)) %></td></tr>
-          <tr><td colspan="3" class="num">IVA (19%)</td><td class="num"><%= clp(ventas.iva(pedido.total)) %></td></tr>
-          <tr><td colspan="3" class="num">Entrega</td><td class="num"><%= pedido.costo_envio > 0 ? clp(pedido.costo_envio) : 'Por definir' %></td></tr>
-          <tr class="pedidos-total"><td colspan="3" class="num">Total de productos</td><td class="num"><%= clp(pedido.total) %></td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <%# HU-029 y HU-030: dónde se entrega y con qué medio se paga. %>
-    <section class="pedidos-caja">
-      <h2>🚚 Entrega y pago</h2>
-      <dl class="pedidos-datos">
+      <section class="comprobante-entrega" aria-labelledby="comprobante-entrega-titulo">
+        <h2 id="comprobante-entrega-titulo">Entrega</h2>
         <% if (pedido.envio) { const e = pedido.envio; %>
-          <div><dt>Dirección</dt><dd><%= e.calle %> <%= e.numero || '' %><%= e.departamento ? ', ' + e.departamento : '' %></dd></div>
-          <div><dt>Comuna</dt><dd><%= e.comuna %>, <%= e.region %></dd></div>
-          <% if (e.referencia) { %><div><dt>Referencia</dt><dd><%= e.referencia %></dd></div><% } %>
+          <p><%= e.calle %> <%= e.numero || '' %><%= e.departamento ? ', ' + e.departamento : '' %></p>
+          <p class="comprobante-secundario"><%= e.comuna %>, <%= e.region %></p>
         <% } else { %>
-          <div><dt>Dirección</dt><dd>Se coordina con la tienda</dd></div>
+          <p>Se coordina con la tienda.</p>
         <% } %>
-        <div><dt>Medio de pago</dt><dd><%= pedido.pago ? (pedido.pago.metodo === 'PayPal Sandbox' ? 'PayPal' : pedido.pago.metodo) : 'Por definir' %></dd></div>
-      </dl>
+        <% if (!cancelado) { %>
+          <p class="comprobante-envio"><%= pedido.costo_envio > 0 ? 'Envío: ' + clp(pedido.costo_envio) + ', incluido en el total.' : 'El costo de envío se coordina con la tienda y no está incluido.' %></p>
+        <% } %>
+      </section>
+
+      <details class="comprobante-detalles">
+        <summary>Ver detalles de la compra</summary>
+        <dl class="pedidos-datos">
+          <div><dt>Cliente</dt><dd><%= pedido.nombre %> <%= pedido.apellido || '' %></dd></div>
+          <div><dt>Correo</dt><dd><%= pedido.correo %></dd></div>
+          <div><dt>Medio de pago</dt><dd><%= pedido.pago ? (pedido.pago.metodo === 'PayPal Sandbox' ? 'PayPal' : pedido.pago.metodo) : 'Por definir' %></dd></div>
+          <% if (pedido.sucursal) { %><div><dt>Despacha</dt><dd><%= pedido.sucursal %></dd></div><% } %>
+          <% if (pedido.envio && pedido.envio.referencia) { %><div><dt>Referencia de entrega</dt><dd><%= pedido.envio.referencia %></dd></div><% } %>
+          <div><dt>Neto de productos</dt><dd><%= clp(ventas.neto(pedido.total)) %></dd></div>
+          <div><dt>IVA (19%)</dt><dd><%= clp(ventas.iva(pedido.total)) %></dd></div>
+        </dl>
+      </details>
     </section>
 
-    <div class="pedidos-acciones">
-      <a href="/pedidos/<%= pedido.id %>" class="btn btn-primary">Ver seguimiento</a>
-      <a href="/catalogo" class="btn btn-secundario">Seguir comprando</a>
+    <div class="comprobante-acciones">
+      <% if (puedePagar) { %>
+        <a href="/carrito?pagar=<%= pedido.id %>#pago-paypal" class="btn btn-primary">Pagar con PayPal</a>
+        <a href="/pedidos/<%= pedido.id %>" class="btn btn-secundario">Ver pedido</a>
+      <% } else { %>
+        <a href="/pedidos/<%= pedido.id %>" class="btn btn-primary">Ver seguimiento</a>
+        <a href="/catalogo" class="btn btn-secundario">Seguir comprando</a>
+      <% } %>
     </div>
-<% if (pedido.estado === 'confirmado' && pedido.pago && pedido.pago.metodo === 'PayPal Sandbox' && pedido.pago.estado === 'pendiente') { %><p><a href="/carrito?pagar=<%= pedido.id %>#pago-paypal">Continuar pago con PayPal</a></p><% } %>
   </main>
 </body>
 </html>

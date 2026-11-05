@@ -8,7 +8,8 @@
 
   <!-- HU-040: lista de pedidos con filtro por estado. Los datos llegan de adminPedidosController.listar. -->
   <main class="admin">
-    <a href="/admin" class="admin-volver">← Volver al panel</a>
+    <%- include('../partials/admin-menu', { activo: 'pedidos' }) %>
+
     <p class="eyebrow">Administración</p>
     <h1>Pedidos</h1>
     <p class="admin-minimo">El costo de entrega se coordina con la tienda y se muestra en el detalle del pedido.</p>
@@ -22,7 +23,7 @@
       <% }) %>
     </nav>
 
-    <table class="admin-tabla">
+    <div class="admin-tabla-scroll"><table class="admin-tabla">
       <thead>
         <tr><th>N.º</th><th>Fecha</th><th>Cliente</th><th class="num">Unidades</th><th class="num">Total</th><th>Estado</th><th></th></tr>
       </thead>
@@ -38,11 +39,11 @@
             <td class="num"><%= p.unidades %></td>
             <td class="num"><%= clp(p.total + p.costo_envio) %></td>
             <td><span class="admin-estado-pedido <%= p.estado %>"><%= nombres[p.estado] %></span></td>
-            <td><a href="/admin/pedidos/<%= p.id %>">Ver / cambiar estado →</a></td>
+            <td><a href="/admin/pedidos/<%= p.id %>">Gestionar →</a></td>
           </tr>
         <% }) %>
       </tbody>
-    </table>
+    </table></div>
   </main>
 </body>
 </html>

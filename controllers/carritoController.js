@@ -12,7 +12,7 @@ const Direccion = require('../models/Direccion');
 const MetodoPago = require('../models/MetodoPago');
 const Pedido = require('../models/Pedido');
 const ventas = require('../config/ventas');
-const correoServicio = require('../config/correo');
+const notificarPedido = require('../utils/notificarPedido');
 const { texto, leerDireccionNueva } = require('../utils/validaciones');
 const { MAX_CANTIDAD, normalizarItems } = require('../utils/carrito');
 const tipoCambio = require('../config/tipoCambio');
@@ -177,12 +177,12 @@ exports.agregar = async (req, res, next) => {
         ? await Producto.obtenerAromaParaProducto(id, idComponente)
         : null;
       if (!aroma) {
-        req.session.avisoCarrito = 'El aroma elegido no está disponible para este producto.';
+        req.session.avisoCarrito = 'El sabor y aroma elegidos no están disponibles para este producto.';
         return res.redirect(volver);
       }
       intensidad = Number(texto(req.body.intensidad).trim());
       if (!Number.isInteger(intensidad) || intensidad < 1 || intensidad > 5) {
-        req.session.avisoCarrito = 'Elige una intensidad del aroma entre 1 y 5 dosis.';
+        req.session.avisoCarrito = 'Elige una intensidad de sabor y aroma entre 1 y 5 dosis.';
         return res.redirect(volver);
       }
     }
@@ -361,17 +361,7 @@ exports.confirmar = async (req, res, next) => {
 
     const pedido = await Carrito.confirmar(idCliente, req.session.usuario.id, null, entrega);
     req.session.carrito = [];
-    // HU-033: el pedido ya quedó guardado y confirmado; cualquier falla del correo es no bloqueante.
-    if (correoServicio.configurado()) {
-      try {
-        const detallePedido = await Pedido.obtener(pedido.id, { idCliente });
-        if (detallePedido) await correoServicio.enviarConfirmacionPedido(detallePedido);
-      } catch (err) {
-        console.warn(`HU-033: no se pudo enviar la confirmación del pedido #${pedido.id}.`);
-      }
-    } else {
-      console.warn(`HU-033: SMTP sin configurar; pedido #${pedido.id} se confirmó sin correo.`);
-    }
+    void notificarPedido(pedido.id, 'confirmado');
     if (entrega.paypalCotizacion) return res.redirect('/carrito?pagar=' + pedido.id + '#pago-paypal');
     return res.redirect(`/pedidos/${pedido.id}/comprobante`);
   } catch (err) {

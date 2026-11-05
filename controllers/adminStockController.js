@@ -26,13 +26,19 @@ async function mostrar(req, res, estado = 200, formulario = {}) {
   ]);
   // La tabla puede venir filtrada; las listas desplegables de los formularios usan todos los productos.
   const productos = soloBajo ? todos.filter((p) => p.bajo) : todos;
+  const sucursalElegida = sucursales.find(s => s.id === Number(req.query.sucursal));
+  const productoElegido = todos.find(p => p.id === Number(req.query.producto));
+  const datosIniciales = {
+    ...(sucursalElegida ? { idSucursal: String(sucursalElegida.id) } : {}),
+    ...(productoElegido ? { idProducto: String(productoElegido.id) } : {}),
+  };
   // Aviso de éxito después de guardar (?ajustado=1 o ?minimo=1).
   const exito = req.query.ajustado ? 'Ajuste guardado. El catálogo ya muestra el stock nuevo.'
     : req.query.minimo ? 'Stock mínimo actualizado.' : null;
   res.status(estado).render('admin/stock', {
     productos, todos, sucursales, movimientos, totalBajo, soloBajo, exito,
-    ajuste: formulario.ajuste || { datos: {}, errores: {} },
-    minimo: formulario.minimo || { datos: {}, errores: {} },
+    ajuste: formulario.ajuste || { datos: { ...datosIniciales }, errores: {} },
+    minimo: formulario.minimo || { datos: { ...datosIniciales }, errores: {} },
   });
 }
 
@@ -78,7 +84,7 @@ exports.ajustar = async (req, res, next) => {
     if (Object.keys(errores).length > 0) return await mostrar(req, res, 400, { ajuste: { datos, errores } });
 
     await Inventario.ajustar({ idProducto, idSucursal, cambio, motivo: datos.motivo, idUsuario: req.session.usuario.id });
-    res.redirect('/admin/stock?ajustado=1');
+    res.redirect('/admin/stock?ajustado=1&sucursal=' + idSucursal);
   } catch (err) {
     // Criterio 3 de HU-038: si el stock quedaría negativo, no se guarda y se avisa.
     if (err.code === 'STOCK_NEGATIVO') {
@@ -110,7 +116,7 @@ exports.cambiarMinimo = async (req, res, next) => {
     if (Object.keys(errores).length > 0) return await mostrar(req, res, 400, { minimo: { datos, errores } });
 
     await Inventario.cambiarMinimo({ idProducto, idSucursal, minimo });
-    res.redirect('/admin/stock?minimo=1');
+    res.redirect('/admin/stock?minimo=1&sucursal=' + idSucursal);
   } catch (err) {
     next(err);
   }

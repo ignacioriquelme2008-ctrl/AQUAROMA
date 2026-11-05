@@ -6,6 +6,7 @@
 //   comprobante: compra recién confirmada (HU-028): número de orden, ítems y montos.
 // Solo entra un cliente con sesión (permiso "ver_mis_pedidos") y cada uno ve solo sus pedidos.
 const Pedido = require('../models/Pedido');
+const notificarPedido = require('../utils/notificarPedido');
 const ventas = require('../config/ventas');
 
 // GET /pedidos
@@ -53,6 +54,7 @@ exports.cancelar = async (req, res, next) => {
       req.session.usuario.id
     );
     const devolucion = resultado.solicitudReembolso ? '&devolucion=1' : '';
+    void notificarPedido(id, 'cancelado');
     return res.redirect(`/pedidos/${id}?cancelado=1${devolucion}`);
   } catch (err) {
     if (err.code === 'CAMBIO_INVALIDO') {

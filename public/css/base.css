@@ -121,13 +121,7 @@ h3 { font-family: var(--font-heading); font-size: 15px; font-weight: 650; color:
 }
 
 .logo { display: flex; flex-shrink: 0; align-items: center; gap: 14px; color: var(--text); padding: 4px; }
-.logo-img {
-  height: 34px;        /* alto fijo: sube o baja este número */
-  width: auto;         /* el ancho se ajusta solo, sin deformar */
-  max-width: 160px;    /* límite de ancho por si la imagen es muy ancha */
-  object-fit: contain; /* la imagen entra completa, sin recortarse */
-  display: block;
-}
+.logo-img { display: block; }
 .logo-text { display: flex; flex-direction: column; line-height: 1.2; }
 .logo-text strong { font-size: 19px; color: var(--navy); letter-spacing: .02em; }
 .logo-text span {

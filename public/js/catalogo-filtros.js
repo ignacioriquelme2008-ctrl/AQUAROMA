@@ -6,6 +6,8 @@
   const cuenta = document.querySelector('.count');
   const resumen = filtros.querySelector('summary');
   let solicitud;
+  let temporizador;
+  let pulsandoProducto = false;
 
   const pestanas = [...form.querySelectorAll('[role="tab"]')];
   const mostrarCategoria = pestaña => {
@@ -49,8 +51,39 @@
   filtros.addEventListener('focusout', event => {
     if (!filtros.contains(event.relatedTarget)) filtros.open = false;
   });
-  const todos = filtros.querySelector('input[name="aroma"][value="todos"]');
-  const aromas = [...filtros.querySelectorAll('input[name="aroma"]')].filter(input => input !== todos);
+  let todos = filtros.querySelector('input[name="aroma"][value="todos"]');
+  let aromas = [...filtros.querySelectorAll('input[name="aroma"]')].filter(input => input !== todos);
+
+  const actualizarOpciones = pagina => {
+    const foco = document.activeElement;
+    const grupos = [...form.querySelectorAll('.filtros-opciones')];
+    grupos.forEach((grupo, indice) => {
+      const nuevo = pagina.querySelectorAll('.filtros-opciones')[indice];
+      if (!nuevo) return;
+      const firma = elemento => [...elemento.querySelectorAll('label')].map(label => [
+        label.querySelector('input').value, label.textContent.trim(),
+      ]);
+      // Si una variedad seleccionada deja de existir, conserva su opción para
+      // que el cliente pueda desmarcarla sin perder los demás filtros.
+      grupo.querySelectorAll('input:checked').forEach(input => {
+        if (![...nuevo.querySelectorAll('input')].some(opcion => opcion.value === input.value)) {
+          const label = input.closest('label').cloneNode(true);
+          label.querySelector('input').checked = true;
+          label.querySelector('input').setAttribute('checked', '');
+          nuevo.append(label);
+        }
+      });
+      if (JSON.stringify(firma(grupo)) !== JSON.stringify(firma(nuevo))) {
+        const restaurarFoco = grupo.contains(foco) ? { nombre: foco.name, valor: foco.value } : null;
+        grupo.innerHTML = nuevo.innerHTML;
+        if (restaurarFoco) [...grupo.querySelectorAll('input')].find(input => (
+          input.name === restaurarFoco.nombre && input.value === restaurarFoco.valor
+        ))?.focus({ preventScroll: true });
+      }
+    });
+    todos = filtros.querySelector('input[name="aroma"][value="todos"]');
+    aromas = [...filtros.querySelectorAll('input[name="aroma"]')].filter(input => input !== todos);
+  };
 
   const urlSeleccionada = () => {
     const url = new URL(form.action);
@@ -61,13 +94,14 @@
     return url;
   };
 
-  const actualizar = async (url, guardarHistorial = true) => {
+  const actualizar = async (url, guardarHistorial = true, automatico = false) => {
+    if (automatico && (solicitud || document.hidden || pulsandoProducto || resultados.contains(document.activeElement))) return;
     solicitud?.abort();
     const actual = new AbortController();
     solicitud = actual;
     resultados.setAttribute('aria-busy', 'true');
     try {
-      const respuesta = await fetch(url, { signal: actual.signal });
+      const respuesta = await fetch(url, { signal: actual.signal, cache: 'no-store' });
       if (!respuesta.ok) throw new Error('No se pudo actualizar el catálogo');
       const html = await respuesta.text();
       if (actual !== solicitud) return;
@@ -76,14 +110,20 @@
       const contador = pagina.querySelector('.count');
       const nuevoResumen = pagina.querySelector('.catalogo-filtros summary');
       if (!listado || !contador || !nuevoResumen) throw new Error('Catálogo no disponible');
-      resultados.innerHTML = listado.innerHTML;
-      cuenta.textContent = contador.textContent;
-      resumen.innerHTML = nuevoResumen.innerHTML;
+      // No reemplaza tarjetas iguales ni interrumpe un clic o el teclado.
+      if (automatico && (pulsandoProducto || resultados.contains(document.activeElement))) return;
+      if (resultados.innerHTML !== listado.innerHTML) resultados.innerHTML = listado.innerHTML;
+      if (cuenta.textContent !== contador.textContent) cuenta.textContent = contador.textContent;
+      if (resumen.innerHTML !== nuevoResumen.innerHTML) resumen.innerHTML = nuevoResumen.innerHTML;
+      actualizarOpciones(pagina);
       if (guardarHistorial && url.href !== location.href) history.pushState(null, '', url);
     } catch (error) {
-      if (error.name !== 'AbortError' && actual === solicitud) location.assign(url.href);
+      if (!automatico && error.name !== 'AbortError' && actual === solicitud) location.assign(url.href);
     } finally {
-      if (actual === solicitud) resultados.removeAttribute('aria-busy');
+      if (actual === solicitud) {
+        resultados.removeAttribute('aria-busy');
+        solicitud = null;
+      }
     }
   };
 
@@ -120,9 +160,28 @@
     actualizar(new URL(location.href), false);
   });
   window.addEventListener('pageshow', event => {
+    iniciarActualizacion();
     if (event.persisted) {
       restaurar();
       actualizar(new URL(location.href), false);
     }
   });
+  const refrescar = () => actualizar(new URL(location.href), false, true);
+  function iniciarActualizacion() {
+    if (!temporizador) temporizador = window.setInterval(refrescar, 5000);
+  }
+  resultados.addEventListener('pointerdown', () => { pulsandoProducto = true; });
+  document.addEventListener('pointerup', () => { pulsandoProducto = false; });
+  document.addEventListener('pointercancel', () => { pulsandoProducto = false; });
+  resultados.addEventListener('focusout', () => { window.setTimeout(refrescar, 0); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refrescar(); });
+  window.addEventListener('focus', refrescar);
+  window.addEventListener('blur', () => { pulsandoProducto = false; });
+  window.addEventListener('online', refrescar);
+  window.addEventListener('pagehide', () => {
+    window.clearInterval(temporizador);
+    temporizador = null;
+    solicitud?.abort();
+  });
+  iniciarActualizacion();
 })();

@@ -1,42 +1,90 @@
-// Controlador del panel de administración (HU-006 y HU-035).
-// Arriba muestra el resumen de la tienda (HU-035): ventas acumuladas, pedidos por estado, últimos
-// 10 pedidos, mensajes sin leer y alertas de stock bajo (HU-039). Abajo, una tarjeta por sección.
-// Cada sección la completa una historia del tablero:
-//   Productos -> HU-036 y HU-037 | Stock -> HU-038 y HU-039 | Pedidos -> HU-040
-//   Mensajes de contacto -> HU-035 (los mensajes llegan desde HU-012)
-// Cuando una sección esté lista, se le agrega su "url" y la vista la muestra como enlace.
 const Pedido = require('../models/Pedido');
 const Inventario = require('../models/Inventario');
 const Mensaje = require('../models/Mensaje');
 
+const LIMITE = 5;
+
 exports.panel = async (req, res, next) => {
   try {
-    // Cada sección indica qué permiso necesita (tabla "permiso"); la vista la marca si el usuario no lo tiene.
-    const secciones = [
-      { titulo: 'Productos', descripcion: 'Crear, editar y desactivar productos del catálogo.', permiso: 'gestionar_productos', url: '/admin/productos' },   // HU-036, HU-037
-      { titulo: 'Stock por sucursal', descripcion: 'Ver y ajustar el inventario, con alertas de stock bajo.', permiso: 'gestionar_stock', url: '/admin/stock' },   // HU-038, HU-039
-      { titulo: 'Pedidos', descripcion: 'Revisar los pedidos y actualizar su estado de envío.', permiso: 'gestionar_pedidos', url: '/admin/pedidos' },   // HU-040
-      { titulo: 'Mensajes de contacto', descripcion: 'Leer los mensajes enviados desde el formulario de contacto.', permiso: 'ver_mensajes', url: '/admin/mensajes' }, // HU-012
-    ];
     const permisos = req.session.usuario.permisos || [];
-
-    // Resumen (HU-035). Todo se consulta en paralelo para que el panel cargue rápido.
-    const [ventas, porEstado, ultimos, stockBajo, mensajes] = await Promise.all([
-      Pedido.resumenVentas(),
-      Pedido.contarPorEstado(),
-      Pedido.listarAdmin(null, 10),
-      Inventario.contarStockBajo(),
-      permisos.includes('ver_mensajes') ? Mensaje.sinLeer(5) : { total: 0, ultimos: [] },
+    const verPedidos = permisos.includes('gestionar_pedidos');
+    const verStock = permisos.includes('gestionar_stock');
+    const verMensajes = permisos.includes('ver_mensajes');
+    const [pagados, preparando, pedidos, productos, sucursales, movimientos, mensajes] = await Promise.all([
+      verPedidos ? Pedido.listarAdmin('pagado', LIMITE + 1) : [],
+      verPedidos ? Pedido.listarAdmin('preparando', LIMITE + 1) : [],
+      verPedidos ? Pedido.listarAdmin(null, LIMITE) : [],
+      verStock ? Inventario.listar() : [],
+      verStock ? Inventario.sucursales() : [],
+      verStock ? Inventario.movimientosRecientes(LIMITE) : [],
+      verMensajes ? Mensaje.sinLeer(LIMITE) : { total: 0, ultimos: [] },
     ]);
 
-    res.render('admin/panel', {
-      secciones: secciones.map((s) => ({ ...s, permitido: permisos.includes(s.permiso) })),
-      ventas, porEstado, ultimos, stockBajo, mensajes,
-      nombres: Pedido.NOMBRES,
-      puedeVerPedidos: permisos.includes('gestionar_pedidos'),
-      puedeVerStock: permisos.includes('gestionar_stock'),
-      puedeVerMensajes: permisos.includes('ver_mensajes'),
+    const avisosPedido = (filas, estado, accion, tono) => ({
+      url: '/admin/pedidos?estado=' + estado,
+      mas: filas.length > LIMITE,
+      filas: filas.slice(0, LIMITE).map(p => ({
+        titulo: 'Pedido #' + p.id,
+        detalle: p.sucursal || 'Sucursal por asignar',
+        fecha: p.fecha,
+        estado: Pedido.NOMBRES[estado],
+        tono,
+        accion,
+        url: '/admin/pedidos/' + p.id,
+      })),
     });
+
+    const stock = productos.filter(p => p.activo && p.bajo).flatMap(p => {
+      const cantidades = sucursales.filter(s => p.sucursales[s.id])
+        .map(s => s.nombre + ': ' + p.sucursales[s.id].cantidad + ' u.').join(' · ');
+      return sucursales.filter(s => p.sucursales[s.id]?.bajo).map(s => {
+        const agotado = p.sucursales[s.id].cantidad === 0;
+        return {
+          titulo: p.nombre + ' · ' + s.nombre,
+          detalle: cantidades,
+          estado: agotado ? 'Agotado' : 'Stock bajo',
+          tono: agotado ? 'peligro' : 'alerta',
+          accion: 'Actualizar stock',
+          url: '/admin/stock?sucursal=' + s.id + '&producto=' + p.id + '#stock-herramientas',
+        };
+      });
+    });
+    stock.sort((a, b) => Number(b.tono === 'peligro') - Number(a.tono === 'peligro'));
+
+    const grupos = [
+      { titulo: 'Por preparar', ...avisosPedido(pagados, 'pagado', 'Preparar pedido', 'exito') },
+      { titulo: 'En preparación', ...avisosPedido(preparando, 'preparando', 'Revisar despacho', 'info') },
+      { titulo: 'Stock por sucursal', url: '/admin/stock?bajo=1', mas: stock.length > LIMITE, filas: stock.slice(0, LIMITE) },
+      {
+        titulo: 'Mensajes sin leer',
+        url: '/admin/mensajes',
+        mas: mensajes.total > mensajes.ultimos.length,
+        filas: mensajes.ultimos.map(m => ({
+          titulo: m.asunto,
+          detalle: m.nombre,
+          fecha: m.creado_en,
+          estado: 'Sin leer',
+          tono: 'info',
+          accion: 'Abrir mensaje',
+          url: '/admin/mensajes#mensaje-' + m.id,
+        })),
+      },
+    ].filter(grupo => grupo.filas.length);
+
+    const recientes = [
+      ...pedidos.map(p => ({
+        titulo: 'Pedido #' + p.id + ' · ' + Pedido.NOMBRES[p.estado],
+        url: '/admin/pedidos/' + p.id,
+        fecha: p.fecha,
+      })),
+      ...movimientos.map(m => ({
+        titulo: 'Movimiento de stock · ' + m.producto + ' · ' + m.sucursal,
+        url: '/admin/stock',
+        fecha: m.fecha,
+      })),
+    ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, LIMITE);
+
+    res.render('admin/panel', { grupos, recientes });
   } catch (err) {
     next(err);
   }

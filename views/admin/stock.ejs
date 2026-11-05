@@ -16,7 +16,8 @@
   <!-- HU-038 (stock por sucursal y ajustes) y HU-039 (alertas de stock bajo).
        Los datos llegan de adminStockController.ver. -->
   <main class="admin">
-    <a href="/admin" class="admin-volver">← Volver al panel</a>
+    <%- include('../partials/admin-menu', { activo: 'inventario' }) %>
+
     <div class="admin-cabecera">
       <div>
         <p class="eyebrow">Administración</p>
@@ -32,44 +33,45 @@
 
     <% if (exito) { %><p class="admin-exito" role="status"><%= exito %></p><% } %>
 
-    <%# Criterio 1 de HU-038: existencias por sucursal. Criterio 1 de HU-039: filas en alerta resaltadas. %>
-    <table class="admin-tabla admin-tabla-stock">
-      <thead>
-        <tr>
-          <th>Producto</th>
-          <% sucursales.forEach(s => { %><th class="num"><%= s.nombre.replace('Aquaroma ', '') %><span class="admin-th-sub">unidades / mínimo</span></th><% }) %>
-          <th class="num">Total</th>
-          <th>Estado</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (productos.length === 0) { %>
-          <tr><td colspan="<%= sucursales.length + 3 %>" class="admin-vacio">No hay productos con stock bajo. 🎉</td></tr>
-        <% } %>
-        <% productos.forEach(p => { %>
-          <tr class="<%= p.bajo ? 'admin-fila-alerta' : '' %> <%= p.activo ? '' : 'admin-fila-inactiva' %>">
-            <td><strong><%= p.nombre %></strong> <span class="sku"><%= p.sku %></span><% if (!p.activo) { %> <span class="admin-chip inactivo">Inactivo</span><% } %></td>
-            <% sucursales.forEach(s => { const st = p.sucursales[s.id]; %>
-              <td class="num <%= st && st.bajo ? 'admin-celda-alerta' : '' %>">
-                <% if (st) { %><%= st.cantidad %> <span class="admin-minimo">/ <%= st.minimo %></span><% } else { %><span class="admin-minimo">—</span><% } %>
-              </td>
-            <% }) %>
-            <td class="num"><strong><%= p.total %></strong></td>
-            <td>
-              <% if (p.bajo) { %><span class="admin-chip alerta">⚠ Stock bajo</span>
-              <% } else if (p.activo) { %><span class="admin-chip activo">OK</span><% } %>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
-    <p class="admin-nota">"—" = el producto no se lleva en esa sucursal. Un producto queda en alerta cuando en alguna sucursal tiene igual o menos unidades que su mínimo.</p>
+    <div class="stock-sucursales">
+      <% sucursales.forEach(s => {
+        const deSucursal = todos.filter(p => p.sucursales[s.id]);
+        const alertas = deSucursal.filter(p => p.sucursales[s.id].bajo).length;
+        const filas = soloBajo ? deSucursal.filter(p => p.sucursales[s.id].bajo) : deSucursal;
+      %>
+        <section class="stock-sucursal" aria-labelledby="sucursal-<%= s.id %>">
+          <header class="stock-sucursal-cabecera">
+            <div><h2 id="sucursal-<%= s.id %>"><%= s.nombre %></h2><p><%= deSucursal.length %> productos · <%= alertas %> con stock bajo</p></div>
+            <a href="/admin/stock?sucursal=<%= s.id %>#stock-herramientas" class="stock-ajustar">Actualizar stock</a>
+          </header>
+          <div class="admin-tabla-scroll">
+            <table class="admin-tabla stock-tabla">
+              <thead><tr><th>Producto</th><th class="num">Unidades</th><th class="num">Mínimo</th><th>Estado</th></tr></thead>
+              <tbody>
+                <% if (!filas.length) { %><tr><td colspan="4" class="admin-vacio"><%= soloBajo ? 'Sin productos con stock bajo en esta sucursal.' : 'Todavía no hay existencias registradas en esta sucursal.' %></td></tr><% } %>
+                <% filas.forEach(p => { const st = p.sucursales[s.id]; %>
+                  <tr class="<%= st.bajo ? 'admin-fila-alerta' : '' %> <%= p.activo ? '' : 'admin-fila-inactiva' %>">
+                    <td><a href="/admin/stock?sucursal=<%= s.id %>&producto=<%= p.id %>#stock-herramientas"><%= p.nombre %></a><small class="stock-sku"><%= p.sku %></small></td>
+                    <td class="num <%= st.bajo ? 'admin-celda-alerta' : '' %>"><strong><%= st.cantidad %></strong></td>
+                    <td class="num"><%= st.minimo %></td>
+                    <td><span class="admin-chip <%= !p.activo ? 'inactivo' : st.cantidad <= 0 ? 'agotado' : st.bajo ? 'alerta' : 'activo' %>"><%= !p.activo ? 'Inactivo' : st.cantidad <= 0 ? 'Agotado' : st.bajo ? 'Bajo' : 'Disponible' %></span></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      <% }) %>
+      <% if (!sucursales.length) { %><p class="admin-minimo">No hay sucursales activas.</p><% } %>
+    </div>
 
+    <details class="stock-herramientas" id="stock-herramientas" <%= ajuste.datos.idSucursal || minimo.datos.idSucursal || Object.keys(ajuste.errores).length || Object.keys(minimo.errores).length ? 'open' : '' %>>
+      <summary>Actualizar stock o cambiar mínimos</summary>
     <div class="admin-dos-columnas">
       <%# Criterios 2 y 3 de HU-038: ajuste con motivo obligatorio; no se permite quedar en negativo. %>
       <form class="admin-form" method="post" action="/admin/stock/ajuste" novalidate>
         <fieldset>
-          <legend>Ajustar stock</legend>
+          <legend>Actualizar stock</legend>
           <div class="admin-fila">
             <div class="admin-campo">
               <label for="aj-producto">Producto</label>
@@ -99,7 +101,7 @@
             <%- aviso(ajuste, 'motivo') %>
             <p class="admin-ayuda">Queda registrado con tu usuario y la fecha.</p>
           </div>
-          <div class="admin-acciones"><button type="submit" class="btn btn-primary">Guardar ajuste</button></div>
+          <div class="admin-acciones"><button type="submit" class="btn btn-primary">Guardar cambio</button></div>
         </fieldset>
       </form>
 
@@ -135,9 +137,12 @@
       </form>
     </div>
 
+    </details>
+
+    <details class="stock-historial"><summary>Ver últimos movimientos</summary>
     <%# Registro de los últimos ajustes: quién, cuándo, cuánto y por qué (criterio 2 de HU-038). %>
-    <h2 class="admin-subtitulo">Últimos movimientos</h2>
-    <table class="admin-tabla">
+
+    <div class="admin-tabla-scroll"><table class="admin-tabla">
       <thead><tr><th>Fecha</th><th>Producto</th><th>Sucursal</th><th>Movimiento</th><th class="num">Unidades</th><th>Motivo</th><th>Usuario</th></tr></thead>
       <tbody>
         <% if (movimientos.length === 0) { %><tr><td colspan="7" class="admin-vacio">Todavía no hay movimientos.</td></tr><% } %>
@@ -153,7 +158,8 @@
           </tr>
         <% }) %>
       </tbody>
-    </table>
+    </table></div>
+    </details>
   </main>
 </body>
 </html>

@@ -1,0 +1,15 @@
+<%
+  const permisosAdmin = (locals.usuario && locals.usuario.permisos) || [];
+  const opcionesAdmin = [
+    { id: 'resumen', nombre: 'Por atender', url: '/admin', permiso: 'ver_panel_admin' },
+    { id: 'pedidos', nombre: 'Pedidos', url: '/admin/pedidos', permiso: 'gestionar_pedidos' },
+    { id: 'productos', nombre: 'Productos', url: '/admin/productos', permiso: 'gestionar_productos' },
+    { id: 'inventario', nombre: 'Stock', url: '/admin/stock', permiso: 'gestionar_stock' },
+    { id: 'mensajes', nombre: 'Mensajes', url: '/admin/mensajes', permiso: 'ver_mensajes' },
+  ];
+%>
+<nav class="admin-menu" aria-label="Secciones de administración">
+  <% opcionesAdmin.filter(opcion => permisosAdmin.includes(opcion.permiso)).forEach(opcion => { %>
+    <a href="<%= opcion.url %>" <%- opcion.id === activo ? 'aria-current="page"' : '' %>><%= opcion.nombre %></a>
+  <% }) %>
+</nav>

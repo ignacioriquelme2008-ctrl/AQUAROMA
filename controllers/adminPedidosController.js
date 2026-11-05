@@ -5,6 +5,7 @@
 // Lo que se guarda aquí lo lee el seguimiento del cliente (HU-032) al abrir la página (criterio 4).
 // Las rutas están en routes/adminRoutes.js y exigen el permiso "gestionar_pedidos".
 const Pedido = require('../models/Pedido');
+const notificarPedido = require('../utils/notificarPedido');
 const { texto } = require('../utils/validaciones');
 
 const LARGO = { transportista: 100, tracking: 100 };   // columnas envio.transportista y envio.tracking
@@ -24,9 +25,12 @@ exports.listar = async (req, res, next) => {
 async function mostrarDetalle(req, res, estado = 200, formulario = { datos: {}, errores: {} }) {
   const pedido = await Pedido.obtener(Number(req.params.id));
   if (!pedido) return res.status(404).render('errores/no-encontrado', { mensaje: 'Ese pedido no existe.' });
+  const historial = await Pedido.historialAdmin(pedido.id);
   res.status(estado).render('admin/pedido', {
     pedido,
-    siguientes: Pedido.SIGUIENTES[pedido.estado] || [],
+    historial,
+    siguientes: (Pedido.SIGUIENTES[pedido.estado] || [])
+      .filter(siguiente => siguiente !== 'pagado' || !pedido.pago?.verificado_por_paypal),
     nombres: Pedido.NOMBRES,
     exito: req.query.actualizado ? `El pedido quedó "${Pedido.NOMBRES[pedido.estado]}". El cliente ya lo ve en su seguimiento.` : null,
     formulario,
@@ -63,7 +67,9 @@ exports.cambiarEstado = async (req, res, next) => {
     await Pedido.cambiarEstado(Number(req.params.id), datos.estado, {
       ...(datos.estado === 'enviado' ? datos : {}),
       idUsuario: req.session.usuario.id,
+      nombreAdmin: req.session.usuario.nombre || 'Administrador',
     });
+    void notificarPedido(Number(req.params.id), datos.estado, datos);
     res.redirect(`/admin/pedidos/${Number(req.params.id)}?actualizado=1`);
   } catch (err) {
     // Criterio 2: un salto que no está en la secuencia se rechaza con un aviso.

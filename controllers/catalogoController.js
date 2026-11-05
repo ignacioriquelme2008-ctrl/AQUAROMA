@@ -33,6 +33,7 @@ exports.listar = async (req, res, next) => {
       (aromasSel.length === 0 || aromasSel.includes(p.aromaSlug)) &&
       (tiposSel.length === 0 || tiposSel.includes(p.tipoSlug)));
 
+    res.set('Cache-Control', 'no-store');
     res.render('catalogo/catalogo', {
       productos,
       aromas,
@@ -54,7 +55,9 @@ exports.detalle = async (req, res, next) => {
       return res.status(404).render('errores/no-encontrado', { mensaje: 'Este producto no existe o ya no está disponible.' });
     }
     const aromas = producto.personalizable ? await Producto.aromasDisponibles() : [];
-    res.render('catalogo/producto', { producto, aromas, ventas, volver: req.originalUrl });
+    const normalizarNombre = nombre => String(nombre || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+    const aromaPredeterminado = aromas.find(aroma => normalizarNombre(aroma.nombre) === normalizarNombre(producto.aroma))?.id;
+    res.render('catalogo/producto', { producto, aromas, aromaPredeterminado, ventas, volver: req.originalUrl });
   } catch (err) {
     next(err);   // lo atiende el manejador de errores de app.js
   }

@@ -7,6 +7,7 @@ const adminProductosController = require('../controllers/adminProductosControlle
 const adminStockController = require('../controllers/adminStockController');
 const adminPedidosController = require('../controllers/adminPedidosController');
 const adminMensajesController = require('../controllers/adminMensajesController');
+const { recibirImagenProducto } = require('../middlewares/imagenProducto');
 
 // router.use aplica los dos guardias a TODAS las rutas de este archivo:
 // 1) requiereSesion: sin sesión -> al login.   2) soloAdmin: si no es administrador -> "Acceso denegado".
@@ -21,9 +22,9 @@ router.get('/', requierePermiso('ver_panel_admin'), adminController.panel);
 const puedeGestionarProductos = requierePermiso('gestionar_productos');
 router.get('/productos', puedeGestionarProductos, adminProductosController.listar);
 router.get('/productos/nuevo', puedeGestionarProductos, adminProductosController.mostrarFormulario);
-router.post('/productos', puedeGestionarProductos, adminProductosController.crear);
+router.post('/productos', puedeGestionarProductos, recibirImagenProducto, adminProductosController.crear);
 router.get('/productos/:id(\\d+)/editar', puedeGestionarProductos, adminProductosController.mostrarEdicion);   // HU-037
-router.post('/productos/:id(\\d+)', puedeGestionarProductos, adminProductosController.guardarEdicion);         // HU-037
+router.post('/productos/:id(\\d+)', puedeGestionarProductos, recibirImagenProducto, adminProductosController.guardarEdicion); // HU-037
 router.post('/productos/:id(\\d+)/activo', puedeGestionarProductos, adminProductosController.cambiarActivo);   // HU-037
 router.post('/productos/:id(\\d+)/eliminar', puedeGestionarProductos, adminProductosController.eliminar);      // HU-037
 

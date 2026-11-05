@@ -8,7 +8,8 @@
 
   <!-- HU-036 y HU-037: lista de productos del panel. Los datos llegan de adminProductosController.listar. -->
   <main class="admin admin-ancho">
-    <a href="/admin" class="admin-volver">← Volver al panel</a>
+    <%- include('../partials/admin-menu', { activo: 'productos' }) %>
+
     <div class="admin-cabecera">
       <div>
         <p class="eyebrow">Administración</p>
@@ -44,9 +45,9 @@
       </div>
     <% } %>
 
-    <table class="admin-tabla">
+    <div class="admin-tabla-scroll"><table class="admin-tabla">
       <thead>
-        <tr><th>SKU</th><th>Nombre</th><th>Aroma</th><th>Tipo de agua</th><th class="num">Precio</th><th class="num">Stock</th><th>Estado</th><th>Últ. modificación</th><th>Acciones</th></tr>
+        <tr><th>SKU</th><th>Nombre</th><th>Sabor y aroma</th><th>Tipo de agua</th><th class="num">Precio</th><th class="num">Stock</th><th>Estado</th><th>Últ. modificación</th><th>Acciones</th></tr>
       </thead>
       <tbody>
         <% productos.forEach(p => { %>
@@ -75,7 +76,7 @@
           </tr>
         <% }) %>
       </tbody>
-    </table>
+    </table></div>
     <p class="admin-nota">"Desactivar" saca el producto de la tienda y conserva sus pedidos. "Eliminar" solo se permite si el producto nunca se vendió.</p>
   </main>
 </body>

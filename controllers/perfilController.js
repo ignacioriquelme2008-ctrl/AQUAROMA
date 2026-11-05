@@ -264,7 +264,7 @@ exports.crearFavorito = async (req, res, next) => {
     const aroma = Number.isInteger(idComponente) && idComponente > 0
       ? await Producto.obtenerAromaParaProducto(id, idComponente)
       : null;
-    if (!aroma) return volverAlCarrito(req, res, 'El aroma elegido no está disponible para este producto.');
+    if (!aroma) return volverAlCarrito(req, res, 'El sabor y aroma elegidos no están disponibles para este producto.');
 
     const intensidad = Number(texto(req.body.intensidad).trim());
     if (!Number.isInteger(intensidad) || intensidad < 1 || intensidad > 5) {

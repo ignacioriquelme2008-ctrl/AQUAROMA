@@ -14,8 +14,7 @@ const PRECIO_MAX = 99999999;                       // precio_base es DECIMAL(10,
 const STOCK_MAX = 99999;
 const CARPETA_IMAGENES = path.join(__dirname, '..', 'public', 'img', 'productos');
 
-// Imágenes que hay en public/img/productos. Para usar una imagen nueva, se copia a esa carpeta
-// y aparece sola en la lista del formulario.
+// Imágenes existentes para reutilizar. Las nuevas se reciben desde el formulario.
 async function imagenesDisponibles() {
   const archivos = await fs.readdir(CARPETA_IMAGENES);
   return archivos.filter((a) => /\.(png|jpe?g|webp)$/i.test(a)).sort();
@@ -29,19 +28,21 @@ function entero(valor) {
 
 // Lee y valida el formulario. Devuelve { datos, errores }; errores = { campo: 'mensaje' }.
 // "opciones" son las listas válidas de la base, para que nadie mande un id inventado.
-function validarProducto(body, opciones, imagenes) {
+function validarProducto(body, opciones, imagenes, archivo = null, errorImagen = null) {
   const datos = {
     sku: texto(body.sku).trim().toUpperCase(),
     nombre: texto(body.nombre).trim(),
     idTipoAgua: Number(body.idTipoAgua),
     idPresentacion: Number(body.idPresentacion),
     idCategoria: Number(body.idCategoria),
+    categoriaNueva: body.idCategoria === 'nueva',
+    nombreCategoriaNueva: texto(body.nombreCategoriaNueva).trim().replace(/\s+/g, ' '),
     precioTexto: texto(body.precio).trim(),
     precio: entero(body.precio),
     esPersonalizable: body.esPersonalizable === '1',
     etiqueta: texto(body.etiqueta).trim(),
     descripcionLarga: texto(body.descripcionLarga).trim(),
-    imagen: texto(body.imagen),
+    imagen: archivo ? archivo.filename : texto(body.imagen),
     activo: body.activo === '1',
     stockTexto: texto(body.stockInicial).trim(),
     stockInicial: texto(body.stockInicial).trim() === '' ? 0 : entero(body.stockInicial),
@@ -58,7 +59,10 @@ function validarProducto(body, opciones, imagenes) {
 
   if (!existe(opciones.tipos, datos.idTipoAgua)) errores.idTipoAgua = 'Elige el tipo de agua.';
   if (!existe(opciones.presentaciones, datos.idPresentacion)) errores.idPresentacion = 'Elige la presentación.';
-  if (!existe(opciones.categorias, datos.idCategoria)) errores.idCategoria = 'Elige la categoría (aroma).';
+  if (datos.categoriaNueva) {
+    if (!datos.nombreCategoriaNueva) errores.nombreCategoriaNueva = 'Escribe el nombre del nuevo sabor y aroma.';
+    else if (datos.nombreCategoriaNueva.length > 100) errores.nombreCategoriaNueva = 'El nombre puede tener hasta 100 caracteres.';
+  } else if (!existe(opciones.categorias, datos.idCategoria)) errores.idCategoria = 'Elige el sabor y aroma del producto.';
 
   if (!datos.precioTexto) errores.precio = 'Ingresa el precio.';
   else if (Number.isNaN(datos.precio)) errores.precio = 'El precio debe ser un número entero en pesos, sin decimales (ej.: 1490).';
@@ -70,7 +74,8 @@ function validarProducto(body, opciones, imagenes) {
   else if (datos.etiqueta.length > LARGO.etiqueta) errores.etiqueta = `La descripción corta puede tener hasta ${LARGO.etiqueta} caracteres.`;
   if (datos.descripcionLarga.length > LARGO.descripcionLarga) errores.descripcionLarga = `La descripción puede tener hasta ${LARGO.descripcionLarga} caracteres.`;
 
-  if (!imagenes.includes(datos.imagen)) errores.imagen = 'Elige la imagen del producto.';
+  if (errorImagen) errores.imagen = errorImagen;
+  else if (!archivo && !imagenes.includes(datos.imagen)) errores.imagen = 'Sube una imagen o elige una existente.';
 
   if (Number.isNaN(datos.stockInicial)) errores.stockInicial = 'El stock debe ser un número entero.';
   else if (datos.stockInicial < 0) errores.stockInicial = 'El stock no puede ser negativo.';
@@ -78,6 +83,26 @@ function validarProducto(body, opciones, imagenes) {
   else if (datos.stockInicial > 0 && !existe(opciones.sucursales, datos.idSucursal)) errores.idSucursal = 'Elige la sucursal donde queda el stock.';
 
   return { datos, errores };
+}
+
+async function guardarImagen(req) {
+  if (!req.file) return null;
+  await fs.writeFile(path.join(CARPETA_IMAGENES, req.file.filename), req.file.buffer, { flag: 'wx' });
+  return req.file.filename;
+}
+
+async function limpiarImagen(archivo) {
+  if (!archivo) return;
+  await fs.unlink(path.join(CARPETA_IMAGENES, archivo)).catch(error => {
+    if (error.code !== 'ENOENT') console.warn('No se pudo limpiar una imagen de producto sin guardar.');
+  });
+}
+
+function pedirImagenDeNuevo(req, datos, errores) {
+  if (req.file) {
+    datos.imagen = texto(req.body.imagen);
+    errores.imagen = errores.imagen || 'Después de corregir los campos, vuelve a seleccionar la imagen.';
+  }
 }
 
 // Junta lo que necesita la vista del formulario (listas desplegables + imágenes) y la muestra.
@@ -125,25 +150,32 @@ exports.mostrarFormulario = async (req, res, next) => {
 
 // POST /admin/productos -> valida y, si todo está bien, pide al modelo crear el producto.
 exports.crear = async (req, res, next) => {
+  let imagenGuardada = null;
   try {
     const [opciones, imagenes] = await Promise.all([Producto.opcionesFormulario(), imagenesDisponibles()]);
-    const { datos, errores } = validarProducto(req.body, opciones, imagenes);
+    const { datos, errores } = validarProducto(req.body, opciones, imagenes, req.file, req.errorImagen);
 
     // Criterio 2 de HU-036: un SKU repetido se rechaza indicando el campo.
     if (!errores.sku && (await Producto.skuExiste(datos.sku))) errores.sku = 'Ya existe un producto con este SKU.';
     if (Object.keys(errores).length > 0) {
+      pedirImagenDeNuevo(req, datos, errores);
       return res.status(400).render('admin/producto-nuevo', { opciones, imagenes, datos, errores, producto: null });
     }
 
+    imagenGuardada = await guardarImagen(req);
     const id = await Producto.crear(datos, req.session.usuario.id);
+    imagenGuardada = null;
     // Se redirige (patrón PRG) para que recargar la página no cree el producto dos veces.
     res.redirect('/admin/productos?creado=' + id);
   } catch (err) {
+    await limpiarImagen(imagenGuardada);
     // Si dos administradores guardan el mismo SKU a la vez, lo detiene la base (UNIQUE).
     if (err.code === 'ER_DUP_ENTRY') {
       try {
         const { datos } = validarProducto(req.body, await Producto.opcionesFormulario(), await imagenesDisponibles());
-        return await mostrarVistaFormulario(res, 400, datos, { sku: 'Ya existe un producto con este SKU.' });
+        const errores = { sku: 'Ya existe un producto con este SKU.' };
+        pedirImagenDeNuevo(req, datos, errores);
+        return await mostrarVistaFormulario(res, 400, datos, errores);
       } catch (e) {
         return next(e);
       }
@@ -170,19 +202,24 @@ exports.mostrarEdicion = async (req, res, next) => {
 // POST /admin/productos/:id -> valida igual que al crear y guarda los cambios.
 // El SKU no se edita (se usa el que ya tiene) y el stock se ajusta en /admin/stock (HU-038).
 exports.guardarEdicion = async (req, res, next) => {
+  let imagenGuardada = null;
   try {
     const producto = await Producto.obtenerParaEditar(Number(req.params.id));
     if (!producto) return res.status(404).render('errores/no-encontrado', { mensaje: 'Ese producto no existe.' });
 
     const [opciones, imagenes] = await Promise.all([Producto.opcionesFormulario(), imagenesDisponibles()]);
-    const { datos, errores } = validarProducto({ ...req.body, sku: producto.sku, stockInicial: '' }, opciones, imagenes);
+    const { datos, errores } = validarProducto({ ...req.body, sku: producto.sku, stockInicial: '' }, opciones, imagenes, req.file, req.errorImagen);
     if (Object.keys(errores).length > 0) {
+      pedirImagenDeNuevo(req, datos, errores);
       return res.status(400).render('admin/producto-nuevo', { opciones, imagenes, datos, errores, producto });
     }
 
+    imagenGuardada = await guardarImagen(req);
     await Producto.actualizar(producto.id, datos);
+    imagenGuardada = null;
     res.redirect('/admin/productos?editado=' + producto.id);
   } catch (err) {
+    await limpiarImagen(imagenGuardada);
     next(err);
   }
 };
