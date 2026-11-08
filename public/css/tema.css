@@ -52,25 +52,14 @@ html[data-tema="oscuro"] {
   --admin-info-border: var(--line);
 }
 
-[data-tema="oscuro"] :is(.home-page, .account-page) { background: var(--page-bg); }
-[data-tema="oscuro"] .hero {
-  background-color: #041321;
-  background-image: url(/img/marca/aquaroma-noche.png);
-}
-
-[data-tema="oscuro"] .hero-text {
-  --green: #267534;
-  max-width: min(520px, 52%);
-  text-shadow: 0 2px 8px #041321;
-}
-
-@media (max-width: 480px) {
-  [data-tema="oscuro"] .hero-text {
-    max-width: 290px;
-    padding: 16px;
-    border-radius: 14px;
-    background: #041321d9;
-  }
+[data-tema="oscuro"] .account-page { background: var(--page-bg); }
+[data-tema="oscuro"] .home-page {
+  --hero-bg: #041321;
+  --hero-tinta: #041321eb;
+  --hero-image: url(/img/marca/aquaroma-noche.png);
+  --hero-top: #001020;
+  --hero-lead: #d3e5f5;
+  --hero-accent: var(--green);
 }
 
 [data-tema="oscuro"] :is(
@@ -141,7 +130,7 @@ html[data-tema="oscuro"] {
   border-color: var(--admin-success-border);
 }
 
-[data-tema="oscuro"] :is(.badge.disponible, .card-vendido, .progreso li.hecho .progreso-punto) {
+[data-tema="oscuro"] :is(.badge.disponible, .progreso li.hecho .progreso-punto) {
   background: #236649;
   color: #fff;
 }

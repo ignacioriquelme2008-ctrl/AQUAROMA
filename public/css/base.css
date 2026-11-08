@@ -42,6 +42,7 @@ body {
 
 /* Quita el subrayado por defecto de los enlaces y ayuda a mantener una navegación más limpia. */
 a { text-decoration: none; color: inherit; }
+.container { width: 100%; max-width: 1200px; margin-inline: auto; padding-inline: clamp(16px, 3vw, 32px); }
 /* Contorno visible al moverse con el teclado (Tab). */
 :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
 
@@ -186,20 +187,16 @@ h3 { font-family: var(--font-heading); font-size: 15px; font-weight: 650; color:
 /* Aviso de la última acción del carrito ("se agregó", "solo quedan X unidades"). */
 .aviso-carrito { border-radius: 18px; margin: 14px 0 0; padding: 10px 24px; background: #e8f7ee; border-top: 1px solid #b7e4c7; color: #14532d; font-size: 14px; text-align: center; }
 
-/* Parte derecha del menú: nombre del usuario, "Panel", "Cerrar sesión" o "Iniciar sesión / Registrarse". */
+/* Parte derecha del menú: tema, cuenta y carrito. */
 .nav-acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; }
 .nav-acciones .nav-cuenta { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 22px; border-radius: 999px; background: #075ed7; color: white; font-weight: 600; white-space: nowrap; }
 .nav-acciones .nav-cuenta:hover { background: #084cb0; color: white; }
 .nav-cuenta-icon { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
-.nav-identidad { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
 .nav-avatar { display: inline-grid; place-items: center; flex: 0 0 30px; width: 30px; height: 30px; border-radius: 50%; background: #e0efff; color: var(--blue); font-size: 14px; font-weight: 700; }
 .nav-nombre { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--navy); font-size: 14px; font-weight: 600; }
 .nav-acciones form { margin: 0; }
 .nav-enlace { font: inherit; font-size: 14px; font-weight: 500; color: var(--text-muted); background: none; border: 0; padding: 8px 12px; border-radius: 999px; cursor: pointer; }
 .nav-enlace:hover { color: var(--primary); background: var(--primary-light); }
-/* Enlace "Panel": solo lo ve el administrador (HU-006). */
-.nav-panel { color: var(--navy); font-weight: 600; }
-
 /* Menú de perfil: flota bajo el botón sin desplazar la barra. */
 .nav-perfil { position: relative; }
 .nav-perfil summary { display: flex; align-items: center; gap: 10px; list-style: none; }
@@ -208,8 +205,9 @@ h3 { font-family: var(--font-heading); font-size: 15px; font-weight: 650; color:
 .nav-perfil[open] > summary { color: var(--blue); background: var(--primary-light); }
 .nav-perfil[open] .nav-perfil-flecha { transform: translateY(2px) rotate(225deg); }
 .nav-perfil-opciones { position: absolute; top: calc(100% + 12px); right: 0; z-index: 110; width: 200px; max-width: calc(100vw - 32px); padding: 8px; background: var(--white); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 12px 32px #0b2d6b1c; }
-.nav-perfil-opciones a { display: block; padding: 12px 14px; color: var(--navy); font-size: 14px; font-weight: 500; border-radius: 10px; }
-.nav-perfil-opciones a:hover { color: var(--blue); background: var(--primary-light); }
+.nav-perfil-opciones :is(a, button) { display: block; width: 100%; padding: 12px 14px; color: var(--navy); font: inherit; font-size: 14px; font-weight: 500; text-align: left; background: transparent; border: 0; border-radius: 10px; cursor: pointer; }
+.nav-perfil-opciones :is(a, button):hover { color: var(--blue); background: var(--primary-light); }
+.nav-perfil-opciones form:not(:first-child) { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--line); }
 
 /* ===== Tarjeta centrada ===== */
 /* Caja blanca al centro de la página. La usan el login y el registro (usuarios.css agrega sus campos)

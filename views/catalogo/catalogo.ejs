@@ -3,16 +3,16 @@
 <head>
   <%- include('../partials/head', { titulo: 'Catálogo | AQUAROMA', estilos: ['catalogo'] }) %>
 </head>
-<body>
-  <%- include('../partials/navbar') %>
+<body class="catalogo-page">
+  <div class="container catalogo-nav">
+    <%- include('../partials/navbar') %>
+  </div>
 
-  <div class="wrap">
+  <main class="container catalogo">
+    <h1>Nuestro Catálogo</h1>
+    <p class="intro">Descubre nuestras aguas funcionales con ingredientes naturales.</p>
     <div class="catalogo-cabecera">
-      <div class="catalogo-titulo">
-        <h1>Nuestro Catálogo</h1>
-        <p class="intro">Descubre nuestras aguas funcionales con ingredientes naturales.</p>
-        <p class="count" role="status">Mostrando <%= productos.length %> <%= productos.length === 1 ? 'producto' : 'productos' %></p>
-      </div>
+      <p class="count" role="status">Mostrando <%= productos.length %> <%= productos.length === 1 ? 'producto' : 'productos' %></p>
       <details class="catalogo-filtros">
         <summary>Filtros <% const filtrosActivos = filtros.aromas.length + filtros.tipos.length; %><% if (filtrosActivos) { %><span class="filtros-cantidad" aria-label="<%= filtrosActivos %> filtros activos"><%= filtrosActivos %></span><% } %><span class="filtros-flecha" aria-hidden="true"></span></summary>
         <%# Los filtros se consultan al cambiar cada opción y conservan las selecciones en la URL. %>
@@ -45,44 +45,41 @@
         </form>
       </details>
     </div>
-    <div class="layout">
-      <section>
-        <div class="grid">
-          <% const colores = { limon: 't-yellow', menta: 't-green', frutilla: 't-red', pepino: 't-green', durazno: 't-orange', arandano: 't-purple',
-                               mango: 't-orange', 'frutos-rojos': 't-red', 'hibisco-y-rosa': 't-purple', 'limon-y-menta': 't-yellow', 'pepino-y-limon': 't-green' }; %>
-          <!-- Cada tarjeta muestra los datos del modelo, incluida la imagen y la disponibilidad del producto. -->
-          <% productos.forEach(p => { %>
-            <article class="item">
-              <%# HU-016: la imagen y el nombre llevan a la ficha de detalle del producto. %>
-              <a href="/catalogo/<%= p.id %>" class="item-enlace">
-                <div class="img">
-                  <img src="<%= imagenProducto(p.imagen) %>" alt="<%= p.nombre %>">
-                  <%# HU-017: cada tarjeta indica si el producto está "Disponible" o "Agotado". %>
-                  <% if (p.stock === 0) { %><span class="badge out">Agotado</span><% } else { %><span class="badge disponible">Disponible</span><% } %>
-                </div>
-                <h3><%= p.nombre %></h3>
-              </a>
-              <p class="price"><%= clp(p.precio) %></p>
-              <span class="tag <%= colores[p.aromaSlug] %>"><%= p.etiqueta %></span>
-              <% if (p.stock > 0) { %>
-                <%# HU-022: el botón envía el id al controlador; el nombre y el precio los pone el servidor. %>
-                <form method="post" action="/carrito/agregar" class="buy-form">
-                  <input type="hidden" name="id" value="<%= p.id %>">
-                  <input type="hidden" name="volver" value="<%= volver %>">
-                  <button type="submit" class="buy">Agregar al carrito</button>
-                </form>
-              <% } else { %>
-                <button class="buy" disabled>Agotado</button>
-              <% } %>
-            </article>
-          <% }) %>
-        </div>
-        <% if (productos.length === 0) { %>
-          <p class="empty">No se encontraron productos con estos filtros. Prueba quitar alguno.</p>
-        <% } %>
-      </section>
-    </div>
-  </div>
+    <section class="layout" aria-label="Productos">
+      <div class="grid">
+        <% const colores = { limon: 't-yellow', menta: 't-green', frutilla: 't-red', pepino: 't-green', durazno: 't-orange', arandano: 't-purple',
+                             mango: 't-orange', 'frutos-rojos': 't-red', 'hibisco-y-rosa': 't-purple', 'limon-y-menta': 't-yellow', 'pepino-y-limon': 't-green' }; %>
+        <!-- Cada tarjeta muestra los datos del modelo, incluida la imagen y la disponibilidad del producto. -->
+        <% productos.forEach(p => { const disponible = p.stock > 0; %>
+          <article class="item<%= disponible ? '' : ' item--agotado' %>">
+            <%# HU-016: la imagen y el nombre llevan a la ficha de detalle del producto. %>
+            <a href="/catalogo/<%= p.id %>" class="item-enlace">
+              <div class="img">
+                <img src="<%= imagenProducto(p.imagen) %>" alt="<%= p.nombre %>">
+                <% if (!disponible) { %><span class="badge out">Agotado</span><% } %>
+              </div>
+              <h3><%= p.nombre %></h3>
+            </a>
+            <span class="tag <%= colores[p.aromaSlug] %>"><%= p.etiqueta %></span>
+            <p class="price"><%= clp(p.precio) %></p>
+            <% if (disponible) { %>
+              <%# HU-022: el botón envía el id al controlador; el nombre y el precio los pone el servidor. %>
+              <form method="post" action="/carrito/agregar" class="buy-form">
+                <input type="hidden" name="id" value="<%= p.id %>">
+                <input type="hidden" name="volver" value="<%= volver %>">
+                <button type="submit" class="buy">Agregar al carrito</button>
+              </form>
+            <% } else { %>
+              <button type="button" class="buy" disabled>Agotado</button>
+            <% } %>
+          </article>
+        <% }) %>
+      </div>
+      <% if (productos.length === 0) { %>
+        <p class="empty">No se encontraron productos con estos filtros. Prueba quitar alguno.</p>
+      <% } %>
+    </section>
+  </main>
   <script src="/js/catalogo-filtros.js" defer></script>
 </body>
 </html>

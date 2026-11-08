@@ -3,57 +3,216 @@
    Páginas: views/inicio/inicio.ejs (HU-008) y views/inicio/nosotros.ejs (HU-010).
    ===================================================================== */
 
-/* El espacio que rodea la barra comparte el azul de la portada. */
-.home-page { background: #cfe6f5; }
-.home-page .hero { margin-top: 0; }
-.home-page .aromas { background: var(--page-bg); max-width: none; }
-.home-page .aromas > * { max-width: 1012px; margin-left: auto; margin-right: auto; }
+/* ===== Portada ===== */
+.home-page {
+  --hero-bg: #cfe6f5;
+  --hero-tinta: #e2f3fbeb;
+  --hero-image: url(/img/marca/AQUAROMA_1920px.png);
+  --hero-top: linear-gradient(90deg, #d9edfa, #dff2fc 22%, #d8edfb 70%, #abd7f0 90%, #87c2e3);
+  --hero-lead: #18384e;
+  --hero-accent: #267534;
+  background: var(--hero-bg);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr;
+}
 
-/* ===== Portada (hero) ===== */
-/* La sección principal tiene una imagen de fondo y un texto grande para presentar la marca al entrar. */
+.home-nav {
+  grid-area: 1 / 1;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  align-self: start;
+  padding-block: 16px;
+}
+
+.home-nav .navbar {
+  position: relative;
+  top: auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+.home-nav .nav-acciones .nav-cuenta {
+  background: var(--primary-light);
+  color: var(--navy);
+}
+
+.home-nav .nav-acciones .nav-cuenta:hover { background: var(--surface-soft); }
+
+.home-page main {
+  grid-area: 2 / 1 / 4 / 2;
+  display: grid;
+  grid-template-rows: subgrid;
+  min-width: 0;
+}
+
 .hero {
-  margin-top: 24px;
-  min-height: 480px;
-  background: #cfe6f5 url(/img/marca/AQUAROMA_1920px.png) right center/cover no-repeat;
+  --hero-image-gap: clamp(12px, 1.5vw, 24px);
+  position: relative;
   display: flex;
   align-items: center;
-  padding: 40px 4vw;
+  min-height: calc(max(480px, 34.5vw) + var(--hero-image-gap));
+  padding-block: 40px;
 }
-.hero-text { max-width: 520px; }
-.hero h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.05; color: var(--navy); font-weight: 800; margin-bottom: 22px; }
-.lead { font-size: 18px; line-height: 1.6; margin-bottom: 28px; }
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: var(--hero-image-gap) 0 0;
+  background: var(--hero-image) right center/cover no-repeat;
+  mask-image: linear-gradient(transparent, #000 12px);
+  pointer-events: none;
+}
+
+.hero > .container {
+  position: relative;
+  max-width: 1360px;
+  padding-inline: clamp(16px, 2vw, 28px);
+}
+
+@media (min-width: 861px) {
+  .home-page {
+    background: linear-gradient(var(--hero-bg), transparent 140px), var(--hero-top);
+  }
+  .hero > .container {
+    max-width: 1320px;
+    padding-inline: clamp(16px, 3vw, 36px);
+  }
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 48px;
+  background: linear-gradient(transparent, var(--page-bg));
+  pointer-events: none;
+}
+
+.hero-text { max-width: min(49%, 37rem); }
+.hero-text .eyebrow { color: var(--hero-accent); font-weight: 700; }
+.hero h1 {
+  font-size: clamp(2.25rem, 5.05vw, 4.6rem);
+  line-height: 1.04;
+  font-weight: 800;
+  padding-bottom: 0;
+  margin-bottom: 20px;
+}
+.hero h1::after { content: none; }
+.hero h1 span { display: block; }
+.hero .lead { max-width: 43ch; color: var(--hero-lead); font-size: clamp(1.125rem, 1.4vw, 1.25rem); line-height: 1.72; margin-bottom: 28px; }
+
+.hero-acciones { display: flex; flex-wrap: wrap; gap: 12px; }
+.hero-acciones .btn {
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 22px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 16px;
+  transition: background-color .2s ease, border-color .2s ease;
+}
+.hero-acciones .btn-green { background: #267534; }
+.hero-acciones .btn-green:hover { background: #1b5d28; }
+.hero-acciones .hero-secundario { color: var(--navy); border-color: currentColor; }
+.hero-acciones .hero-secundario:hover { background: var(--surface); }
 
 /* ===== Productos destacados ===== */
-.aromas { padding: 36px 4vw 60px; max-width: 1100px; margin: auto; }
-.center { text-align: center; color: var(--blue); }
-.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-.card { position: relative; display: flex; flex-direction: column; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--card-radius); padding: 12px 18px 20px; box-shadow: var(--card-shadow); transition: transform .2s ease, box-shadow .2s ease; }
-.card img {
-  width: 100%;
-  aspect-ratio: 3 / 4;
-  object-fit: contain;
-  background: var(--surface-soft);
-  border-radius: 12px;
+.aromas { padding-block: 20px 64px; background: var(--page-bg); }
+.aromas h2 { font-size: clamp(1.65rem, 3vw, 2.25rem); line-height: 1.2; margin-bottom: 24px; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2vw, 24px); }
+.card {
   display: block;
+  align-self: start;
+  min-width: 0;
+  border-radius: var(--card-radius);
+  transition: transform .2s ease;
 }
-.card h3 { color: var(--navy); font-size: 19px; margin: 18px 0 0; line-height: 1.4; }
-.card p { font-size: 14px; line-height: 1.6; margin: 10px 0 18px; color: var(--text-muted); }
-.card a { color: var(--blue); font-weight: 600; font-size: 14px; margin-top: auto; padding: 10px 0 0; }
+.card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: auto 3 / 4;
+  background: var(--surface-soft);
+  border-radius: inherit;
+  box-shadow: var(--card-shadow);
+  transition: box-shadow .2s ease;
+}
+
+.card-nombre {
+  display: block;
+  margin-top: 10px;
+  color: var(--navy);
+  font-size: 18px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.card:focus-visible img { box-shadow: var(--card-shadow-hover); }
+
+@media (min-width: 861px) {
+  .aromas > .container { max-width: 920px; }
+}
+
 @media (hover: hover) {
-  .card:hover { transform: translateY(-3px); box-shadow: var(--card-shadow-hover); }
+  .card:hover { transform: translateY(-3px); }
+  .card:hover img { box-shadow: var(--card-shadow-hover); }
+  .card:hover .card-nombre { text-decoration: underline; }
 }
-.card:focus-within { box-shadow: var(--card-shadow-hover); }
-@media (prefers-reduced-motion: reduce) {
-  .card { transition: none; }
-  .card:hover { transform: none; }
+
+@media (max-width: 860px) {
+  .hero-text { position: relative; isolation: isolate; max-width: min(100%, 30rem); }
+  .hero-text::before {
+    content: "";
+    position: absolute;
+    inset: -10px;
+    z-index: -1;
+    border-radius: 16px;
+    background: var(--hero-tinta);
+  }
+  .hero h1 { font-size: clamp(2.25rem, 6.4vw, 3.5rem); }
 }
-/* Etiqueta "Más vendido": se calcula con las ventas reales (models/Producto.js, obtenerDestacados). */
-.card-vendido { position: absolute; top: 14px; left: 14px; background: var(--green); color: #fff;
-  font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
 
 @media (max-width: 800px) {
+  .hero::before { background-position: 70% center; }
+}
+
+@media (max-width: 600px) {
+  .home-nav { padding-block: 10px; }
+  .home-nav .navbar { padding: 10px 12px; }
+  .home-nav .nav-inner { gap: 8px 12px; }
+  .home-nav .logo { gap: 6px; padding: 0; }
+  .home-nav .logo-text strong { font-size: 15px; }
+  .home-nav .logo-text span { font-size: 9px; }
+  .home-nav .nav-acciones { gap: 6px; }
+  .home-nav .nav-acciones .nav-cuenta { width: 42px; height: 42px; padding: 0; }
+  .home-nav .nav-cuenta span { position: absolute; clip-path: inset(50%); }
+  .home-nav .nav-perfil summary { gap: 5px; padding-inline: 6px; }
+  .home-nav .nav-nombre { display: none; }
+  .home-nav .navbar .nav-cart { width: 42px; height: 42px; }
+  .home-nav .nav-links { gap: 2px; }
+  .home-nav .nav-links a { padding: 9px 8px; font-size: 13px; }
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 400px) {
   .cards { grid-template-columns: 1fr; }
-  .hero { background-position: 70% center; }
+}
+
+@media (max-width: 360px) {
+  .home-nav .nav-inner { column-gap: 4px; }
+  .home-nav .logo-img { width: 20px; height: 20px; }
+  .home-nav .logo-text strong { font-size: 14px; }
+  .home-nav .nav-acciones { gap: 4px; }
+  .home-nav .nav-links a { padding-inline: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .card img, .hero-acciones .btn { transition: none; }
+  .card:hover { transform: none; }
 }
 
 /* ===== Nosotros ===== */
