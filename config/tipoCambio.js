@@ -1,5 +1,5 @@
-// Tipo de cambio de referencia diario USD/CLP de ExchangeRate-API Open Access.
-// La tasa se mantiene en memoria para evitar llamadas repetidas a cada vista del carrito.
+
+
 const URL = 'https://open.er-api.com/v6/latest/USD';
 const CACHE_MS = 6 * 60 * 60 * 1000;
 const MAX_STALE_MS = 48 * 60 * 60 * 1000;
@@ -38,7 +38,7 @@ async function obtener() {
   return consultando;
 }
 
-// Usa todos los decimales de la tasa; solo redondea el importe final a centavos.
+
 function convertir(clp, tasa) {
   const pesos = Math.round(Number(clp) * 100);
   const cambio = Math.round(Number(tasa) * 1e8);

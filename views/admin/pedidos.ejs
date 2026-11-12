@@ -6,7 +6,7 @@
 <body>
   <%- include('../partials/navbar') %>
 
-  <!-- HU-040: lista de pedidos con filtro por estado. Los datos llegan de adminPedidosController.listar. -->
+
   <main class="admin">
     <%- include('../partials/admin-menu', { activo: 'pedidos' }) %>
 
@@ -14,7 +14,7 @@
     <h1>Pedidos</h1>
     <p class="admin-minimo">El costo de entrega se coordina con la tienda y se muestra en el detalle del pedido.</p>
 
-    <%# Criterio 1 de HU-040: filtro por estado, con la cantidad de pedidos en cada uno. %>
+
     <% const total = Object.values(conteo).reduce((a, n) => a + n, 0); %>
     <nav class="admin-filtros" aria-label="Filtrar por estado">
       <a href="/admin/pedidos" class="admin-filtro <%= estado ? '' : 'activo' %>">Todos (<%= total %>)</a>

@@ -1,16 +1,16 @@
-// Modelo: pedidos de los clientes.
-//   HU-040: el administrador los lista, filtra por estado y los hace avanzar en la secuencia logística.
-//   HU-032: el cliente ve el estado y el seguimiento de cada uno de sus pedidos.
-//   HU-035: el panel de administración resume las ventas y muestra los últimos pedidos.
-//
-// Un pedido en estado 'carrito' es el carrito guardado del cliente (HU-026), no una compra:
-// por eso nunca aparece en estas listas.
+
+
+
+
+
+
+
 const db = require('../config/db');
 
-// Secuencia logística, en orden. Es la barra de progreso del seguimiento (HU-032).
+
 const ESTADOS = ['confirmado', 'pagado', 'preparando', 'enviado', 'entregado'];
 
-// Nombre de cada estado para mostrarlo en pantalla.
+
 const NOMBRES = {
   confirmado: 'Confirmado',
   pagado: 'Pagado',
@@ -20,8 +20,8 @@ const NOMBRES = {
   cancelado: 'Cancelado',
 };
 
-// A qué estados puede pasar un pedido desde cada estado (criterio 2 de HU-040).
-// Se avanza de a un paso; se puede cancelar mientras no haya salido a despacho.
+
+
 const SIGUIENTES = {
   confirmado: ['pagado', 'cancelado'],
   pagado: ['preparando', 'cancelado'],
@@ -31,7 +31,7 @@ const SIGUIENTES = {
   cancelado: [],
 };
 
-// Estados que cuentan como venta (los mismos de "Más vendido" y de vw_ventas_consolidadas).
+
 const ESTADOS_VENTA = ['pagado', 'preparando', 'enviado', 'entregado'];
 const ESTADOS_CANCELABLES = ['confirmado', 'pagado', 'preparando'];
 
@@ -42,7 +42,7 @@ exports.ESTADOS_CANCELABLES = ESTADOS_CANCELABLES;
 
 const aNumero = (f) => ({ ...f, total: Number(f.total), costo_envio: Number(f.costo_envio) });
 
-// Lista de pedidos para el administrador, del más nuevo al más antiguo. estado = null trae todos.
+
 exports.listarAdmin = async (estado = null, limite = 200) => {
   const [filas] = await db.query(
     `SELECT pe.id_pedido AS id, pe.fecha, pe.estado, pe.total, pe.costo_envio,
@@ -59,7 +59,7 @@ exports.listarAdmin = async (estado = null, limite = 200) => {
   return filas.map((f) => ({ ...aNumero(f), unidades: Number(f.unidades) }));
 };
 
-// Cantidad de pedidos en cada estado: { confirmado: 1, pagado: 2, ... } (filtros de HU-040 y gráfico de HU-035).
+
 exports.contarPorEstado = async () => {
   const [filas] = await db.query(
     "SELECT estado, COUNT(*) AS n FROM pedido WHERE estado <> 'carrito' GROUP BY estado"
@@ -69,7 +69,7 @@ exports.contarPorEstado = async () => {
   return conteo;
 };
 
-// Ventas acumuladas (HU-035): suma de los pedidos que cuentan como venta, con su envío.
+
 exports.resumenVentas = async () => {
   const [filas] = await db.query(
     `SELECT COUNT(*) AS pedidos, COALESCE(SUM(total + costo_envio), 0) AS monto
@@ -79,8 +79,8 @@ exports.resumenVentas = async () => {
   return { pedidos: Number(filas[0].pedidos), monto: Number(filas[0].monto) };
 };
 
-// Un pedido con su cliente, sus productos y su despacho.
-// idCliente: si se indica, solo devuelve el pedido si es de ese cliente (HU-032: cada uno ve solo los suyos).
+
+
 exports.obtener = async (id, { idCliente = null } = {}) => {
   const [filas] = await db.query(
     `SELECT pe.id_pedido AS id, pe.id_cliente, pe.fecha, pe.estado, pe.total, pe.costo_envio, pe.observacion,
@@ -115,7 +115,7 @@ exports.obtener = async (id, { idCliente = null } = {}) => {
   );
   pedido.envio = envios[0] || null;
 
-  // HU-030: medio de pago con que se compró (el último registrado para el pedido).
+
   const [pagos] = await db.query(
     `SELECT mp.nombre AS metodo, pa.monto, pa.estado,
             EXISTS (SELECT 1 FROM paypal_checkout pc WHERE pc.id_pago = pa.id_pago) AS verificado_por_paypal
@@ -130,7 +130,7 @@ exports.obtener = async (id, { idCliente = null } = {}) => {
   return pedido;
 };
 
-// Pedidos de un cliente (para su página "Mis pedidos"), del más nuevo al más antiguo.
+
 exports.listarDeCliente = async (idCliente) => {
   const [filas] = await db.query(
     `SELECT pe.id_pedido AS id, pe.fecha, pe.estado, pe.total, pe.costo_envio,
@@ -143,7 +143,7 @@ exports.listarDeCliente = async (idCliente) => {
   return filas.map((f) => ({ ...aNumero(f), unidades: Number(f.unidades) }));
 };
 
-// Error para un cambio de estado que no corresponde (el controlador lo muestra como aviso).
+
 class CambioInvalidoError extends Error {
   constructor(mensaje) {
     super(mensaje);
@@ -152,8 +152,8 @@ class CambioInvalidoError extends Error {
 }
 exports.CambioInvalidoError = CambioInvalidoError;
 
-// HU-034: cancelar, devolver al inventario y dejar una solicitud de reembolso pendiente
-// (sin llamar a un proveedor de pagos ni registrar un reembolso como ejecutado).
+
+
 async function cancelarEnTransaccion(conn, id, idUsuario, idClienteEsperado = null) {
   const [pedidos] = await conn.query(
     `SELECT id_pedido, id_cliente, id_sucursal, estado
@@ -239,13 +239,13 @@ exports.cancelarDeCliente = async (id, idCliente, idUsuario) => {
   }
 };
 
-// Cambia el estado de un pedido (HU-040). Todo en una transacción, con el pedido bloqueado
-// (FOR UPDATE) para que dos administradores no lo cambien a la vez.
-//   - Solo se permite pasar a un estado de SIGUIENTES[estado actual] (criterio 2).
-//   - Al pasar a 'enviado' se guardan la empresa de transporte y el código de seguimiento (criterio 3)
-//     en la tabla envio. Si el pedido aún no tiene envío (lo crea la HU-029 al comprar), se arma con
-//     la dirección principal del cliente.
-//   - El envío sigue al pedido: en preparación, en camino, entregado o cancelado.
+
+
+
+
+
+
+
 exports.historialAdmin = async (id) => {
   const [filas] = await db.query(
     `SELECT estado, nombre_admin AS nombre, fecha FROM pedido_historial_admin

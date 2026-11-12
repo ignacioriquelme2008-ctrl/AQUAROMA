@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <%
-  // Este formulario sirve para CREAR (HU-036) y para EDITAR (HU-037).
-  // producto = el producto que se edita; null o ausente = producto nuevo.
+
+
   const p = locals.producto || null;
 %>
 <head>
@@ -13,23 +13,23 @@
   <%- include('../partials/navbar') %>
 
   <%
-    // datos = lo que escribió el administrador (si hubo errores, el formulario vuelve con todo lleno).
-    // errores = { campo: 'mensaje' }: cada campo con problema se marca en rojo con su mensaje debajo.
+
+
     const d = datos || {};
     const marca = (campo) => errores[campo] ? 'class="campo-error" aria-invalid="true"' : '';
     const aviso = (campo) => errores[campo] ? '<p class="admin-aviso">' + errores[campo].replace(/</g, '&lt;') + '</p>' : '';
     const sel = (valor, id) => Number(valor) === id ? 'selected' : '';
     const hayErrores = Object.keys(errores).length > 0;
   %>
-  <!-- HU-036: crear un producto (POST /admin/productos, adminProductosController.crear).
-       HU-037: editarlo (POST /admin/productos/:id, adminProductosController.guardarEdicion). -->
+
+
   <main class="admin admin-angosto">
     <%- include('../partials/admin-menu', { activo: 'productos' }) %>
     <a href="/admin/productos" class="admin-volver">← Volver a productos</a>
     <p class="eyebrow">Administración</p>
     <h1><%= p ? 'Editar producto' : 'Nuevo producto' %></h1>
     <% if (p) { %>
-      <%# Criterio 1 de HU-037: se guarda y se muestra la fecha de última modificación. %>
+
       <p class="admin-sub">
         SKU <strong><%= p.sku %></strong> · Creado el <%= fechaHora(p.creadoEn) %> ·
         Última modificación: <%= p.actualizadoEn ? fechaHora(p.actualizadoEn) : 'sin cambios desde que se creó' %>
@@ -47,7 +47,7 @@
           <div class="admin-campo">
             <label for="sku">Código SKU</label>
             <% if (p) { %>
-              <%# El SKU no se edita: identifica al producto en los pedidos ya hechos. %>
+
               <input type="text" id="sku" value="<%= p.sku %>" readonly aria-describedby="sku-ayuda">
               <p class="admin-ayuda" id="sku-ayuda">El SKU no se puede cambiar.</p>
             <% } else { %>
@@ -133,7 +133,7 @@
       </fieldset>
 
       <% if (p) { %>
-        <%# Al editar no se cambia el stock aquí: tiene su propia pantalla con motivo y registro (HU-038). %>
+
         <p class="admin-ayuda">El stock de este producto se ajusta en <a href="/admin/stock">Stock por sucursal</a>.</p>
       <% } else { %>
       <fieldset>
@@ -158,7 +158,7 @@
 
       <fieldset>
         <legend>Opciones</legend>
-        <%# Una casilla sin marcar no se envía: el controlador lo entiende como "no". %>
+
         <label class="admin-check"><input type="checkbox" name="esPersonalizable" value="1" <%= d.esPersonalizable ? 'checked' : '' %>> Personalizable (el cliente puede ajustar el sabor y aroma)</label>
         <label class="admin-check"><input type="checkbox" name="activo" value="1" <%= d.activo ? 'checked' : '' %>> Activo (se muestra en la tienda apenas se guarda)</label>
       </fieldset>

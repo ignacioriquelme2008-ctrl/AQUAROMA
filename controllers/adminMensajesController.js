@@ -1,4 +1,4 @@
-// Controlador de lectura de mensajes de contacto en administración (HU-012 y HU-035).
+
 const Mensaje = require('../models/Mensaje');
 
 exports.listar = async (req, res, next) => {

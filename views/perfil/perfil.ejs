@@ -7,20 +7,20 @@
   <%- include('../partials/navbar') %>
 
   <%
-    // Datos que manda el controlador. Los formularios con errores vuelven a mostrar lo escrito.
+
     const datos = locals.datos || {};
     const errores = locals.errores || {};
     const passwordErrores = locals.passwordErrores || {};
     const direccionErrores = locals.direccionErrores || {};
     const datosDir = locals.direccionDatos || {};
     const editando = locals.direccionEditando || null;
-    // HU-021: preparaciones que el cliente guardó con un nombre propio.
+
     const favoritos = locals.favoritos || [];
 
-    // Todas las listas de errores de un formulario, en un arreglo (el objeto es {campo: mensaje}).
+
     const listaErrores = (grupo) => Object.values(grupo || {}).filter(Boolean);
 
-    // Las 16 regiones, igual que en el carrito (HU-029): la dirección se guarda con el mismo texto.
+
     const REGIONES = ['Arica y Parinacota', 'Tarapacá', 'Antofagasta', 'Atacama', 'Coquimbo', 'Valparaíso',
       'Metropolitana', "O'Higgins", 'Maule', 'Ñuble', 'Biobío', 'La Araucanía', 'Los Ríos', 'Los Lagos',
       'Aysén', 'Magallanes'];
@@ -45,10 +45,10 @@
           <%- include('../pedidos/_lista', { pedidos, nombres }) %>
         </section>
       <% } else { %>
-      <%# HU-007 criterio 4: mensaje verde después de cualquier cambio (?ok=datos|password|...). %>
+
       <% if (locals.exito) { %><p class="auth-exito" role="status"><%= exito %></p><% } %>
 
-      <!-- HU-007 criterio 1: nombre, apellido, correo y teléfono. -->
+
       <section class="perfil-bloque">
         <h2>Datos personales</h2>
         <p class="perfil-nota">El correo no se puede cambiar: es con lo que inicias sesión.</p>
@@ -89,7 +89,7 @@
         </form>
       </section>
 
-      <!-- HU-007 criterios 3 y 4: cambiar la contraseña pidiendo la actual. -->
+
       <section class="perfil-bloque">
         <h2>Contraseña</h2>
         <p class="perfil-nota">Para cambiarla necesitas tu contraseña actual.</p>
@@ -120,7 +120,7 @@
             </div>
           </div>
 
-          <!-- La validación real es la del servidor (utils/validaciones.js); esto solo informa. -->
+
           <ul class="auth-reglas">
             <li>Entre 8 y 20 caracteres.</li>
             <li>Al menos una mayúscula, una minúscula, un número y un carácter especial.</li>
@@ -130,7 +130,7 @@
         </form>
       </section>
 
-      <!-- HU-007 criterio 2: direcciones de entrega (ver, agregar, editar, marcar principal y eliminar). -->
+
       <section class="perfil-bloque">
         <h2>Direcciones de entrega</h2>
         <p class="perfil-nota">La dirección principal es la que viene marcada al confirmar un pedido.</p>
@@ -164,7 +164,7 @@
                   </form>
                 </div>
 
-                <!-- Editar: el formulario se abre solo si esta dirección volvió con errores. -->
+
                 <details class="perfil-editar" <%= esEdicion ? 'open' : '' %>>
                   <summary>Editar esta dirección</summary>
                   <form method="post" action="/perfil/direcciones/<%= d.id %>" novalidate>
@@ -194,8 +194,8 @@
         </form>
       </section>
 
-      <!-- HU-021: configuraciones favoritas. Se guardan desde el carrito y aquí se pueden pedir
-           de nuevo o quitar de la lista. -->
+
+
       <section class="perfil-bloque">
         <h2>Mis favoritas</h2>
         <p class="perfil-nota">Tus mezclas guardadas. Puedes pedirlas de nuevo o quitarlas de la lista.</p>

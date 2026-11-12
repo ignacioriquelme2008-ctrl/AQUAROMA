@@ -1,4 +1,4 @@
-// El pedido y su cotización se guardan en el servidor antes de abrir PayPal.
+
 (() => {
   const container = document.getElementById('paypal-button-container');
   const resultado = document.getElementById('paypal-resultado');

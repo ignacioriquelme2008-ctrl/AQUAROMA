@@ -63,8 +63,8 @@
       const firma = elemento => [...elemento.querySelectorAll('label')].map(label => [
         label.querySelector('input').value, label.textContent.trim(),
       ]);
-      // Si una variedad seleccionada deja de existir, conserva su opción para
-      // que el cliente pueda desmarcarla sin perder los demás filtros.
+
+
       grupo.querySelectorAll('input:checked').forEach(input => {
         if (![...nuevo.querySelectorAll('input')].some(opcion => opcion.value === input.value)) {
           const label = input.closest('label').cloneNode(true);
@@ -110,7 +110,7 @@
       const contador = pagina.querySelector('.count');
       const nuevoResumen = pagina.querySelector('.catalogo-filtros summary');
       if (!listado || !contador || !nuevoResumen) throw new Error('Catálogo no disponible');
-      // No reemplaza tarjetas iguales ni interrumpe un clic o el teclado.
+
       if (automatico && (pulsandoProducto || resultados.contains(document.activeElement))) return;
       if (resultados.innerHTML !== listado.innerHTML) resultados.innerHTML = listado.innerHTML;
       if (cuenta.textContent !== contador.textContent) cuenta.textContent = contador.textContent;

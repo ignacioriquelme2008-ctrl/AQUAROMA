@@ -15,7 +15,7 @@
 .confirm.paypal-icon-button:hover:not(:disabled) { background: #f2ba36; }
 .confirm.paypal-icon-button:disabled { background: #e2e8f0; opacity: .65; }
 .paypal-icon-button img { display: block; width: 30px; height: 36px; }
-/* Resumen de pago centrado en la información del cliente. */
+
 .paypal-checkout { max-width: 560px; margin: 24px auto 32px; padding: 28px; border-radius: var(--card-radius); box-shadow: var(--card-shadow); scroll-margin-top: 130px; }
 .paypal-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .paypal-checkout .paypal-orden { margin: 0 0 5px; font-size: 13px; color: var(--text-muted); }

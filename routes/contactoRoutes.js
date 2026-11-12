@@ -1,4 +1,4 @@
-// Rutas públicas del formulario de contacto (HU-012).
+
 const router = require('express').Router();
 const contactoController = require('../controllers/contactoController');
 

@@ -1,11 +1,11 @@
-// Controlador de la sección CARRITO.
-// Toda la lógica del carrito vive aquí (HU-022 a HU-030): la vista solo dibuja lo que el
-// controlador le entrega. El navegador no guarda ni calcula nada.
-//
-//   - Visitante: el carrito se guarda en req.session.carrito (lo maneja este controlador).
-//   - Cliente con sesión (HU-026): el carrito se guarda en su cuenta, en MySQL (models/Carrito).
-//   - Cada cambio es un POST de formulario; al terminar se redirige (patrón PRG), así recargar
-//     la página no repite la acción.
+
+
+
+
+
+
+
+
 const Carrito = require('../models/Carrito');
 const Producto = require('../models/Producto');
 const Direccion = require('../models/Direccion');
@@ -20,9 +20,9 @@ const paypalSandbox = require('./paypalSandboxController');
 const PaypalCheckout = require('../models/PaypalCheckout');
 const db = require('../config/db');
 
-// Largo de cada campo de la dirección, igual que las columnas de la base.
 
-// Ícono y color del círculo de cada aroma (solo presentación de la vista del carrito).
+
+
 const ESTILOS_AROMA = {
   'Limón': ['🍋', '#fef9c3'],
   'Menta': ['🍃', '#e0f3dc'],
@@ -37,12 +37,12 @@ const ESTILOS_AROMA = {
   'Pepino y limón': ['🥒', '#e3f4d9'],
 };
 
-// Después de una acción solo se permite volver a una página interna del sitio.
+
 const rutaSegura = (ruta) => (typeof ruta === 'string' && ruta.startsWith('/') && !ruta.startsWith('//') ? ruta : '');
 
 const idClienteDe = (req) => (req.session.usuario && req.session.usuario.idCliente) || null;
 
-// HU-025: totales del resumen. Los precios incluyen IVA; el costo de entrega queda por definir.
+
 function calcularTotales(items) {
   const subtotal = items.reduce((suma, i) => suma + i.subtotal, 0);
   const unidades = items.reduce((suma, i) => suma + i.qty, 0);
@@ -55,14 +55,14 @@ function calcularTotales(items) {
   };
 }
 
-// Agrega el ícono y el color de cada aroma para que la vista no tenga que decidirlos.
+
 const adornar = (items) => items.map((i) => {
   const [icono, color] = ESTILOS_AROMA[i.aroma] || ['💧', '#e0f2fe'];
   return { ...i, icono, color };
 });
 
-// HU-026: si alguien armó un carrito como visitante y su fusión con la cuenta quedó pendiente
-// (por ejemplo, el login no alcanzó a guardarla), se une la próxima vez que abra el carrito.
+
+
 async function fusionarPendiente(req, idCliente) {
   const pendientes = normalizarItems(req.session.carrito);
   if (pendientes.length === 0) return;
@@ -70,7 +70,7 @@ async function fusionarPendiente(req, idCliente) {
   req.session.carrito = [];
 }
 
-// Devuelve las líneas del carrito actual como [{ id, qty }], sin importar si es de sesión o de cuenta.
+
 async function leerCarrito(req) {
   const idCliente = idClienteDe(req);
   if (idCliente) {
@@ -80,7 +80,7 @@ async function leerCarrito(req) {
   return normalizarItems(req.session.carrito);
 }
 
-// Reemplaza el carrito completo. El controlador ya decidió qué productos y cantidades van.
+
 async function guardarCarrito(req, lineas) {
   const items = normalizarItems(lineas);
   const idCliente = idClienteDe(req);
@@ -91,8 +91,8 @@ async function guardarCarrito(req, lineas) {
   }
 }
 
-// Arma y muestra la página del carrito. Se usa al abrirla y también cuando la confirmación
-// falla, para no perder lo que la persona había elegido (dirección y medio de pago).
+
+
 async function renderCarrito(req, res, { error = null, datos = {}, estado = 200 } = {}) {
   const idCliente = idClienteDe(req);
   const [lineas, direcciones, metodos] = await Promise.all([
@@ -105,8 +105,8 @@ async function renderCarrito(req, res, { error = null, datos = {}, estado = 200 
   if (idCliente && /^\d+$/.test(String(req.query.pagar || ''))) {
     pagoPaypal = await PaypalCheckout.obtener(Number(req.query.pagar), idCliente);
     if (pagoPaypal) {
-      // Son las líneas ya confirmadas y sus precios guardados, no el carrito
-      // nuevo ni el stock que quedó después de reservar este pedido.
+
+
       const pedidoParaPagar = await Pedido.obtener(Number(req.query.pagar), { idCliente });
       if (pedidoParaPagar) pagoPaypal.items = pedidoParaPagar.items;
       else pagoPaypal = null;
@@ -121,8 +121,8 @@ async function renderCarrito(req, res, { error = null, datos = {}, estado = 200 
       console.warn('No se pudo obtener el tipo de cambio para PayPal:', err.message);
     }
   }
-  // HU-027: el límite corresponde al producto completo, aunque haya varias preparaciones
-  // personalizadas del mismo producto (por ejemplo, aromas o intensidades distintos).
+
+
   const unidadesPorProducto = new Map();
   for (const item of items) {
     unidadesPorProducto.set(item.id, (unidadesPorProducto.get(item.id) || 0) + item.qty);
@@ -146,9 +146,9 @@ async function renderCarrito(req, res, { error = null, datos = {}, estado = 200 
   });
 }
 
-// GET /carrito
-// HU-029 y HU-030: la página muestra las direcciones guardadas y los medios de pago activos.
-// Un visitante también puede ver su carrito; la dirección solo se guarda cuando confirma con sesión.
+
+
+
 exports.ver = async (req, res, next) => {
   try {
     await renderCarrito(req, res);
@@ -157,7 +157,7 @@ exports.ver = async (req, res, next) => {
   }
 };
 
-// POST /carrito/agregar -> HU-022. Suma una unidad del producto indicado (o lo crea en el carrito).
+
 exports.agregar = async (req, res, next) => {
   const volver = rutaSegura(req.body.volver) || '/catalogo';
   try {
@@ -219,8 +219,8 @@ exports.agregar = async (req, res, next) => {
   }
 };
 
-// POST /carrito/cantidad -> HU-023. Los botones − / + mandan accion=restar|sumar y la casilla
-// manda accion=fijar con la cantidad escrita. HU-027: nunca se supera el stock disponible.
+
+
 exports.cantidad = async (req, res, next) => {
   try {
     const id = Number(req.body.id);
@@ -245,7 +245,7 @@ exports.cantidad = async (req, res, next) => {
       return res.redirect('/carrito');
     }
 
-    // Bajar a cero (o menos) equivale a eliminar el producto.
+
     if (qty < 1) {
       lineas.splice(indice, 1);
       await guardarCarrito(req, lineas);
@@ -260,8 +260,8 @@ exports.cantidad = async (req, res, next) => {
     ), 0);
     const disponibleParaLinea = Math.max(0, tope - otrasUnidades);
 
-    // Si el stock bajó mientras el carrito estaba guardado, siempre se permite reducir;
-    // cualquier incremento se limita al remanente del producto entre todas sus variantes.
+
+
     if (qty > actual.qty && qty > disponibleParaLinea) {
       if (disponibleParaLinea >= actual.qty) qty = disponibleParaLinea;
       else qty = actual.qty;
@@ -278,7 +278,7 @@ exports.cantidad = async (req, res, next) => {
   }
 };
 
-// POST /carrito/eliminar -> HU-024. Quita el producto del carrito.
+
 exports.eliminar = async (req, res, next) => {
   try {
     const id = Number(req.body.id);
@@ -295,17 +295,17 @@ exports.eliminar = async (req, res, next) => {
 };
 
 
-// POST /carrito/confirmar -> HU-028: confirma la compra y genera la orden.
-// El carrito que se confirma es el guardado en la cuenta: el navegador ya no manda líneas,
-// así nadie puede alterar precios ni cantidades desde afuera.
-// HU-029: recibe la dirección elegida o una nueva. HU-030: recibe el medio de pago.
+
+
+
+
 exports.confirmar = async (req, res, next) => {
   const idCliente = idClienteDe(req);
-  // HU-004: confirmar es una acción privada. Sin sesión se va al login con vuelta al carrito
-  // y, al entrar, el carrito de visitante se fusiona con la cuenta (HU-026).
+
+
   if (!idCliente) return res.redirect('/login?volver=' + encodeURIComponent('/carrito'));
 
-  // Se guarda lo que la persona escribió para poder volver a mostrarlo si algo falla.
+
   const datos = {
     direccion: texto(req.body.direccion).trim(),
     pago: texto(req.body.pago).trim(),
@@ -323,7 +323,7 @@ exports.confirmar = async (req, res, next) => {
 
     const entrega = {};
 
-    // Dirección: una guardada del cliente o una nueva que se escribe en el carrito.
+
     if (datos.direccion && datos.direccion !== 'nueva') {
       const idDireccion = Number(datos.direccion);
       if (!Number.isInteger(idDireccion) || idDireccion <= 0) {
@@ -338,7 +338,7 @@ exports.confirmar = async (req, res, next) => {
       entrega.nuevaDireccion = nueva.datos;
     }
 
-    // Medio de pago: el modelo comprueba además que exista y esté activo.
+
     let idMetodoPago;
     if (datos.pago === 'paypal') {
       if (!paypalSandbox.configuracionPublica().enabled) {
@@ -365,7 +365,7 @@ exports.confirmar = async (req, res, next) => {
     if (entrega.paypalCotizacion) return res.redirect('/carrito?pagar=' + pedido.id + '#pago-paypal');
     return res.redirect(`/pedidos/${pedido.id}/comprobante`);
   } catch (err) {
-    // Los errores de negocio (carrito vacío, stock insuficiente) se muestran en el carrito.
+
     if (!err.status) return next(err);
     try {
       return await renderCarrito(req, res, { error: err.message, datos, estado: err.status });

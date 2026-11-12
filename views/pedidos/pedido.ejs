@@ -6,7 +6,7 @@
 <body>
   <%- include('../partials/navbar') %>
 
-  <!-- HU-032: estado y seguimiento de un pedido del cliente. Datos: pedidosController.ver. -->
+
   <main class="pedidos">
     <a href="/perfil?seccion=pedidos" class="pedidos-volver">← Mis pedidos</a>
     <p class="eyebrow">Seguimiento</p>
@@ -15,12 +15,12 @@
     <% if (avisoCancelacion) { %><p class="pedidos-aviso-cancelacion" role="status"><%= avisoCancelacion %></p><% } %>
 
     <% if (pedido.estado === 'cancelado') { %>
-      <%# Criterio 3: una orden cancelada se indica de forma clara y visible. %>
+
       <div class="pedidos-cancelado" role="alert">
         <strong>Este pedido fue cancelado.</strong> No se despachará. Si tienes dudas, escríbenos.
       </div>
     <% } else { %>
-      <%# Criterio 1: barra de progreso con la secuencia del pedido. %>
+
       <ol class="progreso" aria-label="Avance del pedido">
         <% pasos.forEach((e, n) => { %>
           <li class="<%= n < paso ? 'hecho' : n === paso ? 'actual' : '' %>" <%- n === paso ? 'aria-current="step"' : '' %>>
@@ -32,14 +32,14 @@
     <% } %>
 
     <% if (puedeCancelar) { %>
-      <!-- HU-034: cancelación disponible hasta antes del despacho; el servidor vuelve a validar el estado. -->
+
       <form class="pedidos-cancelar-form" method="post" action="/pedidos/<%= pedido.id %>/cancelar" data-confirmar-cancelacion>
         <button type="submit" class="pedidos-cancelar">Cancelar pedido</button>
         <p>Disponible antes de que el pedido salga a despacho.</p>
       </form>
     <% } %>
 
-    <%# Criterio 2: con el pedido enviado (o ya entregado) se muestran transporte y código de seguimiento. %>
+
     <% if (['enviado', 'entregado'].includes(pedido.estado) && pedido.envio) { %>
       <section class="pedidos-caja pedidos-envio">
         <h2>🚚 Despacho</h2>
@@ -63,7 +63,7 @@
           <tr class="pedidos-total"><td colspan="3" class="num">Total de productos</td><td class="num"><%= clp(pedido.total) %></td></tr>
         </tbody>
       </table>
-      <%# HU-028: el comprobante de la compra se puede volver a ver desde el seguimiento. %>
+
       <a href="/pedidos/<%= pedido.id %>/comprobante" class="pedidos-comprobante">🧾 Ver comprobante de compra</a>
     </section>
 <% if (pedido.estado === 'confirmado' && pedido.pago && pedido.pago.metodo === 'PayPal Sandbox' && pedido.pago.estado === 'pendiente') { %><p><a href="/carrito?pagar=<%= pedido.id %>#pago-paypal">Continuar pago con PayPal</a></p><% } %>

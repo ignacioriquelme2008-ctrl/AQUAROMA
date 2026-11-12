@@ -1,7 +1,7 @@
--- ============================================================
--- BASE DE DATOS FINAL Y NORMALIZADA - AQUAROMA
--- Versión Corregida con Trazabilidad, Triggers y Procedimientos con ROLLBACK
--- ============================================================ --
+
+
+
+
 DROP DATABASE IF EXISTS aquaroma;
 CREATE DATABASE aquaroma
 CHARACTER SET utf8mb4
@@ -9,9 +9,9 @@ COLLATE utf8mb4_unicode_ci;
 
 USE aquaroma;
 
--- ============================================================
--- 1. UBICACIÓN Y DIRECCIÓN (3FN)
--- ============================================================
+
+
+
 CREATE TABLE ubicacion (
     id_ubicacion INT AUTO_INCREMENT PRIMARY KEY,
     region VARCHAR(100) NOT NULL,
@@ -34,9 +34,9 @@ CREATE TABLE direccion (
         ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
--- ============================================================
--- 2. UNIDADES DE MEDIDA
--- ============================================================
+
+
+
 CREATE TABLE unidad_medida (
     id_unidad INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(10) NOT NULL UNIQUE,
@@ -46,9 +46,9 @@ CREATE TABLE unidad_medida (
     CONSTRAINT chk_factor_positivo CHECK (factor_a_base > 0)
 );
 
--- ============================================================
--- 3. INSUMOS Y PROVEEDORES
--- ============================================================
+
+
+
 CREATE TABLE insumo (
     id_insumo INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(120) NOT NULL,
@@ -81,9 +81,9 @@ CREATE TABLE proveedor_insumo (
     FOREIGN KEY (id_insumo) REFERENCES insumo(id_insumo) ON DELETE RESTRICT
 );
 
--- ============================================================
--- 4. COMPONENTES Y PERSONALIZACIÓN
--- ============================================================
+
+
+
 CREATE TABLE componente (
     id_componente INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL UNIQUE,
@@ -106,9 +106,9 @@ CREATE TABLE componente_insumo (
     FOREIGN KEY (id_insumo) REFERENCES insumo(id_insumo) ON DELETE RESTRICT
 );
 
--- ============================================================
--- 5. PRODUCTOS Y FORMULACIONES
--- ============================================================
+
+
+
 CREATE TABLE tipo_agua (
     id_tipo_agua INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL UNIQUE,
@@ -142,7 +142,7 @@ CREATE TABLE producto (
     precio_base DECIMAL(10,2) NOT NULL CHECK (precio_base >= 0),
     es_personalizable BOOLEAN NOT NULL DEFAULT TRUE,
     descripcion TEXT,
-    -- Texto completo que se muestra en la ficha del producto (HU-016). "descripcion" es la etiqueta corta del catálogo.
+
     descripcion_larga TEXT NULL,
     imagen VARCHAR(100) NULL,
     activo BOOLEAN NOT NULL DEFAULT TRUE,
@@ -172,9 +172,9 @@ CREATE TABLE formulacion_insumo (
     FOREIGN KEY (id_insumo) REFERENCES insumo(id_insumo) ON DELETE RESTRICT
 );
 
--- ============================================================
--- 6. SUCURSALES, INVENTARIO Y LOTES
--- ============================================================
+
+
+
 CREATE TABLE sucursal (
     id_sucursal INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -190,8 +190,8 @@ CREATE TABLE inventario (
     id_insumo INT NULL,
     id_producto INT NULL,
     cantidad DECIMAL(12,3) NOT NULL DEFAULT 0 CHECK (cantidad >= 0),
-    -- Umbral de stock bajo de ese producto en esa sucursal (HU-039). Con cantidad <= stock_minimo,
-    -- el panel lo marca como alerta. El administrador lo cambia en /admin/stock.
+
+
     stock_minimo DECIMAL(12,3) NOT NULL DEFAULT 5 CHECK (stock_minimo >= 0),
     FOREIGN KEY (id_sucursal) REFERENCES sucursal(id_sucursal),
     FOREIGN KEY (id_insumo) REFERENCES insumo(id_insumo),
@@ -200,9 +200,9 @@ CREATE TABLE inventario (
     CONSTRAINT uk_inventario_producto UNIQUE (id_sucursal, id_producto)
 );
 
--- ============================================================
--- 7. CLIENTES, USUARIOS, ROLES Y PERMISOS
--- ============================================================
+
+
+
 CREATE TABLE cliente (
     id_cliente INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -235,7 +235,7 @@ CREATE TABLE usuario (
     FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE SET NULL
 );
 
--- HU-005: tokens de recuperación guardados como hash, de un solo uso y con vencimiento.
+
 CREATE TABLE token_recuperacion (
     id_token INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
@@ -275,9 +275,9 @@ CREATE TABLE usuario_rol (
     FOREIGN KEY (id_rol) REFERENCES rol(id_rol) ON DELETE RESTRICT
 );
 
--- ============================================================
--- 8. COMPRAS Y LOTES
--- ============================================================
+
+
+
 CREATE TABLE compra (
     id_compra INT AUTO_INCREMENT PRIMARY KEY,
     id_proveedor INT NOT NULL,
@@ -319,9 +319,9 @@ CREATE TABLE lote_insumo (
     CONSTRAINT uk_lote_codigo UNIQUE (id_insumo, id_sucursal, codigo_lote)
 );
 
--- ============================================================
--- 9. MOVIMIENTOS Y TRANSFERENCIAS
--- ============================================================
+
+
+
 CREATE TABLE transferencia_inventario (
     id_transferencia INT AUTO_INCREMENT PRIMARY KEY,
     id_sucursal_origen INT NOT NULL,
@@ -368,9 +368,9 @@ CREATE TABLE movimiento_inventario (
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
 );
 
--- ============================================================
--- 10. CONFIGURACIÓN DE BEBIDA Y PEDIDOS
--- ============================================================
+
+
+
 CREATE TABLE configuracion_bebida (
     id_configuracion INT AUTO_INCREMENT PRIMARY KEY,
     id_producto INT NOT NULL,
@@ -392,11 +392,11 @@ CREATE TABLE configuracion_componente (
     FOREIGN KEY (id_componente) REFERENCES componente(id_componente) ON DELETE RESTRICT
 );
 
--- HU-021: configuraciones favoritas del cliente.
--- La preparación en sí NO se duplica: ya vive en configuracion_bebida + configuracion_componente
--- (la misma fila que crea el carrito al elegir aroma e intensidad). Aquí solo se guarda el nombre
--- con el que el cliente la bautizó y a quién pertenece.
--- UNIQUE (id_cliente, alias): un cliente no puede tener dos favoritas con el mismo nombre.
+
+
+
+
+
 CREATE TABLE configuracion_favorita (
     id_favorita INT AUTO_INCREMENT PRIMARY KEY,
     id_cliente INT NOT NULL,
@@ -454,9 +454,9 @@ CREATE TABLE detalle_pedido (
     FOREIGN KEY (id_formulacion_aplicada) REFERENCES formulacion(id_formulacion) ON DELETE SET NULL
 );
 
--- ============================================================
--- 11. PRODUCCIÓN
--- ============================================================
+
+
+
 CREATE TABLE orden_produccion (
     id_orden INT AUTO_INCREMENT PRIMARY KEY,
     id_pedido INT NULL,
@@ -482,9 +482,9 @@ CREATE TABLE detalle_orden_produccion (
     FOREIGN KEY (id_configuracion) REFERENCES configuracion_bebida(id_configuracion)
 );
 
--- ============================================================
--- 12. PAGOS, REEMBOLSOS Y ENVÍO
--- ============================================================
+
+
+
 CREATE TABLE metodo_pago (
     id_metodo INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL UNIQUE,
@@ -504,7 +504,7 @@ CREATE TABLE pago (
     FOREIGN KEY (id_metodo) REFERENCES metodo_pago(id_metodo)
 );
 
--- Cotización congelada y referencias de la demo Sandbox vinculadas a un pago real del sistema.
+
 CREATE TABLE IF NOT EXISTS paypal_checkout (
   id_pago INT PRIMARY KEY,
   monto_usd DECIMAL(12,2) NOT NULL,
@@ -528,8 +528,8 @@ CREATE TABLE reembolso (
     FOREIGN KEY (id_usuario_autoriza) REFERENCES usuario(id_usuario)
 );
 
--- HU-034: registra una solicitud de devolución sin marcarla como reembolso ejecutado.
--- El procesamiento real queda pendiente de la integración de pagos (priorizada al final).
+
+
 CREATE TABLE solicitud_reembolso (
     id_solicitud INT AUTO_INCREMENT PRIMARY KEY,
     id_pago INT NOT NULL UNIQUE,
@@ -566,8 +566,8 @@ CREATE TABLE envio (
     )
 );
 
--- Mensajes del formulario de contacto. Los guarda la HU-012 (formulario) y el panel de
--- administración muestra los que no se han leído (HU-035).
+
+
 CREATE TABLE mensaje_contacto (
     id_mensaje INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -578,12 +578,12 @@ CREATE TABLE mensaje_contacto (
     creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- ============================================================
--- 13. TRIGGERS DE INTEGRIDAD Y VALIDACIÓN
--- ============================================================
+
+
+
 DELIMITER //
 
--- Validar exclusividad Insumo o Producto (INSERT)
+
 CREATE TRIGGER trg_inventario_chk_bi
 BEFORE INSERT ON inventario
 FOR EACH ROW
@@ -595,7 +595,7 @@ BEGIN
     END IF;
 END//
 
--- Validar exclusividad Insumo o Producto (UPDATE)
+
 CREATE TRIGGER trg_inventario_chk_bu
 BEFORE UPDATE ON inventario
 FOR EACH ROW
@@ -607,7 +607,7 @@ BEGIN
     END IF;
 END//
 
--- Movimiento: Exclusividad
+
 CREATE TRIGGER trg_movimiento_chk_bi
 BEFORE INSERT ON movimiento_inventario
 FOR EACH ROW
@@ -630,7 +630,7 @@ BEGIN
     END IF;
 END//
 
--- Control de componentes personalizables
+
 CREATE TRIGGER trg_validar_personalizable_bi
 BEFORE INSERT ON configuracion_componente
 FOR EACH ROW
@@ -647,7 +647,7 @@ BEGIN
     END IF;
 END//
 
--- Control de componentes personalizables (UPDATE) --
+
 CREATE TRIGGER trg_validar_personalizable_bu
 BEFORE UPDATE ON configuracion_componente
 FOR EACH ROW
@@ -663,8 +663,8 @@ BEGIN
         SET MESSAGE_TEXT = 'Error: Este producto está marcado como no personalizable.';
     END IF;
 END//
--- Validar monto de reembolsos (INSERT)
--- INSERT y UPDATE validan el estado del pago y limitan la suma de reembolsos; UPDATE excluye la fila editada.
+
+
 CREATE TRIGGER trg_validar_monto_reembolso_bi
 BEFORE INSERT ON reembolso
 FOR EACH ROW
@@ -717,13 +717,13 @@ BEGIN
 END//
 DELIMITER ;
 
--- ============================================================
--- 14. PROCEDIMIENTOS ALMACENADOS (CON MANEJO DE ERRORES Y ROLLBACK)
--- ============================================================
+
+
+
 DELIMITER //
 
--- Completa la orden en una transacción: valida existencias, consume lotes vigentes por FIFO,
--- registra movimientos y productos terminados; si falla un paso, revierte los cambios.
+
+
 CREATE PROCEDURE sp_completar_orden_produccion(
     IN p_id_orden INT,
     IN p_id_usuario INT
@@ -742,7 +742,7 @@ BEGIN
 
     START TRANSACTION;
 
-    -- Bloquear y validar la orden. El handler local distingue el caso sin fila.
+
     BEGIN
         DECLARE v_orden_no_encontrada BOOLEAN DEFAULT FALSE;
         DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_orden_no_encontrada = TRUE;
@@ -767,7 +767,7 @@ BEGIN
     );
     TRUNCATE TABLE tmp_requerimiento;
 
-    -- Agrupar los consumos de la formulación base.
+
     INSERT INTO tmp_requerimiento (id_insumo, cantidad_total)
     SELECT fi.id_insumo, SUM(fi.cantidad * dop.cantidad_a_producir)
     FROM detalle_orden_produccion dop
@@ -777,7 +777,7 @@ BEGIN
     GROUP BY fi.id_insumo
     ON DUPLICATE KEY UPDATE cantidad_total = cantidad_total + VALUES(cantidad_total);
 
-    -- Agregar los consumos de componentes personalizados activos.
+
     INSERT INTO tmp_requerimiento (id_insumo, cantidad_total)
     SELECT ci.id_insumo, SUM(cc.cantidad * ci.cantidad_insumo_por_dosis * dop.cantidad_a_producir)
     FROM detalle_orden_produccion dop
@@ -787,7 +787,7 @@ BEGIN
     GROUP BY ci.id_insumo
     ON DUPLICATE KEY UPDATE cantidad_total = cantidad_total + VALUES(cantidad_total);
 
-    -- Tomar bloqueos antes de validar para evitar consumos concurrentes del mismo stock.
+
     UPDATE inventario i
     JOIN tmp_requerimiento req ON req.id_insumo = i.id_insumo
     SET i.cantidad = i.cantidad
@@ -822,7 +822,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Stock insuficiente en los lotes disponibles y no vencidos.';
     END IF;
 
-    -- Recorrer los insumos y descontar FIFO entre todos los lotes necesarios.
+
     BEGIN
         DECLARE v_req_insumo INT;
         DECLARE v_req_cantidad DECIMAL(12,4);
@@ -889,7 +889,7 @@ BEGIN
         CLOSE cur_req;
     END;
 
-    -- Ingresar los productos terminados y registrar sus movimientos.
+
     BEGIN
         DECLARE v_id_producto INT;
         DECLARE v_cant_producir INT;
@@ -929,9 +929,9 @@ BEGIN
 END//
 DELIMITER ;
 
--- ============================================================
--- 15. DATOS DE PRUEBA (CON LOTES INCLUIDOS)
--- ============================================================
+
+
+
 INSERT INTO ubicacion (region, provincia, comuna, pais) VALUES
 ('Metropolitana', 'Santiago', 'Santiago', 'Chile'),
 ('Metropolitana', 'Santiago', 'Providencia', 'Chile');
@@ -991,7 +991,7 @@ INSERT INTO sucursal (nombre, telefono, id_direccion) VALUES
 ('Aquaroma Santiago', '+56211111111', 1),
 ('Aquaroma Providencia', '+56222222222', 2);
 
--- Cargar Inventario Base
+
 INSERT INTO inventario (id_sucursal, id_insumo, id_producto, cantidad) VALUES
 (1, 1, NULL, 500),
 (1, 2, NULL, 2000),
@@ -1000,7 +1000,7 @@ INSERT INTO inventario (id_sucursal, id_insumo, id_producto, cantidad) VALUES
 (1, 5, NULL, 500),
 (1, NULL, 1, 20);
 
--- Cargar Lotes para permitir consumo (NUEVO)
+
 INSERT INTO lote_insumo (id_insumo, id_sucursal, codigo_lote, fecha_vencimiento, cantidad_inicial, cantidad_actual, estado) VALUES
 (1, 1, 'LT-AGUA-01', '2028-12-31', 500, 500, 'disponible'),
 (2, 1, 'LT-LIMON-01', '2028-12-31', 2000, 2000, 'disponible'),
@@ -1014,15 +1014,15 @@ INSERT INTO cliente (nombre, apellido, telefono, correo) VALUES
 INSERT INTO cliente_direccion (id_cliente, id_direccion, es_principal, alias) VALUES
 (1, 1, TRUE, 'Casa');
 
--- ============================================================
--- CUENTAS DE PRUEBA (solo para desarrollo; cambiarlas antes de publicar el sitio)
---   Rol            | Usuario (correo)    | Contraseña
---   Administrador  | admin@aquaroma.cl   | Admin.2026
---   Cliente        | benjamin@email.cl   | Cliente.2026
--- En la tabla se guarda el HASH bcrypt de cada contraseña, nunca la contraseña en texto plano.
--- ============================================================
--- Para cambiar una contraseña, genera un hash nuevo en la terminal del proyecto y pégalo aquí:
---   node -e "require('bcrypt').hash('NUEVA_CLAVE', 10).then(console.log)"
+
+
+
+
+
+
+
+
+
 INSERT INTO usuario (correo, password_hash, id_cliente) VALUES
 ('admin@aquaroma.cl', '$2b$10$5IfOE6I1bb67q.qye8SytODUILWOUZDY4rE/OirqqrbWV12HR4dzS', NULL),
 ('benjamin@email.cl', '$2b$10$pGT7y1vQUHU0D9WHFM0K9.wpi0LbpTXwAzWoFPPij9G9S0V3LwMIG', 1);
@@ -1034,7 +1034,7 @@ INSERT INTO rol (nombre, descripcion) VALUES
 INSERT INTO usuario_rol (id_usuario, id_rol) VALUES
 (1, 1),
 (2, 2);
--- Permisos por rol (HU-006). Cada historia del admin usará el suyo.
+
 INSERT INTO permiso (nombre, descripcion) VALUES
 ('ver_panel_admin', 'Entrar al panel de administración'),
 ('gestionar_productos', 'Crear, editar y desactivar productos (HU-036, HU-037)'),
@@ -1044,7 +1044,7 @@ INSERT INTO permiso (nombre, descripcion) VALUES
 ('comprar', 'Confirmar pedidos (HU-028)'),
 ('ver_mis_pedidos', 'Ver el historial propio (HU-031)');
 
--- Une cada rol con sus permisos buscando por nombre (así no dependemos de los id).
+
 INSERT INTO rol_permiso (id_rol, id_permiso)
 SELECT r.id_rol, p.id_permiso FROM rol r JOIN permiso p
 WHERE (r.nombre = 'Administrador' AND p.nombre IN ('ver_panel_admin','gestionar_productos','gestionar_stock','gestionar_pedidos','ver_mensajes'))
@@ -1052,7 +1052,7 @@ WHERE (r.nombre = 'Administrador' AND p.nombre IN ('ver_panel_admin','gestionar_
 
 
 
-   
+
 INSERT INTO configuracion_bebida (id_producto, id_cliente, nombre_display, precio_final) VALUES
 (1, 1, 'Aquaroma Limon', 1500);
 
@@ -1082,20 +1082,20 @@ INSERT INTO pago (id_pedido, id_metodo, monto, estado, referencia_externa, fecha
 INSERT INTO envio (id_pedido, calle, numero, comuna, region, codigo_postal, transportista, tracking, estado) VALUES
 (1, 'Av. Principal', '1500', 'Santiago', 'Metropolitana', '8320000', 'Aquaroma Express', 'TRK-001', 'preparando');
 
--- ============================================================
--- PRODUCTOS DEL CATÁLOGO WEB (HU-013, HU-016) Y STOCK INICIAL
--- ============================================================
--- Estos son los productos que se ven en /catalogo. Se crean en 4 pasos:
---   1) tipos de agua  2) aromas (categoria)  3) productos  4) stock en la sucursal 1.
 
--- 1) Tipos de agua. En el catálogo son el filtro "Tipo" (Con gas / Sin gas / Electrolitos).
+
+
+
+
+
+
 INSERT INTO tipo_agua (nombre, descripcion) VALUES
 ('Con gas', 'Agua funcional con gas'),
 ('Sin gas', 'Agua funcional sin gas'),
 ('Electrolitos', 'Agua funcional con electrolitos');
 
--- 2) Aromas. Cada producto tiene uno, y el catálogo arma con ellos los filtros de "Aroma".
---    Los 5 últimos (desde Mango) son los sabores que se agregaron después.
+
+
 INSERT INTO categoria (nombre, descripcion) VALUES
 ('Limón', 'Aroma de limón'),
 ('Menta', 'Aroma de menta'),
@@ -1109,24 +1109,24 @@ INSERT INTO categoria (nombre, descripcion) VALUES
 ('Limón y menta', 'Aroma de limón y menta'),
 ('Pepino y limón', 'Aroma de pepino y limón');
 
--- 3) Productos. En vez de escribir los id a mano (id_tipo_agua = 2, id_categoria = 7...),
---    se arma una tabla temporal "datos" con los NOMBRES y se usan JOIN para buscar el id
---    que corresponde a cada nombre. Así el script no falla si los id cambian.
---    Distribución por tipo de agua:
---      Sin gas:      Limón, Menta, Pepino, Hibisco y rosa, Pepino y limón
---      Con gas:      Frutilla, Arándano, Frutos rojos, Limón y menta
---      Electrolitos: Durazno, Mango
+
+
+
+
+
+
+
 INSERT INTO producto
     (sku, nombre, id_tipo_agua, id_presentacion, id_categoria, precio_base,
      es_personalizable, descripcion, imagen)
--- Columnas que se insertan: los textos salen de "datos" y los id salen de los JOIN de abajo.
--- Todos cuestan $1.490 (precio_base) y se pueden personalizar (es_personalizable = TRUE).
+
+
 SELECT datos.sku, datos.nombre, t.id_tipo_agua, pr.id_presentacion,
-       c.id_categoria, 1490.00, TRUE, datos.descripcion, datos.imagen
+       c.id_categoria, 1200.00, TRUE, datos.descripcion, datos.imagen
 FROM (
-    -- Una fila por producto: SKU (código único), nombre, tipo de agua, aroma,
-    -- descripción corta (la etiqueta de color del catálogo) e imagen (archivo en public/img).
-    -- La primera fila define los nombres de las columnas (AS ...); las demás se unen con UNION ALL.
+
+
+
     SELECT 'AQ-LIM-500' AS sku, 'AQUAROMA Limón' AS nombre,
            'Sin gas' AS tipo, 'Limón' AS categoria,
            'Cítrico refrescante' AS descripcion, 'agua_limon.png' AS imagen
@@ -1140,7 +1140,7 @@ FROM (
            'Electrolitos', 'Durazno', 'Suave y delicado', 'agua_durazno.png'
     UNION ALL SELECT 'AQ-ARA-500', 'AQUAROMA Arándano',
            'Con gas', 'Arándano', 'Antioxidante natural', 'agua_arandano.jpg'
-    -- Sabores agregados después (sus imágenes ya estaban en public/img sin usarse):
+
     UNION ALL SELECT 'AQ-MAN-500', 'AQUAROMA Mango',
            'Electrolitos', 'Mango', 'Tropical y dulce', 'agua_mango.png'
     UNION ALL SELECT 'AQ-FRR-500', 'AQUAROMA Frutos rojos',
@@ -1152,43 +1152,43 @@ FROM (
     UNION ALL SELECT 'AQ-PYL-500', 'AQUAROMA Pepino y limón',
            'Sin gas', 'Pepino y limón', 'Fresco y ligero', 'pepino_y_limon.jpg'
 ) AS datos
--- Busca el id del tipo de agua por su nombre (ej.: 'Sin gas' -> su id_tipo_agua).
+
 JOIN tipo_agua t ON t.nombre = datos.tipo
--- Busca el id del aroma por su nombre (ej.: 'Mango' -> su id_categoria).
+
 JOIN categoria c ON c.nombre = datos.categoria
--- Todos usan la misma presentación: botella de 500 ml (es el "Tamaño" que muestra la ficha).
+
 JOIN presentacion pr ON pr.nombre = 'Botella individual' AND pr.volumen_ml = 500;
 
--- 4) Stock inicial de cada producto en la sucursal 1 (Aquaroma Santiago).
---    Se busca cada producto por su SKU. Con cantidad 0 el producto aparece "Agotado"
---    en el catálogo y en su ficha (Frutilla y Arándano), y su botón de compra se desactiva.
+
+
+
 INSERT INTO inventario (id_sucursal, id_producto, cantidad)
 SELECT 1, p.id_producto, datos.cantidad
 FROM (
     SELECT 'AQ-LIM-500' AS sku, 20.000 AS cantidad
     UNION ALL SELECT 'AQ-MEN-500', 15.000
-    UNION ALL SELECT 'AQ-FRU-500', 0.000     -- agotado
+    UNION ALL SELECT 'AQ-FRU-500', 0.000
     UNION ALL SELECT 'AQ-PEP-500', 12.000
     UNION ALL SELECT 'AQ-DUR-500', 8.000
-    UNION ALL SELECT 'AQ-ARA-500', 0.000     -- agotado
+    UNION ALL SELECT 'AQ-ARA-500', 0.000
     UNION ALL SELECT 'AQ-MAN-500', 18.000
     UNION ALL SELECT 'AQ-FRR-500', 14.000
     UNION ALL SELECT 'AQ-HIB-500', 10.000
     UNION ALL SELECT 'AQ-LYM-500', 16.000
     UNION ALL SELECT 'AQ-PYL-500', 12.000
 ) AS datos
--- Convierte cada SKU en el id_producto que MySQL le asignó en el paso 3.
+
 JOIN producto p ON p.sku = datos.sku;
 
--- ============================================================
--- DESCRIPCIÓN COMPLETA PARA LA FICHA DEL PRODUCTO (HU-016)
--- ============================================================
--- La ficha (/catalogo/<id>) muestra este texto debajo del precio. Se guarda en la columna
--- producto.descripcion_larga; la columna "descripcion" sigue siendo la etiqueta corta del catálogo.
--- CASE elige el texto según el SKU de cada fila (funciona como un "si es este SKU, pon este texto").
--- El WHERE limita el UPDATE a estos 11 productos. Además, MySQL Workbench (en modo seguro) no deja
--- hacer un UPDATE sin un WHERE sobre una columna clave como sku.
--- Para cambiar un texto después:  UPDATE producto SET descripcion_larga = '...' WHERE sku = 'AQ-MAN-500';
+
+
+
+
+
+
+
+
+
 UPDATE producto SET descripcion_larga = CASE sku
     WHEN 'AQ-LIM-500' THEN 'Agua sin gas con el aroma cítrico del limón. Refrescante y ligera, ideal para acompañar las comidas o para hidratarte durante el día.'
     WHEN 'AQ-MEN-500' THEN 'Agua sin gas con aroma a menta fresca. Deja una sensación limpia y refrescante, perfecta después de hacer ejercicio o en los días de calor.'
@@ -1205,30 +1205,30 @@ END
 WHERE sku IN ('AQ-LIM-500','AQ-MEN-500','AQ-FRU-500','AQ-PEP-500','AQ-DUR-500','AQ-ARA-500',
               'AQ-MAN-500','AQ-FRR-500','AQ-HIB-500','AQ-LYM-500','AQ-PYL-500');
 
--- ============================================================
--- VENTAS DE PRUEBA PARA "MÁS VENDIDO" DEL INICIO (HU-008)
--- ============================================================
--- El inicio marca como "Más vendido" al producto activo con más unidades vendidas.
--- Solo cuentan los pedidos en estado pagado, preparando, enviado o entregado
--- (los pedidos en carrito, confirmados o cancelados no son ventas reales).
--- Resultado esperado con estos datos:
---   Menta  = 4 + 2 = 6 unidades  -> "Más vendido"
---   Limón  = 2 unidades
---   Pepino = 0 unidades (sus 10 están en un pedido CANCELADO, que no cuenta)
--- Son datos de PRUEBA: cuando existan compras reales (HU-028) se pueden borrar buscando
--- los pedidos con observacion LIKE 'Pedido de prueba HU-008%'.
 
--- En esta base, cada línea de un pedido apunta a una "configuración de bebida" (el producto
--- con sus posibles personalizaciones), no directo al producto. Por eso primero se crea una
--- configuración base, sin personalizar, para cada producto que se va a vender.
---   id_cliente = NULL y es_plantilla_global = TRUE: no es de un cliente en particular.
---   precio_final = precio_base: sin recargos de personalización.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 INSERT INTO configuracion_bebida (id_producto, id_cliente, nombre_display, precio_final, es_plantilla_global)
 SELECT id_producto, NULL, nombre, precio_base, TRUE FROM producto
 WHERE sku IN ('AQ-MEN-500', 'AQ-LIM-500', 'AQ-PEP-500');
 
--- Guarda en variables (@...) el id de la configuración de cada producto, para usarlo en los
--- pedidos de abajo sin escribir números a mano. LIMIT 1 asegura que se tome un solo valor.
+
+
 SET @cfg_menta  = (SELECT cb.id_configuracion FROM configuracion_bebida cb JOIN producto p ON p.id_producto = cb.id_producto
                    WHERE p.sku = 'AQ-MEN-500' AND cb.es_plantilla_global LIMIT 1);
 SET @cfg_limon  = (SELECT cb.id_configuracion FROM configuracion_bebida cb JOIN producto p ON p.id_producto = cb.id_producto
@@ -1236,47 +1236,47 @@ SET @cfg_limon  = (SELECT cb.id_configuracion FROM configuracion_bebida cb JOIN 
 SET @cfg_pepino = (SELECT cb.id_configuracion FROM configuracion_bebida cb JOIN producto p ON p.id_producto = cb.id_producto
                    WHERE p.sku = 'AQ-PEP-500' AND cb.es_plantilla_global LIMIT 1);
 
--- Pedido 1 (ENTREGADO, sí cuenta): 4 Menta + 2 Limón. Total = 6 x $1.490 = $8.940.
--- Columnas: cliente 1 (Benjamin), sucursal 1, estado, total, costo de envío y una nota.
+
+
 INSERT INTO pedido (id_cliente, id_sucursal, estado, total, costo_envio, observacion) VALUES
 (1, 1, 'entregado', 8940, 0, 'Pedido de prueba HU-008');
--- LAST_INSERT_ID() devuelve el id del pedido recién creado, para colgarle sus líneas.
+
 SET @pedido = LAST_INSERT_ID();
--- Líneas del pedido: (pedido, configuración del producto, cantidad, precio unitario).
--- El subtotal (cantidad x precio) lo calcula MySQL solo: es una columna generada.
+
+
 INSERT INTO detalle_pedido (id_pedido, id_configuracion, cantidad, precio_unitario) VALUES
 (@pedido, @cfg_menta, 4, 1490),
 (@pedido, @cfg_limon, 2, 1490);
 
--- Pedido 2 (PAGADO, sí cuenta): 2 Menta. Total = 2 x $1.490 = $2.980.
+
 INSERT INTO pedido (id_cliente, id_sucursal, estado, total, costo_envio, observacion) VALUES
 (1, 1, 'pagado', 2980, 0, 'Pedido de prueba HU-008');
 SET @pedido = LAST_INSERT_ID();
 INSERT INTO detalle_pedido (id_pedido, id_configuracion, cantidad, precio_unitario) VALUES
 (@pedido, @cfg_menta, 2, 1490);
 
--- Pedido 3 (CANCELADO, NO cuenta): 10 Pepino. Total = 10 x $1.490 = $14.900.
--- Sirve para demostrar que "Más vendido" usa solo ventas reales: si contara, ganaría Pepino.
+
+
 INSERT INTO pedido (id_cliente, id_sucursal, estado, total, costo_envio, observacion) VALUES
 (1, 1, 'cancelado', 14900, 0, 'Pedido de prueba HU-008 (cancelado, no cuenta como venta)');
 SET @pedido = LAST_INSERT_ID();
 INSERT INTO detalle_pedido (id_pedido, id_configuracion, cantidad, precio_unitario) VALUES
 (@pedido, @cfg_pepino, 10, 1490);
 
--- Pedido 4 (CONFIRMADO, todavía no cuenta como venta): 3 Limón. Total = 3 x $1.490 = $4.470.
--- Sirve para probar la gestión de pedidos del administrador (HU-040): es el primer paso de la
--- secuencia confirmado -> pagado -> en preparación -> enviado -> entregado.
+
+
+
 INSERT INTO pedido (id_cliente, id_sucursal, estado, total, costo_envio, observacion) VALUES
 (1, 1, 'confirmado', 4470, 0, 'Pedido de prueba HU-040');
 SET @pedido = LAST_INSERT_ID();
 INSERT INTO detalle_pedido (id_pedido, id_configuracion, cantidad, precio_unitario) VALUES
 (@pedido, @cfg_limon, 3, 1490);
 
--- ============================================================
--- STOCK EN PROVIDENCIA Y STOCK MÍNIMO (HU-038, HU-039)
--- ============================================================
--- La sucursal 2 (Aquaroma Providencia) parte con algunos productos, para que la vista de stock
--- por sucursal (/admin/stock) muestre las dos. Mango queda bajo su mínimo (3 de 5): alerta.
+
+
+
+
+
 INSERT INTO inventario (id_sucursal, id_producto, cantidad)
 SELECT 2, p.id_producto, datos.cantidad
 FROM (
@@ -1285,29 +1285,29 @@ FROM (
     UNION ALL SELECT 'AQ-MAN-500', 3.000
 ) AS datos
 JOIN producto p ON p.sku = datos.sku;
--- Durazno tiene 8 en Santiago: con un mínimo de 10 también aparece como stock bajo.
+
 UPDATE inventario i JOIN producto p ON p.id_producto = i.id_producto
 SET i.stock_minimo = 10
 WHERE p.sku = 'AQ-DUR-500' AND i.id_sucursal = 1;
 
--- ============================================================
--- MENSAJES DE CONTACTO DE PRUEBA (HU-035)
--- ============================================================
--- El panel de administración muestra los mensajes sin leer. Uno ya está leído.
+
+
+
+
 INSERT INTO mensaje_contacto (nombre, correo, asunto, mensaje, leido) VALUES
 ('Camila Rojas', 'camila@email.cl', 'Venta por mayor', 'Hola, ¿venden cajas de 12 botellas para eventos?', FALSE),
 ('Diego Soto', 'diego@email.cl', 'Consulta por envío', '¿Hacen despacho a Maipú?', FALSE),
 ('Valentina Muñoz', 'vale@email.cl', 'Felicitaciones', 'Me encantó el agua de hibisco y rosa.', TRUE);
 
--- Desactiva el producto antiguo de ejemplo "Aquaroma Clasica 500ml" (AQ-001) para que no
--- aparezca en el catálogo ni en el inicio. No se borra porque tiene pedidos y una receta asociados.
+
+
 UPDATE producto SET activo = FALSE WHERE sku = 'AQ-001';
 
--- ============================================================
--- 16. VISTAS OFICIALES DE REPORTE (PUNTOS 49 Y 50 FILTRADOS)
--- ============================================================
 
--- Consolida los pedidos pagados o en curso y separa productos, envío y total facturado.
+
+
+
+
 CREATE VIEW vw_ventas_consolidadas AS
 SELECT
     p.id_pedido,
@@ -1322,7 +1322,7 @@ FROM pedido p
 JOIN cliente c ON p.id_cliente = c.id_cliente
 WHERE p.estado IN ('pagado', 'preparando', 'enviado', 'entregado');
 
--- Resume por cliente sus pedidos válidos y el total gastado.
+
 CREATE VIEW vw_ventas_por_cliente AS
 SELECT
     c.id_cliente,
@@ -1335,7 +1335,7 @@ JOIN pedido p ON c.id_cliente = p.id_cliente
 WHERE p.estado IN ('pagado', 'preparando', 'enviado', 'entregado')
 GROUP BY c.id_cliente, c.nombre, c.apellido;
 
--- Muestra el stock por sucursal y el nombre del insumo o producto asociado.
+
 CREATE VIEW vw_stock_sucursal AS
 SELECT
     s.nombre AS sucursal,
@@ -1347,7 +1347,6 @@ LEFT JOIN insumo ins ON i.id_insumo = ins.id_insumo
 LEFT JOIN producto prod ON i.id_producto = prod.id_producto;
 
 
--- Select de todos los usuarios y su rol --
 
 SELECT
     u.id_usuario,
@@ -1358,3 +1357,36 @@ FROM usuario u
 LEFT JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario
 LEFT JOIN rol r ON r.id_rol = ur.id_rol
 GROUP BY u.id_usuario, u.correo, u.id_cliente;
+
+
+SELECT id_pedido, id_cliente, fecha, estado, total, costo_envio
+FROM pedido
+WHERE estado <> 'carrito'
+ORDER BY fecha DESC, id_pedido DESC;
+
+
+SELECT id_usuario, correo, password_hash
+FROM usuario
+ORDER BY id_usuario;
+
+INSERT INTO categoria (nombre, descripcion) VALUES ('Naranja', 'Aroma de naranja');
+
+INSERT INTO componente (nombre, tipo, unidad_dosificacion, recargo_precio, activo)
+VALUES ('Naranja', 'mixto', 'dosis', 0, TRUE);
+
+INSERT INTO producto (sku, nombre, id_tipo_agua, id_presentacion, id_categoria, precio_base,
+                      es_personalizable, descripcion, descripcion_larga, imagen)
+SELECT 'AQ-NAR-500', 'AQUAROMA Naranja', p.id_tipo_agua, p.id_presentacion, c.id_categoria, 1200.00,
+       TRUE, 'Cítrica y refrescante', 'Agua con aroma a naranja, de sabor cítrico y refrescante.', 'agua_naranja.png'
+FROM producto p
+JOIN categoria c ON c.nombre = 'Naranja'
+WHERE p.sku = 'AQ-LIM-500';
+
+INSERT INTO formulacion (id_producto, version, vigente)
+SELECT id_producto, '1.0', TRUE FROM producto WHERE sku = 'AQ-NAR-500';
+
+INSERT INTO configuracion_bebida (id_producto, id_cliente, nombre_display, precio_final, es_plantilla_global)
+SELECT id_producto, NULL, nombre, precio_base, TRUE FROM producto WHERE sku = 'AQ-NAR-500';
+
+INSERT INTO inventario (id_sucursal, id_producto, cantidad)
+SELECT 1, id_producto, 10 FROM producto WHERE sku = 'AQ-NAR-500';

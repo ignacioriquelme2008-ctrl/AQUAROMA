@@ -3,8 +3,8 @@ const { createHash } = require('node:crypto');
 
 const DURACION_SESION = 7 * 24 * 60 * 60 * 1000;
 
-// Guarda las sesiones fuera del proceso de Node para conservarlas al reiniciar.
-// Solo se guarda el hash del identificador; la cookie sigue siendo HttpOnly.
+
+
 class MysqlSessionStore extends Store {
   constructor(db) {
     super();
@@ -55,7 +55,7 @@ class MysqlSessionStore extends Store {
          ON DUPLICATE KEY UPDATE datos = VALUES(datos), vence = VALUES(vence)`,
         [this.clave(sid), JSON.stringify(sesion), this.vencimiento(sesion)]
       );
-      // Limpieza ocasional, sin tareas en segundo plano ni temporizadores.
+
       if (Date.now() - this.ultimaLimpieza > 60 * 60 * 1000) {
         this.ultimaLimpieza = Date.now();
         void this.db.query('DELETE FROM sesion_web WHERE vence <= NOW(3)').catch(() => {

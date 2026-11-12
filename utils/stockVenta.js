@@ -1,5 +1,5 @@
-// Un pedido sale de una sola sucursal: no se suman existencias de locales
-// diferentes para prometer una cantidad que ninguno puede despachar.
+
+
 const STOCK_POR_PRODUCTO = `
   SELECT i.id_producto, MAX(GREATEST(FLOOR(i.cantidad), 0)) AS stock
   FROM inventario i
@@ -14,8 +14,8 @@ async function buscarSucursalConStock(conn, lineas, preferida = null) {
     necesarias.set(id, (necesarias.get(id) || 0) + Number(linea.cantidad));
   }
   if (!necesarias.size) return null;
-  // Bloquea en un orden estable y mantiene la reserva y el descuento dentro
-  // de la transacción de confirmación, incluso con compras simultáneas.
+
+
   const [filas] = await conn.query(
     `SELECT i.id_sucursal, i.id_producto, i.cantidad
      FROM inventario i

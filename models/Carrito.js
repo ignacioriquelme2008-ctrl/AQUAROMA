@@ -1,13 +1,13 @@
-// Modelo del carrito guardado en la cuenta del cliente (HU-026).
-//
-// No se creó una tabla nueva: se usa la estructura de pedidos que ya tenía la base.
-//   - El carrito activo es un "pedido" del cliente con estado = 'carrito' (uno por cliente).
-//   - Cada producto del carrito es una fila de "detalle_pedido". Esa fila no apunta directo al
-//     producto, sino a su "configuración base" (configuracion_bebida con es_plantilla_global = TRUE),
-//     igual que los pedidos de prueba de la HU-008.
-//
-// La HU-028 confirma la compra cambiando el estado de ese pedido a 'confirmado' (ver confirmar()):
-// el cliente queda sin pedido en estado 'carrito', es decir, con el carrito vacío (HU-026, criterio 3).
+
+
+
+
+
+
+
+
+
+
 const db = require('../config/db');
 const { buscarSucursalConStock } = require('../utils/stockVenta');
 const Direccion = require('./Direccion');
@@ -15,10 +15,10 @@ const MetodoPago = require('./MetodoPago');
 const ventas = require('../config/ventas');
 const { MAX_CANTIDAD } = require('../utils/carrito');
 
-// Busca el carrito activo del cliente y, si no tiene, lo crea. Se usa DENTRO de una transacción.
+
 async function obtenerOCrearCarrito(conn, idCliente) {
-  // "FOR UPDATE" bloquea la fila del cliente hasta que termine la transacción. Si llegan dos
-  // peticiones al mismo tiempo, la segunda espera, y así nunca se crean dos carritos para un cliente.
+
+
   await conn.query('SELECT id_cliente FROM cliente WHERE id_cliente = ? FOR UPDATE', [idCliente]);
 
   const [filas] = await conn.query(
@@ -37,8 +37,8 @@ async function obtenerOCrearCarrito(conn, idCliente) {
   return nuevo.insertId;
 }
 
-// Devuelve el id de la configuración base de un producto. Si el producto todavía no tiene una
-// (por ejemplo, uno creado después por el administrador), se crea con su precio actual.
+
+
 async function configuracionBase(conn, idProducto) {
   const [filas] = await conn.query(
     `SELECT id_configuracion FROM configuracion_bebida
@@ -56,8 +56,8 @@ async function configuracionBase(conn, idProducto) {
   return nueva.insertId;
 }
 
-// Recupera o crea la preparación personalizada del cliente para un aroma seleccionado (HU-020).
-// El precio siempre se calcula aquí desde el precio base; no se confía en valores del navegador.
+
+
 async function configuracionPersonalizada(conn, idCliente, idProducto, idComponente, intensidad, precioBase, nombreProducto) {
   const [[componente]] = await conn.query(
     `SELECT c.id_componente, c.nombre, c.recargo_precio
@@ -102,7 +102,7 @@ async function configuracionPersonalizada(conn, idCliente, idProducto, idCompone
   return { id: nueva.insertId, precio };
 }
 
-// Líneas guardadas del carrito, incluyendo el aroma asociado a la preparación si existe.
+
 async function leerLineas(conn, idPedido) {
   const [filas] = await conn.query(
     `SELECT cb.id_producto AS id,
@@ -121,14 +121,14 @@ async function leerLineas(conn, idPedido) {
   return filas.map((f) => ({ id: f.id, idComponente: f.idComponente || null, intensidad: f.idComponente ? Number(f.intensidad) : null, qty: Number(f.qty) }));
 }
 
-// Reemplaza todas las líneas del carrito por la lista recibida y recalcula el total.
-// Solo se guardan productos activos, con el precio que tienen hoy en la base (no el que mande el navegador).
+
+
 async function escribirLineas(conn, idPedido, idCliente, items) {
   await conn.query('DELETE FROM detalle_pedido WHERE id_pedido = ?', [idPedido]);
 
   let total = 0;
   if (items.length > 0) {
-    // "IN (?)" con una lista: mysql2 la convierte en IN (2, 5, 9).
+
     const [productos] = await conn.query(
       'SELECT id_producto, nombre, precio_base FROM producto WHERE activo = TRUE AND id_producto IN (?)',
       [items.map((i) => i.id)]
@@ -136,7 +136,7 @@ async function escribirLineas(conn, idPedido, idCliente, items) {
     const porId = new Map(productos.map((p) => [p.id_producto, p]));
 
     for (const item of items) {
-      if (!porId.has(item.id)) continue; // producto inexistente o desactivado: no se guarda
+      if (!porId.has(item.id)) continue;
       const producto = porId.get(item.id);
       const precioBase = Number(producto.precio_base);
       const intensidad = item.intensidad || 1;
@@ -152,7 +152,7 @@ async function escribirLineas(conn, idPedido, idCliente, items) {
         idConfiguracion = await configuracionBase(conn, item.id);
       }
       if (!idConfiguracion) continue;
-      // El subtotal (cantidad x precio) lo calcula MySQL solo: es una columna generada.
+
       await conn.query(
         'INSERT INTO detalle_pedido (id_pedido, id_configuracion, cantidad, precio_unitario) VALUES (?, ?, ?, ?)',
         [idPedido, idConfiguracion, item.qty, precio]
@@ -163,7 +163,7 @@ async function escribirLineas(conn, idPedido, idCliente, items) {
   await conn.query('UPDATE pedido SET total = ? WHERE id_pedido = ?', [total, idPedido]);
 }
 
-// Ejecuta "trabajo" dentro de una transacción: si algo falla, no se guarda nada (rollback).
+
 async function enTransaccion(trabajo) {
   const conn = await db.getConnection();
   try {
@@ -175,13 +175,13 @@ async function enTransaccion(trabajo) {
     await conn.rollback();
     throw err;
   } finally {
-    conn.release(); // devuelve la conexión al pool
+    conn.release();
   }
 }
 
-// Carrito del cliente como lista de líneas [{ id, qty }]. Es el formato que usa el controlador
-// para leer, modificar y volver a guardar el carrito (HU-022 a HU-027).
-// Solo incluye productos activos: si el administrador desactiva uno (HU-037), deja de mostrarse.
+
+
+
 exports.obtenerLineas = async (idCliente) => {
   const [filas] = await db.query(
     `SELECT cb.id_producto AS id,
@@ -202,8 +202,8 @@ exports.obtenerLineas = async (idCliente) => {
   return filas.map((f) => ({ id: f.id, idComponente: f.idComponente || null, intensidad: f.idComponente ? Number(f.intensidad) : null, qty: Math.min(Number(f.qty), MAX_CANTIDAD) }));
 };
 
-// HU-022: unidades totales del carrito guardado en la cuenta. La usa el contador del menú
-// (middlewares/carrito.js) para no traer la lista completa en cada página.
+
+
 exports.contar = async (idCliente) => {
   const [[fila]] = await db.query(
     `SELECT COALESCE(SUM(dp.cantidad), 0) AS unidades
@@ -217,16 +217,16 @@ exports.contar = async (idCliente) => {
   return Number(fila.unidades) || 0;
 };
 
-// HU-021: crea (o reutiliza) la preparación personalizada de una bebida fuera del carrito, para
-// guardarla como favorita. Usa la misma función que el carrito, así la favorita apunta a la MISMA
-// fila de "configuracion_bebida" (sin preparaciones ni precios duplicados).
-// Devuelve el id de la configuración, o null si el producto o el aroma no son válidos.
+
+
+
+
 exports.guardarConfiguracionPersonalizada = async (idCliente, { idProducto, idComponente, intensidad, precioBase, nombreProducto }) => {
   return enTransaccion((conn) =>
     configuracionPersonalizada(conn, idCliente, idProducto, idComponente, intensidad, precioBase, nombreProducto));
 };
 
-// Guarda el carrito completo que ya validó el controlador (cada vez que el cliente cambia algo).
+
 exports.guardar = async (idCliente, items) => {
   await enTransaccion(async (conn) => {
     const idPedido = await obtenerOCrearCarrito(conn, idCliente);
@@ -235,12 +235,12 @@ exports.guardar = async (idCliente, items) => {
   return exports.obtenerLineas(idCliente);
 };
 
-// HU-026, criterio 2: une el carrito armado como visitante con el que ya estaba guardado en la cuenta.
-// Si un producto está en los dos, se suman las unidades (sin pasar del tope).
+
+
 exports.fusionar = async (idCliente, itemsVisitante) => {
   await enTransaccion(async (conn) => {
     const idPedido = await obtenerOCrearCarrito(conn, idCliente);
-    const cantidades = new Map(); // una línea por producto y aroma elegido; conserva primero lo guardado.
+    const cantidades = new Map();
     for (const item of [...(await leerLineas(conn, idPedido)), ...itemsVisitante]) {
       const clave = `${item.id}:${item.idComponente || 0}:${item.intensidad || 0}`;
       const anterior = cantidades.get(clave);
@@ -255,8 +255,8 @@ exports.fusionar = async (idCliente, itemsVisitante) => {
   return exports.obtenerLineas(idCliente);
 };
 
-// HU-028: error de confirmación con un mensaje que se le puede mostrar tal cual al cliente
-// (carrito vacío, stock insuficiente). El controlador usa "status" como código HTTP.
+
+
 class ConfirmacionError extends Error {
   constructor(mensaje, status = 409) {
     super(mensaje);
@@ -265,19 +265,19 @@ class ConfirmacionError extends Error {
   }
 }
 
-// HU-028: confirma la compra del carrito.
-// Pasa el pedido de 'carrito' a 'confirmado' y, en la misma transacción:
-//   - guarda las líneas que el cliente tiene en pantalla (criterio 2),
-//   - descuenta el stock de la sucursal y registra el movimiento de inventario (criterio 4).
-// HU-029: exige una dirección de entrega (guardada o nueva) y crea la fila de "envio".
-// HU-030: exige un medio de pago activo y crea la fila de "pago" pendiente.
-// Si algo falla (por ejemplo, ya no hay stock), no se guarda nada y el carrito sigue intacto.
-// Devuelve { id, total, costoEnvio } para mostrar la orden; el costo de entrega queda por definir.
+
+
+
+
+
+
+
+
 exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => {
   return enTransaccion(async (conn) => {
-    // El carrito que se confirma es el que está guardado (el controlador solo manda las líneas
-    // cuando ya las validó). Se guardan primero con las mismas reglas de guardar(): precios y
-    // productos salen de la base.
+
+
+
     let idPedido;
     if (items && items.length > 0) {
       idPedido = await obtenerOCrearCarrito(conn, idCliente);
@@ -293,12 +293,12 @@ exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => 
       idPedido = filas[0].id_pedido;
     }
 
-    // Se conserva la sucursal asignada si puede atender todo el pedido.
+
     const [[pedido]] = await conn.query('SELECT id_sucursal FROM pedido WHERE id_pedido = ?', [idPedido]);
     let idSucursal = pedido && pedido.id_sucursal;
 
-    // HU-029: dirección de entrega. Puede ser una de las guardadas del cliente o una nueva que
-    // se escribe en el carrito. La nueva se guarda en su cuenta y se usa en este mismo pedido.
+
+
     let direccion;
     if (entrega.idDireccion) {
       direccion = await Direccion.obtenerDeClienteEn(conn, idCliente, entrega.idDireccion);
@@ -309,13 +309,13 @@ exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => 
       throw new ConfirmacionError('Elige una dirección de entrega para continuar.', 400);
     }
 
-    // HU-030: el medio de pago tiene que existir y estar activo (el navegador puede mandar cualquier id).
+
     const metodo = await MetodoPago.obtenerActivo(entrega.idMetodoPago, conn);
     if (!metodo) throw new ConfirmacionError('Elige un medio de pago para continuar.', 400);
 
-    // Líneas del carrito con el precio actual (incluido el recargo por dosis adicional, HU-020).
-    // Se bloquean (FOR UPDATE) para que el stock no cambie entre la revisión y el descuento.
-    // Si un producto fue desactivado (HU-037), no se incluye: la página del carrito tampoco lo muestra.
+
+
+
     const [lineas] = await conn.query(
       `SELECT dp.id_detalle, dp.precio_unitario, cb.id_producto, p.nombre, p.precio_base, dp.cantidad,
              (SELECT MAX(cc.cantidad)
@@ -357,14 +357,14 @@ exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => 
       const cantidad = Number(linea.cantidad);
       total += precio * cantidad;
 
-      // El precio del pedido queda congelado al momento de confirmar (el mismo que vio el cliente).
+
       if (Number(linea.precio_unitario) !== precio) {
         await conn.query('UPDATE detalle_pedido SET precio_unitario = ? WHERE id_detalle = ?', [precio, linea.id_detalle]);
       }
 
-      // HU-027: verificación final y descuento atómico. El WHERE cantidad >= ? evita dejar stock
-      // negativo aunque dos clientes confirmen a la vez; si no alcanza, la transacción completa
-      // se revierte y el carrito sigue intacto.
+
+
+
       const [descuento] = await conn.query(
         `UPDATE inventario SET cantidad = cantidad - ?
          WHERE id_sucursal = ? AND id_producto = ? AND cantidad >= ?`,
@@ -383,7 +383,7 @@ exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => 
         );
       }
 
-      // El movimiento deja trazabilidad: quién vendió, desde qué sucursal y para qué pedido (criterio 4).
+
       await conn.query(
         `INSERT INTO movimiento_inventario
            (id_sucursal, id_producto, tipo, cantidad, tipo_origen, id_origen_referencia, id_usuario, observacion)
@@ -392,11 +392,11 @@ exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => 
       );
     }
 
-    // El costo de entrega se coordina con la tienda después de confirmar; no se suma al pago.
+
     const costoEnvio = 0;
 
-    // HU-029: el despacho queda con la dirección copiada al momento de comprar. Si el cliente
-    // cambia después su dirección, el pedido conserva la que se usó para la entrega.
+
+
     await conn.query(
       `INSERT INTO envio (id_pedido, calle, numero, departamento, comuna, region, codigo_postal, referencia, pais, estado)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Chile', 'preparando')`,
@@ -404,8 +404,8 @@ exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => 
        direccion.region, direccion.codigoPostal, direccion.referencia]
     );
 
-    // HU-030: el pago queda pendiente por los productos; la entrega aún no tiene precio definido.
-    // Se aprueba cuando el administrador confirma el pago en el panel (HU-040).
+
+
     const [pagoCreado] = await conn.query(
       `INSERT INTO pago (id_pedido, id_metodo, monto, estado) VALUES (?, ?, ?, 'pendiente')`,
       [idPedido, metodo.id, total]
@@ -419,8 +419,8 @@ exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => 
       );
     }
 
-    // El pedido deja de ser carrito: el cliente queda sin carrito guardado (HU-026, criterio 3).
-    // La fecha pasa a ser la de la compra, no la de la creación del carrito.
+
+
     const [cambio] = await conn.query(
       `UPDATE pedido
        SET estado = 'confirmado', id_sucursal = ?, total = ?, costo_envio = ?, fecha = NOW(),
@@ -428,7 +428,7 @@ exports.confirmar = async (idCliente, idUsuario, items = null, entrega = {}) => 
        WHERE id_pedido = ? AND estado = 'carrito'`,
       [idSucursal, total, costoEnvio, idPedido]
     );
-    // Si otra petición confirmó el mismo carrito primero, esta no cambia nada.
+
     if (cambio.affectedRows === 0) throw new ConfirmacionError('Ese pedido ya fue confirmado.', 409);
 
     return { id: idPedido, total, costoEnvio, metodo: metodo.nombre, direccion };

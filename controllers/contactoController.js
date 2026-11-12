@@ -1,4 +1,4 @@
-// Controlador del formulario público de contacto (HU-012).
+
 const Mensaje = require('../models/Mensaje');
 const { EMAIL_REGEX, texto } = require('../utils/validaciones');
 
@@ -10,7 +10,7 @@ exports.mostrar = (req, res) => {
   res.render('contacto/contacto', { datos: {}, errores: {}, exito });
 };
 
-// Valida siempre en el servidor: required y type=email del HTML son solo ayudas visuales.
+
 exports.enviar = async (req, res, next) => {
   const datos = {
     nombre: texto(req.body.nombre).trim(),

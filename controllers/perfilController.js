@@ -1,7 +1,7 @@
-// Controlador de la sección PERFIL del cliente (HU-007).
-// Muestra y permite cambiar los datos personales, la contraseña y las direcciones de entrega.
-// Toda acción que guarda algo termina en un redirect con ?ok=... (patrón POST + redirect):
-// así al recargar no se reenvía el formulario y se puede mostrar el mensaje verde (criterio 4).
+
+
+
+
 const bcrypt = require('bcrypt');
 const Usuario = require('../models/Usuario');
 const Direccion = require('../models/Direccion');
@@ -12,7 +12,7 @@ const Pedido = require('../models/Pedido');
 const { PASS_REGEX, TEL_REGEX, LARGO_MAX, texto, leerDireccionNueva } = require('../utils/validaciones');
 const { MAX_CANTIDAD } = require('../utils/carrito');
 
-// Texto del mensaje verde según lo que se acaba de guardar.
+
 const EXITOS = {
   datos: 'Guardamos tus datos personales.',
   password: 'Cambiamos tu contraseña.',
@@ -23,15 +23,15 @@ const EXITOS = {
   favoritaEliminada: 'Quitamos esa configuración de tus favoritas.',
 };
 
-// Largo de cliente_direccion.alias (el resto de los campos lo revisa leerDireccionNueva).
+
 const LARGO_ALIAS = 50;
 
-// El id del cliente sale SIEMPRE de la sesión y nunca de un campo del formulario:
-// así nadie puede ver ni editar el perfil de otra persona cambiando un número en la petición.
+
+
 const idClienteDe = (req) => req.session.usuario.idCliente;
 
-// Junta lo que necesita la vista y la dibuja. Se usa en el GET y también cuando un formulario
-// llega con errores: en ese caso con código 400 y los valores que la persona había escrito.
+
+
 async function renderPerfil(req, res, estado, extra = {}) {
   const idCliente = idClienteDe(req);
   const puedeVerPedidos = (req.session.usuario.permisos || []).includes('ver_mis_pedidos');
@@ -62,7 +62,7 @@ async function renderPerfil(req, res, estado, extra = {}) {
   });
 }
 
-// GET /perfil -> criterio 1: nombre, apellido, correo, teléfono y direcciones.
+
 exports.ver = async (req, res, next) => {
   try {
     await renderPerfil(req, res, 200, { exito: EXITOS[texto(req.query.ok)] || null });
@@ -71,13 +71,13 @@ exports.ver = async (req, res, next) => {
   }
 };
 
-// POST /perfil/datos -> criterio 2: guardar los datos personales.
-// El correo no se lee del formulario a propósito (decisión D1): es la identidad de login.
+
+
 exports.guardarDatos = async (req, res, next) => {
   const datos = {
     nombre: texto(req.body.nombre).trim(),
     apellido: texto(req.body.apellido).trim(),
-    // Igual que en el registro: se quitan los espacios para guardar solo los dígitos.
+
     telefono: texto(req.body.telefono).replace(/\s+/g, ''),
   };
   const errores = {};
@@ -95,8 +95,8 @@ exports.guardarDatos = async (req, res, next) => {
     }
 
     await Usuario.actualizarDatos(idClienteDe(req), datos);
-    // El nombre también vive en la sesión (lo usa el saludo del menú). Se actualiza para
-    // que el cambio se vea de inmediato, sin tener que volver a iniciar sesión.
+
+
     req.session.usuario.nombre = datos.nombre;
     res.redirect('/perfil?ok=datos');
   } catch (err) {
@@ -104,8 +104,8 @@ exports.guardarDatos = async (req, res, next) => {
   }
 };
 
-// POST /perfil/password -> criterios 3 y 4.
-// La contraseña actual se compara con bcrypt contra el hash guardado: si no coincide, no se cambia.
+
+
 exports.cambiarPassword = async (req, res, next) => {
   const actual = texto(req.body.actual);
   const nueva = texto(req.body.nueva);
@@ -137,15 +137,15 @@ exports.cambiarPassword = async (req, res, next) => {
   }
 };
 
-// Revisa el alias de una dirección (opcional, pero con tope de largo).
+
 function leerAlias(fuente) {
   const alias = texto(fuente.alias).trim();
   if (alias.length > LARGO_ALIAS) return { error: `El nombre de la dirección puede tener hasta ${LARGO_ALIAS} caracteres.` };
   return { alias: alias || null };
 }
 
-// POST /perfil/direcciones -> criterio 2 (agregar una dirección).
-// La primera dirección del cliente queda como principal; las demás se agregan sin marcar.
+
+
 exports.crearDireccion = async (req, res, next) => {
   const revisada = leerDireccionNueva(req.body);
   const revisadoAlias = leerAlias(req.body);
@@ -169,8 +169,8 @@ exports.crearDireccion = async (req, res, next) => {
   }
 };
 
-// POST /perfil/direcciones/:id -> criterio 2 (editar una dirección guardada).
-// El modelo comprueba que la dirección sea de este cliente antes de tocarla (evita IDOR).
+
+
 exports.editarDireccion = async (req, res, next) => {
   const idDireccion = Number(req.params.id);
   const revisada = leerDireccionNueva(req.body);
@@ -202,7 +202,7 @@ exports.editarDireccion = async (req, res, next) => {
   }
 };
 
-// POST /perfil/direcciones/:id/principal -> deja esa dirección como principal.
+
 exports.marcarPrincipal = async (req, res, next) => {
   try {
     const ok = await Direccion.marcarPrincipal(idClienteDe(req), Number(req.params.id));
@@ -215,8 +215,8 @@ exports.marcarPrincipal = async (req, res, next) => {
   }
 };
 
-// POST /perfil/direcciones/:id/eliminar -> quita la dirección.
-// Si era la principal y quedan otras, el modelo promueve la siguiente automáticamente.
+
+
 exports.eliminarDireccion = async (req, res, next) => {
   try {
     const eliminada = await Direccion.eliminar(idClienteDe(req), Number(req.params.id));
@@ -229,25 +229,25 @@ exports.eliminarDireccion = async (req, res, next) => {
   }
 };
 
-// =====================================================================
-// HU-021: configuraciones favoritas.
-// El botón "Guardar como favorita" vive en el carrito, porque cada línea ya trae el producto,
-// el aroma y la intensidad elegidos.
-// =====================================================================
 
-// Largo de configuracion_favorita.alias.
+
+
+
+
+
+
 const LARGO_FAVORITA = 60;
 
-// Deja un aviso para la próxima página y vuelve al carrito (el mismo mecanismo que usa el carrito
-// para "se agregó" o "solo quedan X unidades"; el menú lo muestra una sola vez).
+
+
 function volverAlCarrito(req, res, mensaje) {
   req.session.avisoCarrito = mensaje;
   return res.redirect('/carrito');
 }
 
-// POST /perfil/favoritos -> criterio 1: guardar la preparación del carrito con un nombre.
+
 exports.crearFavorito = async (req, res, next) => {
-  const alias = texto(req.body.alias).trim().replace(/\s+/g, ' ');   // sin espacios repetidos
+  const alias = texto(req.body.alias).trim().replace(/\s+/g, ' ');
 
   if (!alias) return volverAlCarrito(req, res, 'Ponle un nombre a tu configuración favorita.');
   if (alias.length > LARGO_FAVORITA) {
@@ -259,7 +259,7 @@ exports.crearFavorito = async (req, res, next) => {
     const producto = Number.isInteger(id) && id > 0 ? await Producto.obtenerPorId(id) : null;
     if (!producto) return volverAlCarrito(req, res, 'Ese producto ya no está disponible.');
 
-    // El aroma y la intensidad se validan contra la base, nunca contra lo que manda el navegador.
+
     const idComponente = Number(texto(req.body.idComponente).trim());
     const aroma = Number.isInteger(idComponente) && idComponente > 0
       ? await Producto.obtenerAromaParaProducto(id, idComponente)
@@ -271,7 +271,7 @@ exports.crearFavorito = async (req, res, next) => {
       return volverAlCarrito(req, res, 'Elige una intensidad del aroma entre 1 y 5 dosis.');
     }
 
-    // La preparación se crea (o se reutiliza) con la misma función que usa el carrito.
+
     const configuracion = await Carrito.guardarConfiguracionPersonalizada(idClienteDe(req), {
       idProducto: id,
       idComponente,
@@ -285,7 +285,7 @@ exports.crearFavorito = async (req, res, next) => {
     await Favorito.crear(idClienteDe(req), idConfiguracion, alias);
     return volverAlCarrito(req, res, `Guardaste "${alias}" como favorita. La encuentras en tu perfil.`);
   } catch (err) {
-    // UNIQUE (id_cliente, alias): el cliente ya tiene una favorita con ese nombre.
+
     if (err.code === 'ER_DUP_ENTRY') {
       return volverAlCarrito(req, res, 'Ya tienes una favorita con ese nombre. Elige otro.');
     }
@@ -293,7 +293,7 @@ exports.crearFavorito = async (req, res, next) => {
   }
 };
 
-// POST /perfil/favoritos/:id/eliminar -> criterio 3 (quitar de favoritas).
+
 exports.eliminarFavorito = async (req, res, next) => {
   try {
     const quitada = await Favorito.eliminar(idClienteDe(req), Number(req.params.id));
@@ -306,8 +306,8 @@ exports.eliminarFavorito = async (req, res, next) => {
   }
 };
 
-// POST /perfil/favoritos/:id/carrito -> criterio 3: agregar la favorita al carrito con un clic.
-// Se suman las unidades con las mismas reglas del carrito (stock y tope de 99 por producto).
+
+
 exports.favoritoAlCarrito = async (req, res, next) => {
   try {
     const idCliente = idClienteDe(req);

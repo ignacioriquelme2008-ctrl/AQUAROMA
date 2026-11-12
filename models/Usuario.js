@@ -1,8 +1,8 @@
-// Modelo: consultas SQL de usuarios y clientes
+
 const bcrypt = require('bcrypt');
 const db = require('../config/db');
 
-// ¿Ya existe ese correo? (revisa usuario y cliente)
+
 exports.correoExiste = async (correo) => {
   const [filas] = await db.query(
     `SELECT 1 FROM usuario WHERE correo = ?
@@ -13,9 +13,9 @@ exports.correoExiste = async (correo) => {
   return filas.length > 0;
 };
 
-// Datos para validar el login.
-// HU-006: además trae los roles del usuario en una sola columna, separados por coma
-// (por ejemplo "Administrador" o "Cliente"). GROUP_CONCAT junta varias filas en un texto.
+
+
+
 exports.buscarPorCorreo = async (correo) => {
   const [filas] = await db.query(
     `SELECT u.id_usuario, u.correo, u.password_hash, u.activo AS usuario_activo,
@@ -32,8 +32,8 @@ exports.buscarPorCorreo = async (correo) => {
   return filas[0] || null;
 };
 
-// HU-006: lista de permisos del usuario según sus roles (tablas usuario_rol -> rol_permiso -> permiso).
-// Devuelve un arreglo de nombres, por ejemplo ['gestionar_productos', 'ver_panel_admin'].
+
+
 exports.obtenerPermisos = async (idUsuario) => {
   const [filas] = await db.query(
     `SELECT DISTINCT p.nombre
@@ -47,7 +47,7 @@ exports.obtenerPermisos = async (idUsuario) => {
   return filas.map((f) => f.nombre);
 };
 
-// Crea cliente + usuario + rol dentro de UNA transacción
+
 exports.crear = async ({ nombre, apellido, telefono, correo, password }) => {
   const hash = await bcrypt.hash(password, 10);
   const conn = await db.getConnection();
@@ -67,23 +67,23 @@ exports.crear = async ({ nombre, apellido, telefono, correo, password }) => {
       [usr.insertId, 'Cliente']
     );
 
-    await conn.commit();           // todo salió bien: se guarda
+    await conn.commit();
     return usr.insertId;
   } catch (err) {
-    await conn.rollback();         // algo falló: no se guarda nada
+    await conn.rollback();
     throw err;
   } finally {
-    conn.release();                // devuelve la conexión al pool
+    conn.release();
   }
 };
 
-// Guarda la fecha y hora del último acceso
+
 exports.registrarAcceso = async (idUsuario) => {
   await db.query('UPDATE usuario SET ultimo_acceso = NOW() WHERE id_usuario = ?', [idUsuario]);
 };
 
-// HU-007: datos que el cliente ve en su perfil. El correo se lee de "usuario" (es lo que usa
-// para iniciar sesión) y solo se muestra: cambiarlo obligaría a tocar dos tablas a la vez.
+
+
 exports.obtenerPerfil = async (idUsuario) => {
   const [filas] = await db.query(
     `SELECT u.correo, c.nombre, c.apellido, c.telefono, c.fecha_registro
@@ -95,13 +95,13 @@ exports.obtenerPerfil = async (idUsuario) => {
   return filas[0] || null;
 };
 
-// HU-007: solo el hash. El controlador lo compara con bcrypt antes de dejar cambiar la contraseña.
+
 exports.obtenerPasswordHash = async (idUsuario) => {
   const [[fila]] = await db.query('SELECT password_hash FROM usuario WHERE id_usuario = ?', [idUsuario]);
   return fila ? fila.password_hash : null;
 };
 
-// HU-007: datos personales editables. El correo no se toca a propósito (decisión D1 del plan).
+
 exports.actualizarDatos = async (idCliente, { nombre, apellido, telefono }) => {
   await db.query(
     'UPDATE cliente SET nombre = ?, apellido = ?, telefono = ? WHERE id_cliente = ?',
@@ -109,13 +109,13 @@ exports.actualizarDatos = async (idCliente, { nombre, apellido, telefono }) => {
   );
 };
 
-// HU-007: guarda la contraseña nueva ya hasheada, igual que en el registro (nunca en texto plano).
+
 exports.cambiarPassword = async (idUsuario, password) => {
   const hash = await bcrypt.hash(password, 10);
   await db.query('UPDATE usuario SET password_hash = ? WHERE id_usuario = ?', [hash, idUsuario]);
 };
 
-// HU-005: invalida solicitudes previas y persiste solo el hash del token, nunca el token usable.
+
 exports.crearTokenRecuperacion = async (idUsuario, tokenHash) => {
   await db.query(
     `UPDATE token_recuperacion SET usado_en = NOW()
@@ -129,7 +129,7 @@ exports.crearTokenRecuperacion = async (idUsuario, tokenHash) => {
   );
 };
 
-// HU-005: la consulta no distingue entre expirado, utilizado o inexistente.
+
 exports.validarTokenRecuperacion = async (tokenHash) => {
   const [filas] = await db.query(
     `SELECT tr.id_token, tr.id_usuario
@@ -143,7 +143,7 @@ exports.validarTokenRecuperacion = async (tokenHash) => {
   return filas[0] || null;
 };
 
-// HU-005: consume el token y cambia la clave en una sola transacción (uso único incluso con peticiones simultáneas).
+
 exports.restablecerPassword = async (tokenHash, password) => {
   const hashPassword = await bcrypt.hash(password, 10);
   const conn = await db.getConnection();
@@ -176,7 +176,7 @@ exports.restablecerPassword = async (tokenHash, password) => {
   }
 };
 
-// Devuelve solo datos mínimos para el correo de recuperación; no comparte el hash de contraseña.
+
 exports.buscarParaRecuperacion = async (correo) => {
   const [filas] = await db.query(
     `SELECT u.id_usuario, u.correo, u.activo AS usuario_activo, c.activo AS cliente_activo

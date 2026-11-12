@@ -1,5 +1,5 @@
-// HU-020: refleja en la ficha el recargo de intensidad antes de agregar el producto.
-// El servidor vuelve a calcular el total y nunca confía en este valor visual.
+
+
 (() => {
   const selector = document.getElementById('intensidad-aroma');
   const precio = document.getElementById('precio-personalizado');

@@ -1,7 +1,7 @@
 const Pedido = require('../models/Pedido');
 const correo = require('../config/correo');
 
-// La notificación se intenta después de guardar el pedido y no interrumpe el flujo si falla SMTP.
+
 module.exports = async (id, estado, despacho) => {
   if (!correo.configurado()) return;
   try {

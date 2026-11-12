@@ -23,18 +23,18 @@
         <div <%= modo !== 'login' ? 'hidden' : '' %> data-panel="login">
 <% { %>
     <form class="account-form" id="panel-login" aria-labelledby="tab-login" method="post" action="/login" novalidate>
-      <!-- HU-006: página privada a la que se vuelve después de iniciar sesión (si venía de una). -->
+
       <input type="hidden" name="volver" value="<%= locals.volver || '' %>">
 
 
 
-      <!-- Errores que devuelve el servidor (por ejemplo, correo o contraseña incorrectos).
-           Acepta una lista, un objeto {campo: mensaje} o un solo texto. -->
+
+
       <%
         const e1 = modo === 'login' ? (locals.errores || []) : [];
         const lista = [].concat(Array.isArray(e1) || typeof e1 === 'string' ? e1 : Object.values(e1), modo === 'login' ? (locals.error || []) : []).filter(Boolean);
       %>
-      <%# Mensaje verde después de registrarse (?registrado=1) y aviso cuando viene de una página privada (HU-004). %>
+
       <% if (locals.exito) { %><p class="auth-exito" role="status"><%= exito %></p><% } %>
       <% if (locals.passwordRestablecida) { %><p class="auth-exito" role="status">Tu contraseña fue actualizada. Ya puedes iniciar sesión.</p><% } %>
       <% if (locals.aviso && !lista.length) { %><p class="auth-info" role="status"><%= aviso %></p><% } %>
@@ -66,17 +66,17 @@
       const e1 = modo === 'registro' ? (locals.errores || []) : [];
       const lista = [].concat(Array.isArray(e1) || typeof e1 === 'string' ? e1 : Object.values(e1), modo === 'registro' ? (locals.error || []) : []).filter(Boolean);
       const d = locals.datos || {};
-      // HU-002: errores por campo ({ nombre: 'mensaje', ... }) para resaltar cada campo con problema.
+
       const err = (e1 && typeof e1 === 'object' && !Array.isArray(e1)) ? e1 : {};
       const marca = (campo) => err[campo] ? 'class="campo-error" aria-invalid="true"' : '';
-      // Largo permitido de la contraseña: debe coincidir con la regla del controlador.
+
       const MIN = locals.PASS_MIN || 8, MAX = locals.PASS_MAX || 20;
     %>
     <form class="account-form" id="panel-registro" aria-labelledby="tab-registro" method="post" action="/registro" novalidate>
 
 
 
-      <!-- Errores que devuelve el servidor. Acepta una lista, un objeto {campo: mensaje} o un solo texto. -->
+
       <% if (lista.length) { %>
         <ul class="auth-errores" role="alert">
           <% lista.forEach(e => { %><li><%= e %></li><% }) %>
@@ -112,7 +112,7 @@
         <label for="registro-password">Contraseña</label>
         <input <%- marca('password') %> type="password" id="registro-password" name="password" maxlength="<%= MAX %>" autocomplete="new-password" aria-describedby="reglas" required>
         <% if (err.password) { %><p class="auth-aviso"><%= err.password %></p><% } %>
-        <!-- Requisitos de la contraseña. El servidor es el que valida (controllers/usuariosController.js). -->
+
         <ul class="auth-reglas" id="reglas">
           <li data-regla="largo" data-min="<%= MIN %>" data-max="<%= MAX %>">Entre <%= MIN %> y <%= MAX %> caracteres</li>
           <li data-regla="mayuscula">Una letra mayúscula</li>

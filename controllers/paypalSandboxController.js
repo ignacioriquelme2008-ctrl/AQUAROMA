@@ -46,7 +46,7 @@ async function procesar(req, res, capturar) {
           || unit?.amount?.currency_code !== 'USD' || Number(unit.amount.value) !== Number(pago.monto_usd)) {
         throw error('El importe o la referencia de PayPal no coincide con el pedido.', 409);
       }
-      // GET recupera una captura completada aunque se haya perdido la respuesta anterior.
+
       if (order.status !== 'COMPLETED') {
         order = await paypal.request(`${path}/capture`, 'POST', {}, requestId('capturar', pago.id_pago));
       }

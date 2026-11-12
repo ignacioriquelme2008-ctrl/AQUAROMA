@@ -7,14 +7,14 @@
   <%- include('../partials/navbar') %>
 
   <%
-    // Ayudas para marcar los campos con error (igual que en el formulario de productos).
+
     const marca = (grupo, campo) => grupo.errores[campo] ? 'class="campo-error" aria-invalid="true"' : '';
     const aviso = (grupo, campo) => grupo.errores[campo] ? '<p class="admin-aviso">' + grupo.errores[campo].replace(/</g, '&lt;') + '</p>' : '';
     const sel = (valor, id) => Number(valor) === id ? 'selected' : '';
-    // "productos" = filas de la tabla (puede venir filtrada); "todos" = opciones de los formularios.
+
   %>
-  <!-- HU-038 (stock por sucursal y ajustes) y HU-039 (alertas de stock bajo).
-       Los datos llegan de adminStockController.ver. -->
+
+
   <main class="admin">
     <%- include('../partials/admin-menu', { activo: 'inventario' }) %>
 
@@ -23,7 +23,7 @@
         <p class="eyebrow">Administración</p>
         <h1>Stock por sucursal</h1>
       </div>
-      <%# Criterio 3 de HU-039: filtro rápido "Ver solo stock bajo". %>
+
       <% if (soloBajo) { %>
         <a href="/admin/stock" class="admin-filtro activo">Ver todos los productos</a>
       <% } else { %>
@@ -68,7 +68,7 @@
     <details class="stock-herramientas" id="stock-herramientas" <%= ajuste.datos.idSucursal || minimo.datos.idSucursal || Object.keys(ajuste.errores).length || Object.keys(minimo.errores).length ? 'open' : '' %>>
       <summary>Actualizar stock o cambiar mínimos</summary>
     <div class="admin-dos-columnas">
-      <%# Criterios 2 y 3 de HU-038: ajuste con motivo obligatorio; no se permite quedar en negativo. %>
+
       <form class="admin-form" method="post" action="/admin/stock/ajuste" novalidate>
         <fieldset>
           <legend>Actualizar stock</legend>
@@ -105,7 +105,7 @@
         </fieldset>
       </form>
 
-      <%# HU-039: umbral de alerta por producto y sucursal. %>
+
       <form class="admin-form" method="post" action="/admin/stock/minimo" novalidate>
         <fieldset>
           <legend>Cambiar stock mínimo</legend>
@@ -140,7 +140,7 @@
     </details>
 
     <details class="stock-historial"><summary>Ver últimos movimientos</summary>
-    <%# Registro de los últimos ajustes: quién, cuándo, cuánto y por qué (criterio 2 de HU-038). %>
+
 
     <div class="admin-tabla-scroll"><table class="admin-tabla">
       <thead><tr><th>Fecha</th><th>Producto</th><th>Sucursal</th><th>Movimiento</th><th class="num">Unidades</th><th>Motivo</th><th>Usuario</th></tr></thead>

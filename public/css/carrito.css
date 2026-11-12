@@ -1,17 +1,17 @@
-/* =====================================================================
-   carrito.css: sección CARRITO (HU-022 a HU-026).
-   Página: views/carrito/carrito.ejs.
-   ===================================================================== */
+
+
+
+
 .wrap { max-width: 1400px; margin: auto; padding: 28px 4vw 60px; }
 .sub { margin: 6px 0 20px; font-size: 15px; }
-/* Dos columnas: productos a la izquierda y resumen del pedido a la derecha. */
+
 .carrito-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; margin-top: 20px; }
 .carrito-columna { display: grid; gap: 20px; min-width: 0; }
 .checkout-form { margin: 0; }
 .panel { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
 
-/* ===== Lista de productos ===== */
-/* En escritorio se conserva la fila horizontal; minmax(0, ...) evita que invada el resumen. */
+
+
 .row { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) 120px; gap: 8px; align-items: center; min-width: 0; }
 .head { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 10px 0; border-bottom: 1px solid var(--line); font-weight: 600; }
 .head span:nth-child(n+3) { text-align: center; }
@@ -21,10 +21,10 @@
 .prod strong { display: block; color: var(--navy); font-size: 14px; }
 .prod small { display: block; font-size: 12px; line-height: 1.45; }
 .aroma { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--navy); }
-/* Círculo de color con el ícono del aroma (los elige el controlador, que los entrega a la vista). */
+
 .ic { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none; }
 
-/* Botones − / + y casilla para escribir la cantidad (HU-023). */
+
 .qty { display: flex; align-items: center; justify-content: center; border: 1px solid #d3dbe6; border-radius: 8px; width: fit-content; margin: 0 auto; }
 .qty button { border: 0; background: none; width: 32px; height: 34px; font-size: 18px; cursor: pointer; color: var(--navy); }
 .qty button:hover:not(:disabled) { background: #f1f5fa; }
@@ -35,10 +35,10 @@
 
 .price { min-width: 0; font-size: 18px; font-weight: 700; color: var(--blue); margin: 2px 0 8px; text-align: center; }
 .price b { display: block; font-size: 14px; color: var(--navy); white-space: nowrap; }
-/* HU-027: aviso cuando la cantidad guardada supera el stock que queda. */
+
 .stock-aviso { color: #b45309; font-weight: 600; }
 
-/* ===== Botón "Eliminar" con animación (HU-024) ===== */
+
 .del {
   display: inline-flex;
   position: relative;
@@ -61,10 +61,10 @@
 }
 .del:hover { background: #5b21b6; transform: translateY(-2px); }
 .del:active { background: #2e1065; transform: scale(0.96); }
-/* El botón "Eliminar" va dentro de su propio formulario POST (HU-024). */
+
 .del-form { display: flex; justify-content: center; width: 100%; min-width: 0; margin: 0; }
 
-/* Al eliminar: el botón se achica, la papelera tiembla, se abre la tapa y aparece un ✓ verde. */
+
 .del.is-success { width: 42px; min-width: 42px; padding: 0; animation: eliminar-exito 0.8s ease both; }
 .del.is-success .del-label { display: none; }
 .del.is-success::before { content: "✓"; font-size: 24px; animation: check-in 0.3s 0.5s ease both; }
@@ -105,10 +105,10 @@
 
 .foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding-top: 16px; font-size: 13px; }
 .foot a { color: var(--blue); font-weight: 600; }
-/* Aviso "Tu carrito está vacío". */
+
 .empty { padding: 30px 0; text-align: center; }
 
-/* ===== Resumen del pedido (HU-025) ===== */
+
 dl div { display: flex; justify-content: space-between; padding: 10px 0; font-size: 14px; }
 .free { color: #2f8f3a; font-weight: 600; }
 .total { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 16px; }
@@ -118,16 +118,16 @@ dl div { display: flex; justify-content: space-between; padding: 10px 0; font-si
 .confirm { width: 100%; padding: 14px; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
 .confirm:hover:not(:disabled) { background: #1750b0; }
 .confirm:disabled { background: #c9d3e0; cursor: not-allowed; }
-/* Sin sesión, el botón se reemplaza por un enlace al login con el mismo aspecto. */
+
 .confirm-enlace { display: block; box-sizing: border-box; text-align: center; text-decoration: none; }
-/* HU-028: aviso cuando la confirmación no se pudo completar (carrito vacío, sin stock). */
+
 .confirm-error { margin-top: 12px; background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; border-radius: 8px; padding: 10px 12px; font-size: 14px; }
 .secure { font-size: 12px; margin: 12px 0 16px; }
 .perks { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); padding: 14px 0 0; text-align: center; font-size: 12px; }
 .perks li + li { border-left: 1px solid var(--line); }
 .perks span { display: block; font-size: 20px; margin-bottom: 4px; }
 
-/* ===== Entrega y pago (HU-029 y HU-030) ===== */
+
 .checkout h2 { margin-bottom: 12px; }
 .bloque { border: 0; padding: 0; margin: 0 0 18px; }
 .bloque legend { padding: 0 0 8px; font-size: 14px; font-weight: 700; color: var(--navy); }
@@ -148,7 +148,7 @@ dl div { display: flex; justify-content: space-between; padding: 10px 0; font-si
 .linea { padding: 4px 0; font-size: 13px; color: #64748b; }
 @media (max-width: 640px) { .nueva { grid-template-columns: 1fr; } }
 
-/* En pantallas medianas, el producto ocupa todo el ancho y sus controles pasan a dos columnas. */
+
 @media (max-width: 1150px) {
   .head { display: none; }
   .row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
@@ -161,10 +161,10 @@ dl div { display: flex; justify-content: space-between; padding: 10px 0; font-si
   .carrito-layout { grid-template-columns: 1fr; }
 }
 
-/* =====================================================================
-   HU-021: guardar una preparación del carrito como favorita.
-   Va dentro de la celda del producto y se abre con el resumen, sin JavaScript.
-   ===================================================================== */
+
+
+
+
 .fav-form { margin-top: 8px; }
 .fav-form summary { display: inline-block; cursor: pointer; font-size: 12px; font-weight: 700; color: var(--blue); }
 .fav-form summary:hover { text-decoration: underline; }

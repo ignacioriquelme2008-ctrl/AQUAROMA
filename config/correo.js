@@ -1,4 +1,4 @@
-// HU-005 y HU-033: correo transaccional por SMTP. Los secretos viven solo en .env.
+
 const nodemailer = require('nodemailer');
 
 const configuracion = () => {

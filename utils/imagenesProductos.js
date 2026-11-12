@@ -1,8 +1,8 @@
 const { existsSync } = require('node:fs');
 const path = require('node:path');
 
-// Serie uniforme de las once imágenes actuales. Conserva las originales y
-// permite seguir mostrando normalmente productos que se agreguen después.
+
+
 const imagenesUniformes = new Set([
   'agua_limon.png', 'agua_menta.jpg', 'agua_frutilla.png', 'agua_pepino.png',
   'agua_durazno.png', 'agua_arandano.jpg', 'agua_mango.png', 'agua_frutos_rojos.png',

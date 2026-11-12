@@ -15,7 +15,7 @@
       <p class="count" role="status">Mostrando <%= productos.length %> <%= productos.length === 1 ? 'producto' : 'productos' %></p>
       <details class="catalogo-filtros">
         <summary>Filtros <% const filtrosActivos = filtros.aromas.length + filtros.tipos.length; %><% if (filtrosActivos) { %><span class="filtros-cantidad" aria-label="<%= filtrosActivos %> filtros activos"><%= filtrosActivos %></span><% } %><span class="filtros-flecha" aria-hidden="true"></span></summary>
-        <%# Los filtros se consultan al cambiar cada opción y conservan las selecciones en la URL. %>
+
         <form class="filters" method="get" action="/catalogo">
           <div class="filtros-pestanas" role="tablist" aria-label="Categorías de filtros" hidden>
             <button type="button" id="filtro-tab-aroma" role="tab" aria-selected="true" aria-controls="filtro-panel-aroma">Sabores y aromas</button>
@@ -25,7 +25,7 @@
             <legend>Sabor y aroma</legend>
             <div class="filtros-opciones">
             <label><input type="checkbox" name="aroma" value="todos" <%= filtros.aromas.length === 0 ? 'checked' : '' %>> Todos</label>
-            <%# Un filtro por cada aroma que tenga productos activos: un sabor nuevo en la base aparece solo. %>
+
             <% aromas.forEach((a) => { %>
               <label><input type="checkbox" name="aroma" value="<%= a.slug %>" <%= filtros.aromas.includes(a.slug) ? 'checked' : '' %>> <%= a.nombre %></label>
             <% }) %>
@@ -35,7 +35,7 @@
             <legend>Tipo</legend>
             <div class="filtros-opciones">
             <label><input type="radio" name="tipo" value="todos" <%= filtros.tipos.length === 0 ? 'checked' : '' %>> Todos</label>
-            <%# HU-015: un filtro por cada tipo de agua activo de la base (tabla tipo_agua). %>
+
             <% tipos.forEach((t) => { %>
               <label><input type="radio" name="tipo" value="<%= t.slug %>" <%= filtros.tipos.includes(t.slug) ? 'checked' : '' %>> <%= t.nombre %></label>
             <% }) %>
@@ -49,10 +49,10 @@
       <div class="grid">
         <% const colores = { limon: 't-yellow', menta: 't-green', frutilla: 't-red', pepino: 't-green', durazno: 't-orange', arandano: 't-purple',
                              mango: 't-orange', 'frutos-rojos': 't-red', 'hibisco-y-rosa': 't-purple', 'limon-y-menta': 't-yellow', 'pepino-y-limon': 't-green' }; %>
-        <!-- Cada tarjeta muestra los datos del modelo, incluida la imagen y la disponibilidad del producto. -->
+
         <% productos.forEach(p => { const disponible = p.stock > 0; %>
           <article class="item<%= disponible ? '' : ' item--agotado' %>">
-            <%# HU-016: la imagen y el nombre llevan a la ficha de detalle del producto. %>
+
             <a href="/catalogo/<%= p.id %>" class="item-enlace">
               <div class="img">
                 <img src="<%= imagenProducto(p.imagen) %>" alt="<%= p.nombre %>">
@@ -63,7 +63,7 @@
             <span class="tag <%= colores[p.aromaSlug] %>"><%= p.etiqueta %></span>
             <p class="price"><%= clp(p.precio) %></p>
             <% if (disponible) { %>
-              <%# HU-022: el botón envía el id al controlador; el nombre y el precio los pone el servidor. %>
+
               <form method="post" action="/carrito/agregar" class="buy-form">
                 <input type="hidden" name="id" value="<%= p.id %>">
                 <input type="hidden" name="volver" value="<%= volver %>">

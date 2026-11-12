@@ -11,7 +11,7 @@
     const aviso = (campo) => formulario.errores[campo] ? '<p class="admin-aviso">' + formulario.errores[campo].replace(/</g, '&lt;') + '</p>' : '';
     const d = formulario.datos;
   %>
-  <!-- HU-040: detalle de un pedido y cambio de estado. Los datos llegan de adminPedidosController.ver. -->
+
   <main class="admin admin-angosto">
     <%- include('../partials/admin-menu', { activo: 'pedidos' }) %>
     <a href="/admin/pedidos" class="admin-volver">← Volver a pedidos</a>
@@ -51,7 +51,7 @@
       </tbody>
     </table></div>
 
-    <%# Criterio 2 de HU-040: solo se ofrecen los estados válidos según la secuencia. %>
+
     <h2 class="admin-subtitulo">Cambiar estado</h2>
     <% if (siguientes.length === 0) { %>
       <p class="admin-nota">Este pedido está "<%= nombres[pedido.estado] %>": ya no tiene más cambios de estado.</p>
@@ -65,7 +65,7 @@
             <% }) %>
             <%- aviso('estado') %>
           </div>
-          <%# Criterio 3 de HU-040: al pasar a "Enviado" se registran transporte y seguimiento. %>
+
           <% if (siguientes.includes('enviado')) { %>
             <div class="admin-fila" id="datos-envio">
               <div class="admin-campo">
@@ -83,7 +83,7 @@
           <div class="admin-acciones"><button type="submit" class="btn btn-primary">Guardar estado</button></div>
         </fieldset>
       </form>
-      <!-- Muestra los campos de transporte solo al elegir "Enviado": public/js/admin-pedido.js. -->
+
       <script src="/js/admin-pedido.js"></script>
     <% } %>
     <section class="admin-caja admin-actividad" aria-labelledby="historial-titulo">

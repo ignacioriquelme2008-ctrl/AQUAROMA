@@ -1,14 +1,11 @@
-// Modelo: consultas SQL de productos (MySQL)
 const db = require('../config/db');
 const ventas = require('../config/ventas');
 const { STOCK_POR_PRODUCTO } = require('../utils/stockVenta');
 
-// Convierte "Sin gas" en "sin-gas" y "Arándano" en "arandano" (para los filtros)
 const slug = (texto) =>
   texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '-');
 
 exports.obtenerTodos = async () => {
-  // Une cada producto con su categoría y tipo, consulta su stock despachable y trae su imagen para el catálogo.
   const [filas] = await db.query(
     `SELECT p.id_producto AS id, p.nombre, p.precio_base AS precio,
             p.descripcion AS etiqueta, p.imagen,
@@ -23,7 +20,6 @@ exports.obtenerTodos = async () => {
      ORDER BY p.id_producto`
   );
 
-  // MySQL entrega los DECIMAL como texto ("1490.00"): los pasamos a número
   return filas.map((f) => ({
     ...f,
     precio: Number(f.precio),
@@ -33,9 +29,6 @@ exports.obtenerTodos = async () => {
   }));
 };
 
-// Opciones del filtro "Tipo" del catálogo (HU-015). Salen de la tabla tipo_agua, no van escritas
-// a mano en la vista: si mañana se agrega un tipo de agua en la base, aparece solo en el filtro.
-// Solo se listan los tipos activos que hoy tienen algún producto activo (los demás filtrarían vacío).
 exports.tiposConProductos = async () => {
   const [filas] = await db.query(
     `SELECT DISTINCT t.id_tipo_agua AS id, t.nombre
@@ -47,8 +40,6 @@ exports.tiposConProductos = async () => {
   return filas.map((f) => ({ id: f.id, nombre: f.nombre, slug: slug(f.nombre) }));
 };
 
-// Un producto activo con todos los datos de su ficha (HU-016): aroma, tipo de agua, presentación en ml y stock despachable.
-// Devuelve null si no existe o está desactivado.
 exports.obtenerPorId = async (id) => {
   const [filas] = await db.query(
     `SELECT p.id_producto AS id, p.nombre, p.precio_base AS precio,
@@ -73,8 +64,6 @@ exports.obtenerPorId = async (id) => {
   return { ...f, precio: Number(f.precio), stock: Number(f.stock), personalizable: Boolean(f.personalizable) };
 };
 
-// Aromas que se pueden elegir en la ficha de un producto personalizable (HU-018).
-// El nombre y la descripción sensorial salen del componente activo en la base de datos.
 exports.aromasDisponibles = async () => {
   const [filas] = await db.query(
      `SELECT id_componente AS id, nombre, descripcion, recargo_precio AS recargoPorDosis
@@ -85,8 +74,6 @@ exports.aromasDisponibles = async () => {
   return filas.map((f) => ({ ...f, recargoPorDosis: Number(f.recargoPorDosis) }));
 };
 
-// Comprueba una selección recibida por formulario: el producto debe permitir personalización
-// y el componente debe ser un aroma activo. Nunca se confía en el nombre que mande el navegador.
 exports.obtenerAromaParaProducto = async (idProducto, idComponente) => {
   const [filas] = await db.query(
     `SELECT c.id_componente AS id, c.nombre, c.descripcion, c.recargo_precio AS recargoPorDosis
@@ -99,9 +86,6 @@ exports.obtenerAromaParaProducto = async (idProducto, idComponente) => {
   return filas[0] ? { ...filas[0], recargoPorDosis: Number(filas[0].recargoPorDosis) } : null;
 };
 
-// Productos de un carrito [{ id, qty }] con los datos que muestra la página del carrito
-// (HU-022 a HU-025): nombre, aroma, imagen, precio ACTUAL y stock despachable. Conserva el orden
-// recibido y descarta los productos que ya no existen o fueron desactivados (HU-037).
 exports.detallarCarrito = async (items) => {
   if (!items || items.length === 0) return [];
 
@@ -156,14 +140,19 @@ exports.detallarCarrito = async (items) => {
     });
 };
 
-// Productos destacados del inicio: solo activos, disponibles primero y luego los más vendidos
+const ordenDestacados = new Map([
+  ['AQ-NAR-500', 0],
+  ['AQ-LIM-500', 1],
+  ['AQ-MEN-500', 2],
+]);
+
 exports.obtenerDestacados = async (limite = 3) => {
   const [filas] = await db.query(
     `SELECT p.id_producto AS id, p.nombre, p.precio_base AS precio,
             p.descripcion AS etiqueta, p.imagen,
             c.nombre AS aroma, t.nombre AS tipo,
             COALESCE(s.stock, 0) AS stock,
-            COALESCE(v.unidades, 0) AS vendidas
+            COALESCE(v.unidades, 0) AS vendidas, p.sku
      FROM producto p
      JOIN categoria c ON c.id_categoria = p.id_categoria
      JOIN tipo_agua t ON t.id_tipo_agua = p.id_tipo_agua
@@ -186,21 +175,16 @@ exports.obtenerDestacados = async (limite = 3) => {
     tipoSlug: slug(f.tipo),
   }));
 
-  // "Más vendido" = el producto con más unidades en pedidos reales (si hay alguna venta)
   const maxVentas = Math.max(0, ...productos.map((p) => p.vendidas));
   productos.forEach((p) => { p.masVendido = maxVentas > 0 && p.vendidas === maxVentas; });
 
-  // Disponibles primero, luego por ventas, luego por orden
-  productos.sort((a, b) => (b.stock > 0) - (a.stock > 0) || b.vendidas - a.vendidas || a.id - b.id);
+  const prioridad = (producto) => ordenDestacados.get(producto.sku) ?? ordenDestacados.size;
+  productos.sort((a, b) => prioridad(a) - prioridad(b)
+    || (b.stock > 0) - (a.stock > 0) || b.vendidas - a.vendidas || a.id - b.id);
   return productos.slice(0, limite);
 };
 
-// =====================================================================
-// ADMINISTRACIÓN DE PRODUCTOS (HU-036). Las usa controllers/adminProductosController.js.
-// HU-037 (editar y desactivar) puede agregar aquí sus consultas siguiendo el mismo estilo.
-// =====================================================================
 
-// Todos los productos (activos e inactivos) para la tabla del panel, con su stock total.
 exports.listarParaAdmin = async () => {
   const [filas] = await db.query(
     `SELECT p.id_producto AS id, p.sku, p.nombre, p.precio_base AS precio, p.activo, p.actualizado_en,
@@ -216,8 +200,6 @@ exports.listarParaAdmin = async () => {
   return filas.map((f) => ({ ...f, precio: Number(f.precio), stock: Number(f.stock), activo: Boolean(f.activo) }));
 };
 
-// Opciones de las listas desplegables del formulario: solo las que están activas en la base.
-// Así, si mañana se agrega un tipo de agua o un aroma en la base, aparece solo en el formulario.
 exports.opcionesFormulario = async () => {
   const [tipos] = await db.query('SELECT id_tipo_agua AS id, nombre FROM tipo_agua WHERE activo = TRUE ORDER BY nombre');
   const [presentaciones] = await db.query(
@@ -227,31 +209,18 @@ exports.opcionesFormulario = async () => {
   return { tipos, presentaciones, categorias, sucursales };
 };
 
-// ¿Ya hay un producto con ese SKU? (la columna sku es UNIQUE: no se puede repetir).
 exports.skuExiste = async (sku) => {
   const [filas] = await db.query('SELECT 1 FROM producto WHERE sku = ? LIMIT 1', [sku]);
   return filas.length > 0;
 };
 
-// Crea un producto nuevo (HU-036). Todo va en una TRANSACCIÓN: si un paso falla, se deshacen
-// todos y no queda un producto a medias en la base.
-//   1. producto: los datos del formulario.
-//   2. formulacion: la "ficha inicial de preparación" (versión 1.0, vigente). Los insumos de la
-//      receta (formulacion_insumo) se agregan después, cuando se defina cómo se prepara.
-//   3. configuracion_bebida: la configuración base que usa el carrito para guardar el producto (HU-026).
-//   4. Si se indicó stock inicial: inventario de la sucursal + un movimiento de "ajuste" que deja
-//      registrado quién lo cargó (así el stock nunca aparece sin explicación).
-// Devuelve el id del producto creado.
 async function resolverCategoria(conn, datos) {
   if (!datos.categoriaNueva) return datos.idCategoria;
-  // Reutiliza el nombre si ya existe; un SKU duplicado revierte también
-  // este paso porque comparte la transacción del producto.
   const [categoria] = await conn.query(
     `INSERT INTO categoria (nombre, activo) VALUES (?, TRUE)
      ON DUPLICATE KEY UPDATE id_categoria = LAST_INSERT_ID(id_categoria), activo = TRUE`,
     [datos.nombreCategoriaNueva]
   );
-  // La variedad conjunta también queda disponible en la personalización.
   await conn.query(
     `INSERT INTO componente (nombre, tipo, unidad_dosificacion, recargo_precio, activo)
      VALUES (?, 'mixto', 'dosis', 0, TRUE)
@@ -304,16 +273,11 @@ exports.crear = async (d, idUsuario) => {
     await conn.rollback();
     throw err;
   } finally {
-    conn.release();   // devuelve la conexión al pool, pase lo que pase
+    conn.release();
   }
 };
 
-// ---------------------------------------------------------------------
-// HU-037: editar, activar/desactivar y eliminar productos.
-// ---------------------------------------------------------------------
 
-// Un producto (activo o no) con los datos que usa el formulario de edición.
-// "actualizado_en" es la fecha de última modificación: MySQL la pone sola en cada UPDATE.
 exports.obtenerParaEditar = async (id) => {
   const [filas] = await db.query(
     `SELECT id_producto AS id, sku, nombre, id_tipo_agua, id_presentacion, id_categoria, precio_base,
@@ -323,7 +287,6 @@ exports.obtenerParaEditar = async (id) => {
   );
   const f = filas[0];
   if (!f) return null;
-  // Mismos nombres de campo que el formulario (los usa views/admin/producto-nuevo.ejs).
   return {
     id: f.id,
     sku: f.sku,
@@ -342,8 +305,6 @@ exports.obtenerParaEditar = async (id) => {
   };
 };
 
-// Guarda los cambios del formulario. El SKU no se cambia: identifica al producto en los pedidos.
-// También se actualiza el precio de su configuración base (la que usa el carrito, HU-026).
 exports.actualizar = async (id, d) => {
   const conn = await db.getConnection();
   try {
@@ -370,15 +331,11 @@ exports.actualizar = async (id, d) => {
   }
 };
 
-// Activa o desactiva un producto. Desactivado deja de verse en la tienda, pero sus pedidos,
-// recetas y movimientos de inventario se conservan (criterio 2 de HU-037).
 exports.cambiarActivo = async (id, activo) => {
   const [r] = await db.query('UPDATE producto SET activo = ? WHERE id_producto = ?', [activo, id]);
   return r.affectedRows > 0;
 };
 
-// ¿El producto aparece en algún pedido (también en un carrito guardado) o en una orden de producción?
-// Si es así, no se puede borrar: se perdería el historial de ventas (criterio 3 de HU-037).
 exports.tienePedidos = async (id) => {
   const [filas] = await db.query(
     `SELECT 1 FROM detalle_pedido dp
@@ -392,9 +349,6 @@ exports.tienePedidos = async (id) => {
   return filas.length > 0;
 };
 
-// Borra un producto que NUNCA se vendió, junto con lo que se creó con él (HU-036): su ficha de
-// preparación, su configuración base, su stock y los movimientos de ese stock.
-// El controlador revisa antes tienePedidos(); aquí se vuelve a revisar dentro de la transacción.
 exports.eliminar = async (id) => {
   const conn = await db.getConnection();
   try {
@@ -409,8 +363,8 @@ exports.eliminar = async (id) => {
       err.code = 'PRODUCTO_CON_PEDIDOS';
       throw err;
     }
-    await conn.query('DELETE FROM configuracion_bebida WHERE id_producto = ?', [id]);   // sus componentes se borran en cascada
-    await conn.query('DELETE FROM formulacion WHERE id_producto = ?', [id]);            // sus insumos se borran en cascada
+    await conn.query('DELETE FROM configuracion_bebida WHERE id_producto = ?', [id]);
+    await conn.query('DELETE FROM formulacion WHERE id_producto = ?', [id]);
     await conn.query('DELETE FROM movimiento_inventario WHERE id_producto = ?', [id]);
     await conn.query('DELETE FROM inventario WHERE id_producto = ?', [id]);
     const [r] = await conn.query('DELETE FROM producto WHERE id_producto = ?', [id]);

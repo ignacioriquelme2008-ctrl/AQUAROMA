@@ -1,4 +1,4 @@
-// Endpoints temporales de prueba PayPal; están limitados al modo Sandbox y fuera de producción.
+
 const router = require('express').Router();
 const controller = require('../controllers/paypalSandboxController');
 

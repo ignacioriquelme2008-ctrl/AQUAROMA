@@ -1,10 +1,10 @@
-/* =====================================================================
-   base.css: estilos que comparten TODAS las páginas.
-   Se carga siempre desde views/partials/head.ejs. Después, cada página carga
-   la hoja de su sección (inicio.css, usuarios.css, catalogo.css, ...).
-   ===================================================================== */
 
-/* ===== Colores (variables) ===== */
+
+
+
+
+
+
 :root {
   --primary: #0ea5e9;
   --primary-light: #e0f2fe;
@@ -27,10 +27,10 @@
   --font-heading: "Segoe UI", Arial, sans-serif;
 }
 
-/* ===== Base ===== */
-/* Reinicia el margen y padding para que los elementos empiecen con el mismo formato en todas las secciones. */
+
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
-/* Todo lo que tenga el atributo "hidden" queda oculto (lo usan los avisos que se muestran con JavaScript). */
+
 [hidden] { display: none !important; }
 
 body {
@@ -40,14 +40,14 @@ body {
   line-height: 1.5;
 }
 
-/* Quita el subrayado por defecto de los enlaces y ayuda a mantener una navegación más limpia. */
+
 a { text-decoration: none; color: inherit; }
 .container { width: 100%; max-width: 1200px; margin-inline: auto; padding-inline: clamp(16px, 3vw, 32px); }
-/* Contorno visible al moverse con el teclado (Tab). */
+
 :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
 
-/* ===== Títulos ===== */
-/* Título principal de cada página, con una línea azul corta debajo. */
+
+
 h1 {
   font-family: var(--font-heading);
   font-weight: 700;
@@ -63,11 +63,11 @@ h1::after { content: ""; position: absolute; left: 0; bottom: 0; width: 42px; he
 h2 { font-family: var(--font-heading); font-size: 17px; font-weight: 650; letter-spacing: -.02em; color: var(--navy); margin-bottom: 14px; }
 h3 { font-family: var(--font-heading); font-size: 15px; font-weight: 650; color: var(--navy); }
 
-/* Texto pequeño en mayúsculas que va sobre un título (inicio, nosotros, ficha, panel). */
+
 .eyebrow { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--navy); font-weight: 600; margin-bottom: 18px; }
 
-/* ===== Botones ===== */
-/* Los botones comparten una base para mantener coherencia visual y facilitar la acción principal. */
+
+
 .btn {
   display: inline-flex;
   gap: 10px;
@@ -82,20 +82,20 @@ h3 { font-family: var(--font-heading); font-size: 15px; font-weight: 650; color:
 .btn-primary { background: var(--primary); }
 .btn-primary:hover { background: #0284c7; }
 
-/* Botón "Agregar al carrito" (catálogo y ficha del producto). */
+
 .buy { display: block; width: 100%; padding: 10px; border: 0; border-radius: 6px; background: var(--blue); color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; }
 .buy:hover:not(:disabled) { background: #1750b0; }
 .buy:disabled { background: #ececec; color: #444; cursor: not-allowed; }
-/* El botón va dentro de un formulario POST, que no debe agregar espacio extra. */
+
 .buy-form { margin: 0; }
 
-/* Etiqueta sobre la imagen de un producto: roja "Agotado" (catálogo y ficha) o verde "Disponible" (catálogo, HU-017). */
+
 .badge { position: absolute; top: 10px; right: 10px; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 6px; }
 .out { background: #e0343f; color: #fff; }
 .badge.disponible { background: var(--green); color: #fff; }
 
-/* ===== Menú (views/partials/navbar.ejs) ===== */
-/* La barra queda fija al scroll para que el usuario siempre tenga acceso a la navegación. */
+
+
 .navbar {
   position: sticky;
   top: 18px;
@@ -146,7 +146,7 @@ h3 { font-family: var(--font-heading); font-size: 15px; font-weight: 650; color:
 .nav-links a:hover { color: var(--primary); background: var(--primary-light); }
 
 
-/* Botón circular del carrito; el contador queda superpuesto y no altera el ancho del menú. */
+
 .navbar .nav-cart {
   position: relative;
   display: grid;
@@ -162,7 +162,7 @@ h3 { font-family: var(--font-heading); font-size: 15px; font-weight: 650; color:
 }
 .navbar .nav-cart:hover { background: #d8ebff; }
 .nav-cart-icon { display: block; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-/* HU-022: cuenta real de unidades del middleware, superpuesta sin ocupar espacio en el menú. */
+
 .nav-contador {
   position: absolute;
   top: -4px;
@@ -184,10 +184,10 @@ h3 { font-family: var(--font-heading); font-size: 15px; font-weight: 650; color:
   pointer-events: none;
 }
 
-/* Aviso de la última acción del carrito ("se agregó", "solo quedan X unidades"). */
+
 .aviso-carrito { border-radius: 18px; margin: 14px 0 0; padding: 10px 24px; background: #e8f7ee; border-top: 1px solid #b7e4c7; color: #14532d; font-size: 14px; text-align: center; }
 
-/* Parte derecha del menú: tema, cuenta y carrito. */
+
 .nav-acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; }
 .nav-acciones .nav-cuenta { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 22px; border-radius: 999px; background: #075ed7; color: white; font-weight: 600; white-space: nowrap; }
 .nav-acciones .nav-cuenta:hover { background: #084cb0; color: white; }
@@ -197,7 +197,7 @@ h3 { font-family: var(--font-heading); font-size: 15px; font-weight: 650; color:
 .nav-acciones form { margin: 0; }
 .nav-enlace { font: inherit; font-size: 14px; font-weight: 500; color: var(--text-muted); background: none; border: 0; padding: 8px 12px; border-radius: 999px; cursor: pointer; }
 .nav-enlace:hover { color: var(--primary); background: var(--primary-light); }
-/* Menú de perfil: flota bajo el botón sin desplazar la barra. */
+
 .nav-perfil { position: relative; }
 .nav-perfil summary { display: flex; align-items: center; gap: 10px; list-style: none; }
 .nav-perfil summary::-webkit-details-marker { display: none; }
@@ -209,16 +209,16 @@ h3 { font-family: var(--font-heading); font-size: 15px; font-weight: 650; color:
 .nav-perfil-opciones :is(a, button):hover { color: var(--blue); background: var(--primary-light); }
 .nav-perfil-opciones form:not(:first-child) { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--line); }
 
-/* ===== Tarjeta centrada ===== */
-/* Caja blanca al centro de la página. La usan el login y el registro (usuarios.css agrega sus campos)
-   y las páginas de error ("No encontrado" y "Acceso denegado"). */
+
+
+
 .auth { display: flex; justify-content: center; padding: 48px 16px 64px; }
 .auth-card { width: 100%; max-width: 440px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 32px 28px; }
 .auth-card h1 { font-size: 30px; margin-bottom: 14px; }
 .auth-sub { font-size: 14px; margin-bottom: 22px; }
 .auth-boton { width: 100%; justify-content: center; border: 0; cursor: pointer; font-family: inherit; margin-top: 6px; }
 
-/* El menú conserva todos sus accesos en tablet y móvil; cambia de fila antes de apretarse. */
+
 @media (max-width: 1040px) {
   .navbar { border-radius: 28px; padding: 14px 22px; }
   .nav-inner { justify-content: center; gap: 20px 32px; }

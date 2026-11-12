@@ -1,5 +1,5 @@
-﻿// Controlador de la sección USUARIOS (registro, login y logout).
-// Valida los datos EN EL SERVIDOR y decide qué vista mostrar.
+﻿
+
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const Usuario = require('../models/Usuario');
@@ -8,12 +8,12 @@ const correoServicio = require('../config/correo');
 const { EMAIL_REGEX, PASS_REGEX, TEL_REGEX, LARGO_MAX, texto } = require('../utils/validaciones');
 const { normalizarItems } = require('../utils/carrito');
 
-// Hash de una clave cualquiera. Si el correo no existe se compara contra este hash, así el login
-// tarda lo mismo exista o no la cuenta, y nadie puede adivinar qué correos están registrados midiendo el tiempo.
+
+
 const HASH_FALSO = bcrypt.hashSync('cuenta-inexistente', 10);
 
-// HU-006: después del login solo se permite volver a una ruta interna del sitio (que empiece con "/").
-// Así nadie puede armar un enlace que, al iniciar sesión, mande al usuario a otra página externa.
+
+
 const rutaSegura = (ruta) => (typeof ruta === 'string' && ruta.startsWith('/') && !ruta.startsWith('//') ? ruta : '');
 
 
@@ -21,12 +21,12 @@ exports.mostrarRegistro = (req, res) => {
   res.render('usuarios/registro', { errores: {}, datos: {} });
 };
 
-// Normaliza y valida el formulario; si el correo está libre, pide al modelo crear la cuenta.
+
 exports.registrar = async (req, res) => {
   const datos = {
     nombre: texto(req.body.nombre).trim(),
     apellido: texto(req.body.apellido).trim(),
-    // Se quitan los espacios ("+56 9 1234 5678" -> "+56912345678") para contar solo dígitos y guardarlo siempre igual.
+
     telefono: texto(req.body.telefono).replace(/\s+/g, ''),
     correo: texto(req.body.correo).trim().toLowerCase(),
   };
@@ -58,7 +58,7 @@ exports.registrar = async (req, res) => {
     await Usuario.crear({ ...datos, password });
     res.redirect('/login?registrado=1');
   } catch (err) {
-    // Si dos personas se registran a la vez con el mismo correo, la base lo detiene (UNIQUE)
+
     if (err.code === 'ER_DUP_ENTRY') {
       errores.correo = 'Este correo ya está registrado.';
       return res.status(400).render('usuarios/registro', { errores, datos });
@@ -74,16 +74,16 @@ exports.registrar = async (req, res) => {
 exports.mostrarLogin = (req, res) => {
   const exito = req.query.registrado ? 'Cuenta creada exitosamente. Ya puedes iniciar sesión.' : null;
   const passwordRestablecida = req.query.passwordRestablecida === '1';
-  // "volver" guarda la página privada que la persona quiso abrir antes de iniciar sesión (HU-004 / HU-006).
+
   const volver = rutaSegura(req.query.volver);
-  // Si viene de una página privada, se le explica por qué está en el login.
+
   const aviso = !volver ? null
     : volver === '/carrito' ? 'Inicia sesión para confirmar tu pedido. Los productos de tu carrito se mantienen.'
     : 'Inicia sesión para entrar a esa página.';
   res.render('usuarios/login', { error: null, exito, passwordRestablecida, aviso, correo: '', volver });
 };
 
-// HU-005: respuesta única para no revelar si un correo está registrado ni si se pudo enviar.
+
 const MENSAJE_RECUPERACION = 'Si el correo existe en la plataforma, recibirás las instrucciones para recuperar tu acceso.';
 
 exports.mostrarRecuperacion = (req, res) => {
@@ -107,9 +107,9 @@ exports.solicitarRecuperacion = async (req, res) => {
       const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
       await Usuario.crearTokenRecuperacion(usuario.id_usuario, tokenHash);
       if (correoServicio.configurado()) {
-        // No esperamos al SMTP: el texto y el tiempo de respuesta no revelan si la cuenta existe.
+
         void correoServicio.enviarRecuperacion(usuario.correo, token).catch(() => {
-          // No se registra el correo ni el token; el texto visible sigue siendo neutro (HU-005).
+
           console.warn('HU-005: no se pudo enviar el correo de recuperación.');
         });
       } else {
@@ -119,7 +119,7 @@ exports.solicitarRecuperacion = async (req, res) => {
     return res.render('usuarios/recuperar', { mensaje: MENSAJE_RECUPERACION, error: null, correo: '' });
   } catch (err) {
     console.error('HU-005: no se pudo procesar la solicitud de recuperación.');
-    // Mantiene la respuesta neutra incluso ante una falla para proteger la existencia de la cuenta.
+
     return res.render('usuarios/recuperar', { mensaje: MENSAJE_RECUPERACION, error: null, correo: '' });
   }
 };
@@ -167,42 +167,42 @@ exports.restablecerPassword = async (req, res, next) => {
   }
 };
 
-// Busca la cuenta, compara la contraseña con bcrypt y guarda en la sesión al usuario con su rol y permisos (HU-006).
+
 exports.login = async (req, res) => {
   const correo = texto(req.body.correo).trim().toLowerCase();
   const password = texto(req.body.password);
   const volver = rutaSegura(texto(req.body.volver));
-  // Datos que la vista de login necesita cada vez que se muestra con un error.
+
   const vistaConError = (error) => ({ error, exito: null, correo, volver });
 
   try {
     const usuario = correo ? await Usuario.buscarPorCorreo(correo) : null;
-    // Siempre se ejecuta bcrypt (con HASH_FALSO si no hay cuenta) para que la respuesta tarde lo mismo.
+
     const claveOk = (await bcrypt.compare(password, usuario ? usuario.password_hash : HASH_FALSO)) && Boolean(usuario);
 
-    // Mismo mensaje si falla el correo o la clave: no revela cuál estaba mal
+
     if (!claveOk) {
       return res.status(401).render('usuarios/login', vistaConError('Correo o contraseña incorrectos.'));
     }
 
-    // Recién con la clave correcta se informa si la cuenta está inactiva
+
     if (!usuario.usuario_activo || (usuario.id_cliente && !usuario.cliente_activo)) {
       return res.status(403).render('usuarios/login', vistaConError('Tu cuenta está inactiva o deshabilitada. Comunícate con la tienda.'));
     }
 
-    // HU-006: se revisa qué tipo de cuenta es (Administrador o Cliente) y qué permisos tiene.
+
     const roles = usuario.roles ? usuario.roles.split(',') : [];
     const permisos = await Usuario.obtenerPermisos(usuario.id_usuario);
     const esAdmin = roles.includes('Administrador');
 
     await Usuario.registrarAcceso(usuario.id_usuario);
 
-    // HU-026: un visitante puede armar un carrito antes de entrar. Se copia ANTES de regenerate,
-    // porque regenerate crea una sesión nueva y descarta la anterior (junto con req.session.carrito).
+
+
     const carritoVisitante = normalizarItems(req.session.carrito);
 
-    // Se crea una sesión nueva al entrar (regenerate). Así nadie puede reutilizar una sesión
-    // que existía antes del login para hacerse pasar por este usuario.
+
+
     await new Promise((resolve, reject) => {
       req.session.regenerate((err) => (err ? reject(err) : resolve()));
     });
@@ -210,33 +210,33 @@ exports.login = async (req, res) => {
     req.session.usuario = {
       id: usuario.id_usuario,
       idCliente: usuario.id_cliente,
-      // El administrador no tiene fila en "cliente", por eso no tiene nombre: se muestra "Administrador".
+
       nombre: usuario.nombre || (esAdmin ? 'Administrador' : usuario.correo),
       roles,
       permisos,
       esAdmin,
     };
 
-    // HU-026, criterio 2: el carrito de visitante se suma al que ya estaba guardado en la cuenta.
+
     if (usuario.id_cliente && carritoVisitante.length > 0) {
       try {
         await Carrito.fusionar(usuario.id_cliente, carritoVisitante);
         req.session.carrito = [];
       } catch (err) {
-        // Si la base falla, el carrito no se pierde: queda en la sesión y el controlador
-        // del carrito vuelve a intentar la fusión cuando la persona abra /carrito.
+
+
         console.error('No se pudo unir el carrito de visitante:', err);
         req.session.carrito = carritoVisitante;
       }
     }
 
-    // Termina de guardar antes de redirigir: la siguiente página puede pedir la sesión
-    // inmediatamente y ahora se recupera de la base de datos.
+
+
     await new Promise((resolve, reject) => {
       req.session.save((err) => (err ? reject(err) : resolve()));
     });
 
-    // El administrador entra a su panel; el cliente vuelve a la página que pidió o al inicio.
+
     res.redirect(volver || (esAdmin ? '/admin' : '/'));
   } catch (err) {
     console.error(err);

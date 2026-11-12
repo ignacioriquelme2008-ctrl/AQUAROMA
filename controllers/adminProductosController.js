@@ -1,33 +1,33 @@
-// Controlador de PRODUCTOS del panel de administración.
-//   HU-036 (crear productos): listar, mostrarFormulario, crear.
-//   HU-037 (editar y desactivar) puede agregar aquí sus funciones y reutilizar validarProducto().
-// Las rutas están en routes/adminRoutes.js y exigen el permiso "gestionar_productos".
+
+
+
+
 const fs = require('fs/promises');
 const path = require('path');
 const Producto = require('../models/Producto');
 const { texto } = require('../utils/validaciones');
 
-// Reglas de cada campo. Los largos coinciden con las columnas de la tabla producto.
-const SKU_REGEX = /^[A-Z0-9-]{3,30}$/;            // ej.: AQ-LIM-500 (mayúsculas, números y guiones)
+
+const SKU_REGEX = /^[A-Z0-9-]{3,30}$/;
 const LARGO = { nombre: 120, etiqueta: 40, descripcionLarga: 1000 };
-const PRECIO_MAX = 99999999;                       // precio_base es DECIMAL(10,2): hasta 99.999.999
+const PRECIO_MAX = 99999999;
 const STOCK_MAX = 99999;
 const CARPETA_IMAGENES = path.join(__dirname, '..', 'public', 'img', 'productos');
 
-// Imágenes existentes para reutilizar. Las nuevas se reciben desde el formulario.
+
 async function imagenesDisponibles() {
   const archivos = await fs.readdir(CARPETA_IMAGENES);
   return archivos.filter((a) => /\.(png|jpe?g|webp)$/i.test(a)).sort();
 }
 
-// Convierte "1.490" o "1490" en 1490. Devuelve NaN si no es un número entero.
+
 function entero(valor) {
   const limpio = texto(valor).trim().replace(/\./g, '');
   return /^-?\d+$/.test(limpio) ? Number(limpio) : NaN;
 }
 
-// Lee y valida el formulario. Devuelve { datos, errores }; errores = { campo: 'mensaje' }.
-// "opciones" son las listas válidas de la base, para que nadie mande un id inventado.
+
+
 function validarProducto(body, opciones, imagenes, archivo = null, errorImagen = null) {
   const datos = {
     sku: texto(body.sku).trim().toUpperCase(),
@@ -105,15 +105,15 @@ function pedirImagenDeNuevo(req, datos, errores) {
   }
 }
 
-// Junta lo que necesita la vista del formulario (listas desplegables + imágenes) y la muestra.
-// "producto" es el producto que se está editando (HU-037); null cuando se crea uno nuevo (HU-036).
+
+
 async function mostrarVistaFormulario(res, estado, datos, errores, producto = null) {
   const [opciones, imagenes] = await Promise.all([Producto.opcionesFormulario(), imagenesDisponibles()]);
   res.status(estado).render('admin/producto-nuevo', { opciones, imagenes, datos, errores, producto });
 }
 
-// Avisos de la tabla de productos después de una acción (?editado=15, ?activado=15, ...).
-// Se arman aquí para que la vista solo los muestre.
+
+
 function avisoDeLista(query, productos) {
   const buscar = (id) => productos.find((p) => p.id === Number(id));
   if (query.creado && buscar(query.creado)) return { tipo: 'exito', producto: buscar(query.creado), texto: 'Se creó' };
@@ -121,17 +121,17 @@ function avisoDeLista(query, productos) {
   if (query.activado && buscar(query.activado)) return { tipo: 'exito', producto: buscar(query.activado), texto: 'Se activó' };
   if (query.desactivado && buscar(query.desactivado)) return { tipo: 'exito', producto: buscar(query.desactivado), texto: 'Se desactivó' };
   if (query.eliminado) return { tipo: 'exito', texto: `Se eliminó el producto SKU ${texto(query.eliminado)}.` };
-  // Criterio 3 de HU-037: un producto con pedidos no se borra; se sugiere desactivarlo.
+
   if (query.conPedidos && buscar(query.conPedidos)) return { tipo: 'error', producto: buscar(query.conPedidos), texto: 'No se puede eliminar' };
   return null;
 }
 
-// GET /admin/productos -> tabla con todos los productos.
+
 exports.listar = async (req, res, next) => {
   try {
     const productos = await Producto.listarParaAdmin();
     const aviso = avisoDeLista(req.query, productos);
-    // "creado" marca la fila recién creada o editada (fondo celeste).
+
     const creado = productos.find((p) => p.id === Number(req.query.creado || req.query.editado)) || null;
     res.render('admin/productos', { productos, creado, aviso });
   } catch (err) {
@@ -139,7 +139,7 @@ exports.listar = async (req, res, next) => {
   }
 };
 
-// GET /admin/productos/nuevo -> formulario vacío (producto activo y personalizable por defecto).
+
 exports.mostrarFormulario = async (req, res, next) => {
   try {
     await mostrarVistaFormulario(res, 200, { activo: true, esPersonalizable: true }, {});
@@ -148,14 +148,14 @@ exports.mostrarFormulario = async (req, res, next) => {
   }
 };
 
-// POST /admin/productos -> valida y, si todo está bien, pide al modelo crear el producto.
+
 exports.crear = async (req, res, next) => {
   let imagenGuardada = null;
   try {
     const [opciones, imagenes] = await Promise.all([Producto.opcionesFormulario(), imagenesDisponibles()]);
     const { datos, errores } = validarProducto(req.body, opciones, imagenes, req.file, req.errorImagen);
 
-    // Criterio 2 de HU-036: un SKU repetido se rechaza indicando el campo.
+
     if (!errores.sku && (await Producto.skuExiste(datos.sku))) errores.sku = 'Ya existe un producto con este SKU.';
     if (Object.keys(errores).length > 0) {
       pedirImagenDeNuevo(req, datos, errores);
@@ -165,11 +165,11 @@ exports.crear = async (req, res, next) => {
     imagenGuardada = await guardarImagen(req);
     const id = await Producto.crear(datos, req.session.usuario.id);
     imagenGuardada = null;
-    // Se redirige (patrón PRG) para que recargar la página no cree el producto dos veces.
+
     res.redirect('/admin/productos?creado=' + id);
   } catch (err) {
     await limpiarImagen(imagenGuardada);
-    // Si dos administradores guardan el mismo SKU a la vez, lo detiene la base (UNIQUE).
+
     if (err.code === 'ER_DUP_ENTRY') {
       try {
         const { datos } = validarProducto(req.body, await Producto.opcionesFormulario(), await imagenesDisponibles());
@@ -184,11 +184,11 @@ exports.crear = async (req, res, next) => {
   }
 };
 
-// =====================================================================
-// HU-037: editar, activar/desactivar y eliminar.
-// =====================================================================
 
-// GET /admin/productos/:id/editar -> el mismo formulario de HU-036, lleno con los datos del producto.
+
+
+
+
 exports.mostrarEdicion = async (req, res, next) => {
   try {
     const producto = await Producto.obtenerParaEditar(Number(req.params.id));
@@ -199,8 +199,8 @@ exports.mostrarEdicion = async (req, res, next) => {
   }
 };
 
-// POST /admin/productos/:id -> valida igual que al crear y guarda los cambios.
-// El SKU no se edita (se usa el que ya tiene) y el stock se ajusta en /admin/stock (HU-038).
+
+
 exports.guardarEdicion = async (req, res, next) => {
   let imagenGuardada = null;
   try {
@@ -224,7 +224,7 @@ exports.guardarEdicion = async (req, res, next) => {
   }
 };
 
-// POST /admin/productos/:id/activo -> activa (activo=1) o desactiva (activo=0) el producto.
+
 exports.cambiarActivo = async (req, res, next) => {
   try {
     const id = Number(req.params.id);
@@ -237,8 +237,8 @@ exports.cambiarActivo = async (req, res, next) => {
   }
 };
 
-// POST /admin/productos/:id/eliminar -> borra el producto solo si nunca tuvo pedidos (criterio 3).
-// Si los tiene, vuelve a la tabla con un aviso que sugiere desactivarlo.
+
+
 exports.eliminar = async (req, res, next) => {
   try {
     const producto = await Producto.obtenerParaEditar(Number(req.params.id));

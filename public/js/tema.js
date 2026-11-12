@@ -7,7 +7,7 @@
   try {
     preferencia = localStorage.getItem(clave);
   } catch {
-    // La preferencia del sistema sigue disponible si el navegador bloquea el almacenamiento.
+
   }
 
   function aplicarTema() {
@@ -34,7 +34,7 @@
       try {
         localStorage.setItem(clave, preferencia);
       } catch {
-        // El botón sigue funcionando durante la visita.
+
       }
       aplicarTema();
     });

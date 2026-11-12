@@ -6,13 +6,13 @@
 <body>
   <%- include('../partials/navbar') %>
 
-<!-- La página del carrito ordena la compra para que el cliente revise productos, cantidades y total antes de confirmar. -->
+
 <div class="wrap">
-  <!-- El encabezado explica el propósito de la vista y ayuda a que el usuario sepa que está en la etapa de revisión del pedido. -->
+
   <h1><%= pagoPaypal ? 'Pago de tu pedido' : 'Carrito de Compras' %></h1>
   <p class="sub"><%= pagoPaypal ? 'Tu pedido está registrado. Revisa el total y continúa con el pago.' : 'Revisa tus productos y confirma tu pedido' %></p>
 
-  <%# HU-028: si la confirmación falla (stock, dirección o pago), el controlador vuelve a mostrar la página con el motivo. %>
+
   <% if (locals.error) { %>
     <p class="confirm-error" role="alert"><%= error %></p>
   <% } %>
@@ -22,14 +22,14 @@
   <% const datosForm = locals.datos || {}; %>
   <% const elegida = datosForm.direccion || ''; %>
   <% const hayPrincipal = direcciones.some((d) => d.principal); %>
-  <!-- Los productos y el checkout quedan a la izquierda; el resumen, en una columna lateral angosta. -->
+
   <div class="carrito-layout">
     <div class="carrito-columna">
   <section class="panel">
     <h2>💧 Productos</h2>
 
     <% if (items.length === 0) { %>
-      <!-- Si no hay elementos, se informa al usuario que debe agregar productos antes de continuar. -->
+
       <p class="empty">Tu carrito está vacío. Agrega productos desde el catálogo.</p>
     <% } else { %>
       <div class="row head"><span>Producto</span><span>Sabor y aroma</span><span>Cantidad</span><span>Precio</span><span>Acciones</span></div>
@@ -45,12 +45,12 @@
               <% if (i.descripcionAroma) { %><small><%= i.descripcionAroma %></small><% } %>
               <% if (i.intensidad) { %><small>Intensidad: <%= i.intensidad %> <%= i.intensidad === 1 ? 'dosis' : 'dosis' %></small><% } %>
               <% if (i.recargo > 0) { %><small>Recargo por dosis adicionales: <%= clp(i.recargo) %></small><% } %>
-              <%# HU-027: compara todas las variantes del producto contra el stock disponible. %>
+
               <% if (i.stockInsuficiente) { %>
                 <small class="stock-aviso">Tienes <%= i.unidadesEnCarrito %> en el carrito y solo quedan <%= i.stock %> <%= i.stock === 1 ? 'unidad' : 'unidades' %> disponibles en total. Reduce la cantidad para confirmar.</small>
               <% } %>
-              <%# HU-021: guardar esta preparación (producto + aroma + intensidad) con un nombre propio.
-                  Solo aparece en las líneas personalizadas y para clientes con sesión iniciada. %>
+
+
               <% if (locals.usuario && locals.usuario.idCliente && i.idComponente) { %>
                 <details class="fav-form">
                   <summary>★ Guardar como favorita</summary>
@@ -69,12 +69,12 @@
 
           <div class="aroma"><span class="ic" style="background:<%= i.color %>"><%= i.icono %></span><%= i.aroma %></div>
 
-          <%# HU-023: cada cambio de cantidad es un POST que resuelve el controlador. %>
+
           <form class="qty" method="post" action="/carrito/cantidad">
             <input type="hidden" name="id" value="<%= i.id %>">
             <% if (i.idComponente) { %><input type="hidden" name="idComponente" value="<%= i.idComponente %>"><% } %>
             <% if (i.intensidad) { %><input type="hidden" name="intensidad" value="<%= i.intensidad %>"><% } %>
-            <%# Primer botón (oculto): si se presiona Enter en la casilla, el formulario envía "fijar". %>
+
             <button type="submit" name="accion" value="fijar" hidden></button>
             <button type="submit" name="accion" value="restar" aria-label="Quitar una unidad de <%= i.nombre %>">−</button>
              <input class="qty-input" type="number" name="qty" inputmode="numeric" min="1"
@@ -86,7 +86,7 @@
 
           <div class="price"><b><%= clp(i.precio) %> c/u</b><b><%= clp(i.subtotal) %></b></div>
 
-          <%# HU-024: eliminar el producto del carrito. %>
+
           <form class="del-form" method="post" action="/carrito/eliminar">
             <input type="hidden" name="id" value="<%= i.id %>">
             <% if (i.idComponente) { %><input type="hidden" name="idComponente" value="<%= i.idComponente %>"><% } %>
@@ -105,10 +105,10 @@
     </div>
   </section>
 
-  <%# HU-028 a HU-030: solo el formulario de checkout envía dirección y medio de pago. %>
+
     <% if (locals.usuario && locals.usuario.idCliente) { %>
     <form id="confirmar-pedido" class="checkout-form" method="post" action="/carrito/confirmar">
-    <!-- HU-029 y HU-030: solo clientes autenticados eligen dónde se entrega y cómo se paga. -->
+
     <section class="panel checkout">
       <h2>🚚 Entrega y pago</h2>
 
@@ -133,7 +133,7 @@
           </label>
         <% } %>
 
-        <!-- Dirección nueva. El servidor la guarda en la cuenta recién al confirmar el pedido. -->
+
         <div class="nueva" id="direccion-nueva" <%= direcciones.length > 0 && elegida !== 'nueva' ? 'hidden' : '' %>>
           <p class="nueva-titulo"><%= direcciones.length > 0 ? 'Datos de la nueva dirección' : 'Dirección de entrega' %></p>
           <div class="campo ancho">
@@ -181,8 +181,8 @@
     <% } %>
     </div>
 
-    <!-- El resumen del pedido deja claro el total y facilita la decisión final de compra.
-         HU-025: cantidad de productos, subtotal neto, IVA y total de productos. -->
+
+
     <aside class="panel summary">
       <h2>📄 Resumen del Pedido</h2>
       <dl>
@@ -194,7 +194,7 @@
       <div class="total"><span>Total de productos</span><strong><%= clp(totales.total) %></strong></div>
       <p class="iva">El costo de entrega se coordinará con la tienda y no está incluido en este total.</p>
 
-      <%# HU-004 y HU-028: confirmar un pedido es una acción privada. Sin sesión, se va al login. %>
+
       <% if (locals.usuario && locals.usuario.idCliente) { %>
         <button type="submit" form="confirmar-pedido" class="confirm paypal-icon-button" aria-label="Continuar con PayPal" title="PayPal" <%= items.length && !items.some((i) => i.stockInsuficiente) && paypal.enabled && paypal.cambio ? '' : 'disabled' %>><img src="/img/marca/paypal.svg" alt="PayPal" width="30" height="36"></button>
       <% } else { %>

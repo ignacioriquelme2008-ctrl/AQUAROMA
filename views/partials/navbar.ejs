@@ -1,5 +1,5 @@
 <header class="navbar">
-  <%# HU-022: el contador lo calcula el servidor (middlewares/carrito.js) antes de dibujar la página. %>
+
   <% const unidades = locals.carritoCantidad || 0; %>
   <div class="nav-inner">
 
@@ -35,9 +35,9 @@
         <details class="nav-perfil">
           <summary class="nav-enlace" aria-label="Mi cuenta: <%= primerNombre %>"><span class="nav-avatar" aria-hidden="true"><%= inicial %></span><span class="nav-nombre"><%= primerNombre %></span><span class="nav-perfil-flecha" aria-hidden="true"></span></summary>
           <div class="nav-perfil-opciones">
-            <%# HU-006: el panel solo aparece para administradores. %>
+
             <% if (locals.usuario.esAdmin) { %><a href="/admin">Panel</a><% } %>
-            <%# HU-007: el perfil solo existe para los clientes. %>
+
             <% if (locals.usuario.idCliente) { %>
               <% if ((locals.usuario.permisos || []).includes('ver_mis_pedidos')) { %>
                 <a href="/perfil?seccion=pedidos">Mis pedidos</a>
@@ -62,7 +62,7 @@
 
   </div>
 
-  <%# Aviso de la última acción del carrito ("se agregó", "solo quedan X unidades"). Se muestra una vez. %>
+
   <% if (locals.avisoCarrito) { %>
     <p class="aviso-carrito" role="status"><%= locals.avisoCarrito %></p>
   <% } %>

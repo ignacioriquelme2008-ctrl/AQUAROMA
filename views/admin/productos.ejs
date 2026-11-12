@@ -6,7 +6,7 @@
 <body>
   <%- include('../partials/navbar') %>
 
-  <!-- HU-036 y HU-037: lista de productos del panel. Los datos llegan de adminProductosController.listar. -->
+
   <main class="admin admin-ancho">
     <%- include('../partials/admin-menu', { activo: 'productos' }) %>
 
@@ -18,7 +18,7 @@
       <a href="/admin/productos/nuevo" class="btn btn-primary">+ Nuevo producto</a>
     </div>
 
-    <%# Aviso después de crear, editar, activar, desactivar o eliminar (lo arma el controlador). %>
+
     <% if (aviso && aviso.tipo === 'exito') { %>
       <p class="admin-exito" role="status">
         <% if (aviso.producto) { %>
@@ -30,7 +30,7 @@
         <% } %>
       </p>
     <% } else if (aviso && aviso.tipo === 'error') { %>
-      <%# Criterio 3 de HU-037: un producto con pedidos no se borra; se sugiere desactivarlo. %>
+
       <div class="admin-errores" role="alert">
         <%= aviso.texto %> <strong><%= aviso.producto.nombre %></strong> porque tiene pedidos asociados: se perdería el historial de ventas.
         <% if (aviso.producto.activo) { %>
@@ -62,12 +62,12 @@
             <td class="admin-fecha"><%= p.actualizado_en ? fechaHora(p.actualizado_en) : '—' %></td>
             <td class="admin-acciones-fila">
               <a href="/admin/productos/<%= p.id %>/editar">Editar</a>
-              <%# HU-037: activar o desactivar sin borrar nada. %>
+
               <form method="post" action="/admin/productos/<%= p.id %>/activo" class="admin-form-linea">
                 <input type="hidden" name="activo" value="<%= p.activo ? '0' : '1' %>">
                 <button type="submit" class="admin-boton-chico"><%= p.activo ? 'Desactivar' : 'Activar' %></button>
               </form>
-              <%# Eliminar solo funciona si el producto nunca se vendió (el servidor lo revisa). %>
+
               <form method="post" action="/admin/productos/<%= p.id %>/eliminar" class="admin-form-linea"
                     onsubmit="return confirm('¿Eliminar <%= p.sku %> para siempre? Si tiene pedidos no se podrá.')">
                 <button type="submit" class="admin-boton-chico admin-boton-peligro">Eliminar</button>

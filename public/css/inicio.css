@@ -1,9 +1,9 @@
-/* =====================================================================
-   inicio.css: sección INICIO.
-   Páginas: views/inicio/inicio.ejs (HU-008) y views/inicio/nosotros.ejs (HU-010).
-   ===================================================================== */
 
-/* ===== Portada ===== */
+
+
+
+
+
 .home-page {
   --hero-bg: #cfe6f5;
   --hero-tinta: #e2f3fbeb;
@@ -121,7 +121,7 @@
 .hero-acciones .hero-secundario { color: var(--navy); border-color: currentColor; }
 .hero-acciones .hero-secundario:hover { background: var(--surface); }
 
-/* ===== Productos destacados ===== */
+
 .aromas { padding-block: 20px 64px; background: var(--page-bg); }
 .aromas h2 { font-size: clamp(1.65rem, 3vw, 2.25rem); line-height: 1.2; margin-bottom: 24px; }
 .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2vw, 24px); }
@@ -215,7 +215,7 @@
   .card:hover { transform: none; }
 }
 
-/* ===== Nosotros ===== */
+
 .about-page { max-width: 1100px; margin: 0 auto; padding: 40px 4vw 64px; }
 .about-hero { padding: 48px; border-radius: 18px; background: linear-gradient(135deg, #e8f5ff, #f0f8e9); }
 .about-hero .eyebrow { margin-bottom: 10px; }
@@ -226,7 +226,7 @@
 .about-card h2 { color: var(--navy); font-size: 22px; margin-bottom: 10px; }
 .about-card p { line-height: 1.7; }
 .about-cta { margin-top: 28px; text-align: center; }
-/* HU-010: historia de la marca y valores. */
+
 .about-historia { margin-top: 32px; padding: 32px 36px; background: #fff; border: 1px solid var(--line); border-radius: 14px; }
 .about-historia h2, .about-titulo { color: var(--navy); font-size: 26px; margin-bottom: 14px; }
 .about-historia p { max-width: 820px; font-size: 17px; line-height: 1.75; margin-bottom: 12px; }

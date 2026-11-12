@@ -1,5 +1,5 @@
--- HU-005 y HU-034. Ejecutar una vez en bases existentes antes de publicar estas historias.
--- En instalaciones nuevas, ambas tablas ya se crean desde database/aquaroma.sql.
+
+
 CREATE TABLE IF NOT EXISTS token_recuperacion (
     id_token INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,

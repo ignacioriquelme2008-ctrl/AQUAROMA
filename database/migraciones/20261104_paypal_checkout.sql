@@ -1,4 +1,4 @@
--- Cotización congelada y referencias de la demo Sandbox vinculadas a un pago real del sistema.
+
 CREATE TABLE IF NOT EXISTS paypal_checkout (
   id_pago INT PRIMARY KEY,
   monto_usd DECIMAL(12,2) NOT NULL,
